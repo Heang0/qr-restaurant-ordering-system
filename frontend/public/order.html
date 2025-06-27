@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Your Order - QR Restaurant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="order-app-header">
+        <div class="header-text-container">
+            <h1 id="storeNameHeader">Loading Menu...</h1>
+            <p class="table-info">Table: <span id="tableIdDisplay"></span></p>
+        </div>
+        <button id="viewCartBtn" class="cart-icon-btn">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cartItemCount" class="cart-badge">0</span>
+        </button>
+    </header>
+
+    <main class="container order-container">
+        <section class="card-section">
+            <h2 class="section-title">Our Menu</h2>
+            <div id="category-filter-buttons" class="category-buttons">
+                </div>
+            <div id="menuList" class="menu-grid">
+                </div>
+            <p id="menuErrorMessage" class="message error-message"></p>
+        </section>
+
+        <div id="orderModal" class="modal modal-drawer">
+            <div class="modal-content modal-content-drawer">
+                <div class="modal-header">
+                    <h2 class="section-title">Your Order</h2>
+                    <span class="close-button">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="orderSummaryContent">
+                        <ul id="orderItemsList" class="order-summary-list">
+                            </ul>
+                    </div>
+                    <p id="emptyOrderMessage" class="empty-state hidden">Your cart is empty. Add some delicious items!</p>
+                </div>
+                <div class="modal-footer">
+                    <p class="order-total-summary">Total: $<span id="orderTotal">0.00</span></p>
+                    <button id="submitOrderBtn" class="primary-btn full-width">Place Order Now</button>
+                    <p id="orderMessage" class="message success-message"></p>
+                    <p id="orderErrorMessage" class="message error-message"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/customer.js"></script>
+</body>
+</html>

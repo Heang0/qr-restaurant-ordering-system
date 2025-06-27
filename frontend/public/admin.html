@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - QR Restaurant</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1>Admin Dashboard</h1>
+        <button id="logoutBtn" class="header-btn">Logout</button>
+    </header>
+    
+    <main class="container">
+        <section class="card-section">
+            <h2 class="section-title">Manage Categories</h2>
+            <p class="section-description">Create and manage menu categories like 'Appetizers' or 'Drinks'.</p>
+            <form id="addCategoryForm" class="form-card">
+                <label for="categoryName">Category Name:</label>
+                <input type="text" id="categoryName" placeholder="e.g., Appetizers" required>
+                <button type="submit" class="primary-btn">Add Category</button>
+                <p id="addCategoryMessage" class="message"></p>
+            </form>
+            <h3 class="section-subtitle">Existing Categories</h3>
+            <div id="categoriesList" class="table-grid">
+                </div>
+            <p id="categoryListMessage" class="message"></p>
+        </section>
+
+        <section class="card-section">
+            <h2 class="section-title">Manage Menu</h2>
+            <p class="section-description">Add, edit, and delete your store's menu items.</p>
+            <form id="menuItemForm" class="form-card">
+                <input type="hidden" id="menuItemId">
+                <label for="itemName">Item Name:</label>
+                <input type="text" id="itemName" placeholder="e.g., Spicy Noodles" required>
+
+                <label for="itemCategory">Category:</label>
+                <select id="itemCategory" required></select>
+
+                <label for="itemDescription">Description:</label>
+                <textarea id="itemDescription" rows="3" placeholder="A brief description of the item"></textarea>
+
+                <label for="itemPrice">Price ($):</label>
+                <input type="number" id="itemPrice" step="0.01" min="0" placeholder="e.g., 9.99" required>
+
+                <label for="itemImage" class="file-input-label">Item Image:</label>
+                <input type="file" id="itemImage" accept="image/*">
+                <div id="currentImagePreview" class="image-preview"></div>
+
+                <button type="submit" id="menuItemSubmitBtn" class="primary-btn">Add Menu Item</button>
+                <p id="menuItemMessage" class="message"></p>
+            </form>
+
+            <h3 class="section-subtitle">Current Menu Items</h3>
+            <div id="menu-category-filter-buttons" class="category-buttons">
+                </div>
+            <div id="menuItemsList" class="menu-grid">
+                </div>
+            <p id="menuListMessage" class="message"></p>
+        </section>
+
+        <section class="card-section">
+            <h2 class="section-title">Store Branding</h2>
+            <p class="section-description">Upload your store logo for the customer ordering page header.</p>
+            <form id="storeLogoForm" class="form-card">
+                <label for="storeLogo">Upload Store Logo:</label>
+                <input type="file" id="storeLogo" accept="image/*">
+                <div id="currentStoreLogoPreview" class="image-preview"></div>
+                <button type="submit" id="uploadLogoBtn" class="primary-btn">Update Store Logo</button>
+                <p id="storeLogoMessage" class="message"></p>
+            </form>
+        </section>
+
+        <section class="card-section">
+            <h2 class="section-title">Manage Tables & QR Codes</h2>
+            <p class="section-description">Generate QR codes for each table. Your customers will scan these to order.</p>
+            <form id="addTableForm" class="form-card">
+                <label for="newTableId">Table ID:</label>
+                <input type="text" id="newTableId" placeholder="e.g., A1, B2" required>
+                <button type="submit" class="primary-btn">Add Table</button>
+                <p id="addTableMessage" class="message"></p>
+            </form>
+
+            <h3 class="section-subtitle">Existing Tables</h3>
+            <div id="tablesList" class="table-grid">
+                </div>
+            <p id="tablesListMessage" class="message"></p>
+        </section>
+
+        <section class="card-section">
+            <h2 class="section-title">Live Orders</h2>
+            <p class="section-description">View and update customer orders in real-time.</p>
+            <div id="ordersDashboard" class="order-grid">
+                </div>
+            <p id="ordersMessage" class="message"></p>
+        </section>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>
