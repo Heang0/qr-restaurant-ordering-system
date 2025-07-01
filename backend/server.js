@@ -32,16 +32,19 @@ app.use(cors());
 // app.use('/api/orders', orderRoutes);
 // app.use('/api/categories', categoriesRoutes);
 
+// Define the absolute path to your frontend public directory
+const frontendPublicPath = path.join(__dirname, '..', 'frontend', 'public');
+
 // --- Serve static frontend assets ---
 // This should be placed before any wildcard routes or API routes that might
 // accidentally intercept requests for static files.
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'public')));
+app.use(express.static(frontendPublicPath));
 
 // --- Explicit Root Route for Frontend ---
-// Handle the root path explicitly to serve index.html.
-// This often resolves ambiguities with path-to-regexp.
+// Handle the root path explicitly to serve login.html.
+// Using the pre-defined frontendPublicPath for clarity and directness.
 app.get('/', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '..', 'frontend', 'public', 'login.html')); // Assuming login.html is your entry point
+    res.sendFile(path.join(frontendPublicPath, 'login.html')); // Assuming login.html is your entry point
 });
 
 // --- SPA Fallback for other frontend routes ---
@@ -49,7 +52,7 @@ app.get('/', (req, res) => {
 // serve index.html. This is for client-side routing (e.g., /admin.html, /order.html etc.)
 // that might be directly accessed or navigated to.
 app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '..', 'frontend', 'public', 'index.html'));
+    res.sendFile(path.join(frontendPublicPath, 'index.html'));
 });
 
 
