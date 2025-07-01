@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-// --- NEW PUBLIC ROUTE: Get Orders for a specific customer (by storeId and tableId) ---
+// NEW PUBLIC ROUTE: Get Orders for a specific customer (by storeId and tableId)
 // This route does NOT require authentication, as customers access it via QR code.
 router.get('/customer', async (req, res) => {
     const { storeId, tableId } = req.query;
@@ -68,6 +68,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
         query.status = status;
     }
     try {
+        // Updated populate to include 'imageUrl' from MenuItem
         const orders = await Order.find(query)
                                   .populate('items.menuItemId', 'name price imageUrl')
                                   .sort({ createdAt: -1 });
@@ -79,9 +80,10 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 });
 
 // Update Order Status (Admin)
+// Ensure ':id' is correctly named as 'id'
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
     const { status } = req.body;
-    const { id } = req.params;
+    const { id } = req.params; // Correctly destructure 'id' from req.params
     const storeId = req.user.storeId;
 
     try {
@@ -104,11 +106,13 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
 });
 
 // New endpoint to delete all pending/active orders for a specific table
+// Ensure ':tableId' is correctly named as 'tableId'
 router.delete('/table/:tableId', protect, authorize('admin'), async (req, res) => {
-    const { tableId } = req.params;
+    const { tableId } = req.params; // Correctly destructure 'tableId' from req.params
     const storeId = req.user.storeId;
 
     try {
+        // Only delete orders that are not yet 'Completed' or 'Cancelled'
         const result = await Order.deleteMany({ 
             storeId, 
             tableId, 
