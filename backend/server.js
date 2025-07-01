@@ -23,6 +23,12 @@ mongoose.connect(config.mongoURI)
 app.use(express.json());
 app.use(cors());
 
+// --- NEW: API Request Logger Middleware ---
+app.use('/api', (req, res, next) => {
+    console.log(`API Request: ${req.method} ${req.originalUrl}`);
+    next(); // Pass control to the next middleware/route handler
+});
+
 // --- API Routes ---
 // These routes MUST come before any general static file serving or wildcard routes
 // to ensure API requests are handled first.
