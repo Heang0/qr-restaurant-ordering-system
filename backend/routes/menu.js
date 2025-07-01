@@ -16,7 +16,7 @@ router.get('/public', async (req, res) => {
             return res.status(400).json({ message: 'Store ID is required' });
         }
         
-        const menuItems = await MenuItem.find({ storeId, isAvailable: true }) // CITE: Filter for available items
+        const menuItems = await MenuItem.find({ storeId, isAvailable: true })
                                       .populate('categoryId', 'name')
                                       .populate('storeId', 'name logoUrl'); 
         console.log('Found menu items from DB:', menuItems);
@@ -136,7 +136,8 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
         }
         await MenuItem.deleteOne({ _id: id, storeId: storeId });
         res.json({ message: 'Menu item deleted successfully' });
-    } catch (error) {
+    }
+    catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }

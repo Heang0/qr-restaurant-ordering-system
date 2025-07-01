@@ -8,7 +8,7 @@ const MenuItemSchema = new mongoose.Schema({
     imageUrl: { type: String },
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     isBestSeller: { type: Boolean, default: false },
-    isAvailable: { type: Boolean, default: true } // CITE: This field was missing in your uploaded MenuItem.js
+    isAvailable: { type: Boolean, default: true }
 });
 
 module.exports = mongoose.model('MenuItem', MenuItemSchema);
