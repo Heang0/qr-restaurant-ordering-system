@@ -7,9 +7,9 @@ const config = require('./config');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const storeRoutes = require('./routes/stores');
-const menuRoutes = require('./routes/menu');
+const menuRoutes = require('./routes/menu'); // Keep this import
 const tableRoutes = require('./routes/tables');
-const orderRoutes = require('./routes/orders');
+const orderRoutes = require('./routes/orders'); // Keep this import
 const categoriesRoutes = require('./routes/categories');
 
 const app = express();
@@ -23,36 +23,39 @@ mongoose.connect(config.mongoURI)
 app.use(express.json());
 app.use(cors());
 
-// --- API Routes (ALL RE-ENABLED) ---
-// These routes should come first to ensure API requests are handled before static file serving
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/stores', storeRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/tables', tableRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/categories', categoriesRoutes);
+// --- API Routes (ONLY MENU AND ORDERS PUBLIC ROUTES RE-ENABLED FOR TESTING) ---
+// Temporarily comment out all other API routes to isolate the problem.
+// app.use('/api/auth', authRoutes);
+// app.use('/api/users', userRoutes);
+// app.use('/api/stores', storeRoutes);
+
+// ONLY re-enable the menu and orders routes that the customer page uses
+app.use('/api/menu', menuRoutes); // This includes /api/menu/public
+app.use('/api/orders', orderRoutes); // This includes /api/orders/customer
+
+// app.use('/api/tables', tableRoutes); // Commented out
+// app.use('/api/categories', categoriesRoutes); // Commented out
+
 
 // Define the absolute path to your frontend public directory
 const frontendPublicPath = path.join(__dirname, '..', 'frontend', 'public');
 
-// --- Serve static frontend assets ---
-// This should be placed before any wildcard routes or API routes that might
-// accidentally intercept requests for static files.
-app.use(express.static(frontendPublicPath));
+// --- Serve static frontend assets (COMMENTED OUT FOR THIS TEST) ---
+// app.use(express.static(frontendPublicPath));
 
-// --- Explicit Root Route for Frontend ---
-// Handle the root path explicitly to serve login.html.
+// --- Explicit Root Route for Frontend (COMMENTED OUT FOR THIS TEST) ---
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(frontendPublicPath, 'login.html'));
+// });
+
+// --- SPA Fallback for other frontend routes (COMMENTED OUT FOR THIS TEST) ---
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(frontendPublicPath, 'index.html'));
+// });
+
+// Add a simple test route for the root to confirm server is up
 app.get('/', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'login.html')); // Assuming login.html is your entry point
-});
-
-// --- SPA Fallback for other frontend routes ---
-// For any other GET request that doesn't match a static file or the explicit root,
-// serve index.html. This is for client-side routing (e.g., /admin.html, /order.html etc.)
-// that might be directly accessed or navigated to.
-app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'index.html'));
+    res.send('Backend API is running. Test menu public endpoint at /api/menu/public?storeId=<your_store_id>');
 });
 
 
