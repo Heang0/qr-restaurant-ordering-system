@@ -39,7 +39,8 @@ router.get('/', protect, authorize('superadmin'), async (req, res) => {
     }
 });
 
-// CITE: Update an Admin's store (Super Admin only)
+// Update an Admin's store (Super Admin only)
+// Parameter 'id' is correctly named.
 router.put('/:id', protect, authorize('superadmin'), async (req, res) => {
     const { storeId } = req.body;
     try {
@@ -63,6 +64,7 @@ router.put('/:id', protect, authorize('superadmin'), async (req, res) => {
 
 
 // Delete Admin User (Super Admin only)
+// Parameter 'id' is correctly named.
 router.delete('/:id', protect, authorize('superadmin'), async (req, res) => {
     try {
         const user = await User.findById(req.params.id);

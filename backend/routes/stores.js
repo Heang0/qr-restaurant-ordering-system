@@ -33,14 +33,15 @@ router.get('/', protect, authorize('superadmin'), async (req, res) => {
     }
 });
 
-// CITE: Get a single store's details (Admin only, based on their storeId or SuperAdmin for any store)
+// Get a single store's details (Admin only, based on their storeId or SuperAdmin for any store)
+// Parameter 'id' is correctly named.
 router.get('/:id', protect, authorize('superadmin', 'admin'), async (req, res) => {
     try {
         const store = await Store.findById(req.params.id);
         if (!store) {
             return res.status(404).json({ message: 'Store not found' });
         }
-        // CITE: Ensure admin can only access their assigned store
+        // Ensure admin can only access their assigned store
         if (req.user.role === 'admin' && req.user.storeId.toString() !== store._id.toString()) {
             return res.status(403).json({ message: 'Forbidden: You do not have access to this store' });
         }
@@ -51,7 +52,8 @@ router.get('/:id', protect, authorize('superadmin', 'admin'), async (req, res) =
     }
 });
 
-// CITE: Update a Store with logo upload functionality
+// Update a Store with logo upload functionality
+// Parameter 'id' is correctly named.
 router.put('/:id', protect, authorize('superadmin', 'admin'), upload.single('logo'), async (req, res) => {
     const { name, address, phone, clearLogo } = req.body;
     const { id } = req.params;
