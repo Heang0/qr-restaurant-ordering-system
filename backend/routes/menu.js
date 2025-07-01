@@ -16,7 +16,9 @@ router.get('/public', async (req, res) => {
             return res.status(400).json({ message: 'Store ID is required' });
         }
         
-        const menuItems = await MenuItem.find({ storeId }).populate('categoryId', 'name').populate('storeId', 'name'); 
+        const menuItems = await MenuItem.find({ storeId, isAvailable: true }) // CITE: Filter for available items
+                                      .populate('categoryId', 'name')
+                                      .populate('storeId', 'name logoUrl'); 
         console.log('Found menu items from DB:', menuItems);
 
         res.json(menuItems);
@@ -39,7 +41,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 
 // Add Menu Item (Admin)
 router.post('/', protect, authorize('admin'), upload.single('image'), async (req, res) => {
-    const { name, description, price, categoryId } = req.body;
+    const { name, description, price, categoryId, isBestSeller, isAvailable } = req.body;
     const storeId = req.user.storeId;
     let imageUrl = null;
 
@@ -50,10 +52,20 @@ router.post('/', protect, authorize('admin'), upload.single('image'), async (req
             const fs = require('fs');
             fs.unlinkSync(req.file.path);
         }
-
-        const menuItem = new MenuItem({ storeId, name, description, price, imageUrl, categoryId });
+        
+        const menuItem = new MenuItem({ 
+            storeId, 
+            name, 
+            description, 
+            price, 
+            imageUrl, 
+            categoryId, 
+            isBestSeller: isBestSeller === 'true', 
+            isAvailable: isAvailable === 'true' 
+        });
         await menuItem.save();
         res.status(201).json({ message: 'Menu item created successfully', menuItem });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -62,7 +74,7 @@ router.post('/', protect, authorize('admin'), upload.single('image'), async (req
 
 // Update Menu Item (Admin)
 router.put('/:id', protect, authorize('admin'), upload.single('image'), async (req, res) => {
-    const { name, description, price, categoryId } = req.body;
+    const { name, description, price, categoryId, isBestSeller, isAvailable } = req.body;
     const storeId = req.user.storeId;
     const { id } = req.params;
     let imageUrl = null;
@@ -81,19 +93,27 @@ router.put('/:id', protect, authorize('admin'), upload.single('image'), async (r
             const result = await cloudinary.uploader.upload(req.file.path, { folder: 'menu_items' });
             imageUrl = result.secure_url;
             const fs = require('fs');
-            fs.unlinkSync(req.file.path);
+            fs.unlinkSync(req.file.path); 
         }
 
         menuItem.name = name || menuItem.name;
         menuItem.description = description || menuItem.description;
         menuItem.price = price || menuItem.price;
+        menuItem.categoryId = categoryId || menuItem.categoryId;
+        if (isBestSeller !== undefined) {
+             menuItem.isBestSeller = isBestSeller === 'true';
+        }
+        if (isAvailable !== undefined) {
+             menuItem.isAvailable = isAvailable === 'true';
+        }
+        
         if (imageUrl) {
             menuItem.imageUrl = imageUrl;
         }
-        menuItem.categoryId = categoryId || menuItem.categoryId;
         
         await menuItem.save();
         res.json({ message: 'Menu item updated successfully', menuItem });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

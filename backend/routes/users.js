@@ -39,6 +39,29 @@ router.get('/', protect, authorize('superadmin'), async (req, res) => {
     }
 });
 
+// CITE: Update an Admin's store (Super Admin only)
+router.put('/:id', protect, authorize('superadmin'), async (req, res) => {
+    const { storeId } = req.body;
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.role === 'superadmin') {
+            return res.status(403).json({ message: 'Cannot edit superadmin' });
+        }
+        
+        user.storeId = storeId;
+        await user.save();
+        
+        res.json({ message: 'Admin store updated successfully', user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
 // Delete Admin User (Super Admin only)
 router.delete('/:id', protect, authorize('superadmin'), async (req, res) => {
     try {

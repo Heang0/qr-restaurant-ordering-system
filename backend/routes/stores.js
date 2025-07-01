@@ -33,9 +33,27 @@ router.get('/', protect, authorize('superadmin'), async (req, res) => {
     }
 });
 
-// Update a Store (Super Admin or Admin)
+// CITE: Get a single store's details (Admin only, based on their storeId or SuperAdmin for any store)
+router.get('/:id', protect, authorize('superadmin', 'admin'), async (req, res) => {
+    try {
+        const store = await Store.findById(req.params.id);
+        if (!store) {
+            return res.status(404).json({ message: 'Store not found' });
+        }
+        // CITE: Ensure admin can only access their assigned store
+        if (req.user.role === 'admin' && req.user.storeId.toString() !== store._id.toString()) {
+            return res.status(403).json({ message: 'Forbidden: You do not have access to this store' });
+        }
+        res.json(store);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// CITE: Update a Store with logo upload functionality
 router.put('/:id', protect, authorize('superadmin', 'admin'), upload.single('logo'), async (req, res) => {
-    const { name } = req.body;
+    const { name, address, phone, clearLogo } = req.body;
     const { id } = req.params;
     let logoUrl = null;
 
@@ -55,9 +73,18 @@ router.put('/:id', protect, authorize('superadmin', 'admin'), upload.single('log
             fs.unlinkSync(req.file.path);
         }
 
-        store.name = name || store.name;
+        if (name !== undefined) store.name = name; 
+        if (address !== undefined) store.address = address; 
+        if (phone !== undefined) store.phone = phone;       
+
         if (logoUrl) {
             store.logoUrl = logoUrl;
+        } else if (clearLogo === 'true') {
+            if (store.logoUrl) {
+                const publicId = store.logoUrl.split('/').pop().split('.')[0];
+                await cloudinary.uploader.destroy(`store_logos/${publicId}`);
+            }
+            store.logoUrl = null;
         }
 
         await store.save();
