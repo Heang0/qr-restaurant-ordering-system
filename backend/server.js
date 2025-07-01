@@ -1,8 +1,8 @@
 const express = require('express');
-const mongoose = require('mongoose'); // Re-enabled mongoose import
-const cors = require('cors'); // Re-enabled cors import
-const path = require('path'); // Import the 'path' module for directory resolution
-const config = require('./config'); // Still need config for PORT
+const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
+const config = require('./config');
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -14,16 +14,16 @@ const categoriesRoutes = require('./routes/categories');
 
 const app = express();
 
-// Connect to MongoDB (RE-ENABLED)
+// Connect to MongoDB
 mongoose.connect(config.mongoURI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// Middleware (RE-ENABLED)
-app.use(express.json()); // Body parser for JSON
-app.use(cors()); // Enable CORS for all origins (you might want to restrict this in production)
+// Middleware
+app.use(express.json());
+app.use(cors());
 
-// --- API Routes (STILL COMMENTED OUT FOR NOW) ---
+// --- API Routes (STILL COMMENTED OUT FOR NOW - will uncomment later) ---
 // app.use('/api/auth', authRoutes);
 // app.use('/api/users', userRoutes);
 // app.use('/api/stores', storeRoutes);
@@ -32,25 +32,25 @@ app.use(cors()); // Enable CORS for all origins (you might want to restrict this
 // app.use('/api/orders', orderRoutes);
 // app.use('/api/categories', categoriesRoutes);
 
-// --- Serve static frontend assets (RE-ENABLED) ---
-// This tells Express to serve static files from the 'frontend/public' directory.
-// path.join(__dirname, '..', 'frontend', 'public') resolves to:
-// current_directory_of_server.js/../frontend/public
-// which correctly points to your frontend/public folder from the backend folder.
+// --- Serve static frontend assets ---
+// This should be placed before any wildcard routes or API routes that might
+// accidentally intercept requests for static files.
 app.use(express.static(path.join(__dirname, '..', 'frontend', 'public')));
 
-// --- SPA Fallback / Serve index.html for all other routes (RE-ENABLED) ---
-// For any GET request that doesn't match an API route or a static file,
-// serve the 'index.html' file. This is crucial for client-side routing
-// and ensuring direct access to frontend pages (like /order.html) works.
+// --- Explicit Root Route for Frontend ---
+// Handle the root path explicitly to serve index.html.
+// This often resolves ambiguities with path-to-regexp.
+app.get('/', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '..', 'frontend', 'public', 'login.html')); // Assuming login.html is your entry point
+});
+
+// --- SPA Fallback for other frontend routes ---
+// For any other GET request that doesn't match a static file or the explicit root,
+// serve index.html. This is for client-side routing (e.g., /admin.html, /order.html etc.)
+// that might be directly accessed or navigated to.
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '..', 'frontend', 'public', 'index.html'));
 });
-
-// Simple root route to confirm server starts (COMMENTED OUT)
-// app.get('/', (req, res) => {
-//     res.send('Minimal server started successfully!');
-// });
 
 
 const PORT = config.port;
