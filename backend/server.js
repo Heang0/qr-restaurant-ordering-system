@@ -6,7 +6,7 @@ const config = require('./config');
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-const storeRoutes = require('./routes/stores'); // Corrected path
+const storeRoutes = require('./routes/stores');
 const menuRoutes = require('./routes/menu');
 const tableRoutes = require('./routes/tables');
 const orderRoutes = require('./routes/orders');
@@ -31,8 +31,8 @@ app.use('/api', (req, res, next) => {
 });
 
 // --- API Routes ---
-// These routes MUST come before any static file serving for the root path
-// or wildcard routes to ensure API requests are handled first.
+// These routes MUST come before any static file serving or HTML file serving
+// to ensure API requests are handled first.
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
@@ -44,27 +44,39 @@ app.use('/api/categories', categoriesRoutes);
 // Define the absolute path to your frontend public directory
 const frontendPublicPath = path.join(__dirname, '..', 'frontend', 'public');
 
-// --- Serve static assets (CSS, JS, images) for non-API paths ---
-// This is the CRITICAL CHANGE: Only serve static files if the path does NOT start with /api.
-// This prevents express.static from intercepting API calls.
-app.use((req, res, next) => {
-    if (req.originalUrl.startsWith('/api')) {
-        return next(); // Skip static middleware for API calls
-    }
-    express.static(frontendPublicPath)(req, res, next);
+// --- Explicitly serve HTML files ---
+// These routes should come AFTER API routes but BEFORE general express.static
+// to ensure specific HTML files are served directly.
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(frontendPublicPath, 'login.html'));
 });
 
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(frontendPublicPath, 'index.html'));
+});
 
-// --- Handle all other GET requests (including root and frontend routes) ---
-// This is the SPA fallback. It will serve the appropriate HTML file.
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(frontendPublicPath, 'admin.html'));
+});
+
+app.get('/order.html', (req, res) => {
+    res.sendFile(path.join(frontendPublicPath, 'order.html'));
+});
+
+// --- Serve other static assets (CSS, JS, images, etc.) ---
+// This will serve all other files from the 'public' directory.
+// It comes AFTER specific HTML files and API routes.
+app.use(express.static(frontendPublicPath));
+
+// --- SPA Fallback / Handle root and any unmatched routes ---
 // For the root URL, we explicitly serve login.html.
-// For any other path, we serve index.html, and the frontend JS handles routing.
+// For any other unmatched path, we serve index.html (as a fallback for client-side routing).
 app.get('*', (req, res) => {
-    // If the request is for the root path, serve login.html
     if (req.path === '/') {
         return res.sendFile(path.join(frontendPublicPath, 'login.html'));
     }
-    // For any other path, serve index.html (which will then redirect or load content)
+    // If it's not a specific HTML file path or API path, and not '/',
+    // then it's a client-side route, so serve index.html
     res.sendFile(path.join(frontendPublicPath, 'index.html'));
 });
 
