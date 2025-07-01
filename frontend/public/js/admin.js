@@ -1,368 +1,460 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- Initial setup and authentication check ---
-    if (typeof window.api === 'undefined') {
-        console.error('Error: api object is not defined. Ensure api.js is loaded correctly.');
-        return;
+    // Check authentication and redirect if necessary
+    if (!checkAuthAndRedirect()) {
+        return; // Stop execution if not authorized
     }
 
     const role = localStorage.getItem('role');
-    const storeId = localStorage.getItem('storeId');
+    const storeId = localStorage.getItem('storeId'); // Get storeId for admin user
 
-    if (!localStorage.getItem('token') || role !== 'admin') {
+    // Redirect non-superadmin/admin roles to login
+    if (role !== 'superadmin' && role !== 'admin') {
         window.location.href = 'login.html';
         return;
     }
 
-    // --- DOM Element Selection ---
-    const menuItemForm = document.getElementById('menuItemForm');
-    const menuItemIdInput = document.getElementById('menuItemId');
-    const itemNameInput = document.getElementById('itemName');
-    const itemDescriptionInput = document.getElementById('itemDescription');
-    const itemPriceInput = document.getElementById('itemPrice');
-    const itemImageInput = document.getElementById('itemImage');
-    const itemCategorySelect = document.getElementById('itemCategory');
-    const currentImagePreview = document.getElementById('currentImagePreview');
-    const menuItemSubmitBtn = document.getElementById('menuItemSubmitBtn');
-    const menuItemMessage = document.getElementById('menuItemMessage');
-    const menuItemsList = document.getElementById('menuItemsList');
-    const menuListMessage = document.getElementById('menuListMessage');
+    // --- Super Admin Elements (elements that only exist if role is superadmin) ---
+    const createStoreForm = document.getElementById('createStoreForm');
+    const storeNameInput = document.getElementById('storeName');
+    const createStoreMessage = document.getElementById('createStoreMessage');
+
+    const createAdminForm = document.getElementById('createAdminForm');
+    const adminEmailInput = document.getElementById('adminEmail');
+    const adminPasswordInput = document.getElementById('adminPassword');
+    const adminStoreSelect = document.getElementById('adminStore');
+    const createAdminMessage = document.getElementById('createAdminMessage');
+
+    const adminsTableBody = document.querySelector('#adminsTable tbody');
+    const adminListMessage = document.getElementById('adminListMessage');
+
+    // --- Admin/Store Specific Elements (elements that exist for admin or superadmin) ---
+    const totalLiveOrdersEl = document.getElementById('totalLiveOrders');
+    const pendingOrdersCountEl = document.getElementById('pendingOrdersCount');
+    const readyOrdersCountEl = document.getElementById('readyOrdersCount');
+    
+    // Store Branding Form Inputs
+    const storeInfoForm = document.getElementById('storeInfoForm');
+    const storeNameInputBranding = document.getElementById('storeNameInput');
+    const storeAddressInput = document.getElementById('storeAddressInput');
+    const storePhoneInput = document.getElementById('storePhoneInput');
+    const storeLogoInput = document.getElementById('storeLogo');
+    const storeLogoMessage = document.getElementById('storeLogoMessage');
+    const logoPreviewContainer = document.getElementById('currentStoreLogoPreview');
+    const logoPreviewImg = document.getElementById('logoPreviewImg');
+    const updateStoreInfoBtn = document.getElementById('updateStoreInfoBtn');
 
     const addTableForm = document.getElementById('addTableForm');
     const newTableIdInput = document.getElementById('newTableId');
     const addTableMessage = document.getElementById('addTableMessage');
-    const tablesList = document.getElementById('tablesList');
+    const tablesListDiv = document.getElementById('tablesList');
     const tablesListMessage = document.getElementById('tablesListMessage');
+    
+    // Elements for Manage Menu section
+    const menuItemForm = document.getElementById('menuItemForm');
+    const menuItemIdInput = document.getElementById('menuItemId');
+    const itemNameInput = document.getElementById('itemName');
+    const itemCategorySelect = document.getElementById('itemCategory');
+    const itemDescriptionInput = document.getElementById('itemDescription');
+    const itemPriceInput = document.getElementById('itemPrice');
+    const itemImageInput = document.getElementById('itemImage');
+    const menuItemSubmitBtn = document.getElementById('menuItemSubmitBtn');
+    const menuItemMessage = document.getElementById('menuItemMessage');
+    const currentImagePreview = document.getElementById('currentImagePreview');
+    const menuCategoryFilterButtons = document.getElementById('menu-category-filter-buttons');
+    const menuItemsList = document.getElementById('menuItemsList');
+    const menuListMessage = document.getElementById('menuListMessage');
+    const menuSearchInput = document.getElementById('menuSearchInput');
+    // Best Seller and Availability checkboxes
+    const isBestSellerCheckbox = document.getElementById('isBestSellerCheckbox');
+    const isAvailableCheckbox = document.getElementById('isAvailableCheckbox');
+
 
     const ordersDashboard = document.getElementById('ordersDashboard');
     const ordersMessage = document.getElementById('ordersMessage');
-    const logoutBtn = document.getElementById('logoutBtn');
-    
-    // New category elements
-    const addCategoryForm = document.getElementById('addCategoryForm');
-    const categoryNameInput = document.getElementById('categoryName');
-    const addCategoryMessage = document.getElementById('addCategoryMessage');
-    const categoriesListDiv = document.getElementById('categoriesList');
-    const categoryListMessage = document.getElementById('categoryListMessage');
-    const menuCategoryFilterButtons = document.getElementById('menu-category-filter-buttons');
 
-    // Store Branding elements
-    const storeLogoForm = document.getElementById('storeLogoForm');
-    const storeLogoInput = document.getElementById('storeLogo');
-    const currentStoreLogoPreview = document.getElementById('currentStoreLogoPreview');
-    const storeLogoMessage = document.getElementById('storeLogoMessage');
+    // --- Order Details Modal Elements ---
+    const orderDetailsModal = document.getElementById('orderDetailsModal');
+    const closeOrderDetailsModalBtn = document.getElementById('closeOrderDetailsModal');
+    const modalTableIdSpan = document.getElementById('modalTableId');
+    const modalOrderListDiv = document.getElementById('modalOrderList');
+    const modalOrdersMessage = document.getElementById('modalOrdersMessage');
+    const clearTableHistoryBtn = document.getElementById('clearTableHistoryBtn');
+    const modalTotalPrice = document.getElementById('modalTotalPrice');
 
-    let currentPollingInterval;
-    let categories = [];
-    let editingCategoryId = null;
+    // Receipt buttons
+    const printReceiptBtn = document.getElementById('printReceiptBtn');
+    const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
+
+    // Elements for sound and message notification
+    const notificationSound = document.getElementById('notificationSound');
+    const newOrderAlert = document.getElementById('newOrderAlert');
+
+    let previousOrders = {};
     let allMenuItems = [];
+    let currentStoreDetails = {}; // To store current store info for receipts
+    let currentOrdersForModal = []; // To store the full orders object for receipt generation
 
-    // --- Event Listeners ---
-    logoutBtn.addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = 'login.html';
-    });
-    
-    addCategoryForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = categoryNameInput.value.trim();
-        if (!name) {
-            addCategoryMessage.textContent = 'Category name is required.';
-            addCategoryMessage.className = 'error-message';
-            return;
-        }
-        try {
-            if (editingCategoryId) {
-                const data = await api.categories.updateCategory(editingCategoryId, { name });
-                addCategoryMessage.textContent = data.message || 'Category updated successfully!';
-            } else {
-                const data = await api.categories.addCategory(name);
-                addCategoryMessage.textContent = data.message || 'Category added successfully!';
-            }
-            addCategoryMessage.className = 'success-message';
-            categoryNameInput.value = '';
-            editingCategoryId = null;
-            addCategoryForm.querySelector('button').textContent = 'Add Category';
-            await loadCategories();
-        } catch (error) {
-            console.error('Error saving category:', error);
-            addCategoryMessage.textContent = 'Error saving category: ' + (error.message || 'Server error');
-            addCategoryMessage.className = 'error-message';
-        }
-    });
 
-    menuItemForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = menuItemIdInput.value;
-        const name = itemNameInput.value.trim();
-        const description = itemDescriptionInput.value.trim();
-        const price = parseFloat(itemPriceInput.value);
-        const imageFile = itemImageInput.files[0];
-        const categoryId = itemCategorySelect.value;
+    // Workaround for browser autoplay policy: activate audio on first user interaction
+    let audioActivated = false;
+    function activateAudio() {
+        if (audioActivated) return;
+        // Attempt to play a silent sound to unlock audio context
+        notificationSound.volume = 0;
+        notificationSound.play().then(() => {
+            notificationSound.pause(); // Pause immediately
+            notificationSound.currentTime = 0; // Reset time
+            notificationSound.volume = 1; // Restore volume for future plays
+            audioActivated = true;
+            console.log("Audio playback enabled by user interaction.");
+        }).catch(error => {
+            console.error("Failed to activate audio (user not interacted enough):", error);
+        });
+        // Remove listeners after the first interaction
+        document.removeEventListener('click', activateAudio);
+        document.removeEventListener('touchstart', activateAudio);
+    }
+    // Listen for the first user interaction (click or touch) on the document
+    document.addEventListener('click', activateAudio);
+    document.addEventListener('touchstart', activateAudio);
 
-        if (!name || isNaN(price) || !categoryId) {
-            menuItemMessage.textContent = 'Name, Price, and Category are required.';
-            menuItemMessage.className = 'error-message';
-            return;
-        }
 
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('description', description);
-        formData.append('price', price);
-        formData.append('categoryId', categoryId);
-        if (imageFile) {
-            formData.append('image', imageFile);
-        }
+    // --- Conditional UI for Superadmin vs Admin ---
+    // Hide superadmin-specific sections if the user is an admin
+    if (role === 'superadmin') {
+        // Superadmin sections are visible by default
+    } else if (role === 'admin') {
+        // Hide elements specific to superadmin if the current user is an admin
+        if (createStoreForm) createStoreForm.closest('section').style.display = 'none';
+        if (createAdminForm) createAdminForm.closest('section').style.display = 'none';
+        const adminsTable = document.getElementById('adminsTable');
+        if (adminsTable) adminsTable.style.display = 'none';
+        if (adminListMessage) adminListMessage.style.display = 'none';
+    }
 
-        try {
-            if (id) {
-                const data = await api.menu.updateMenuItem(id, formData);
-                menuItemMessage.textContent = data.message || 'Menu item updated successfully!';
-            } else {
-                const data = await api.menu.addMenuItem(formData);
-                menuItemMessage.textContent = data.message || 'Menu item added successfully!';
-            }
-            menuItemMessage.className = 'success-message';
-            menuItemForm.reset();
-            menuItemIdInput.value = '';
-            currentImagePreview.innerHTML = '';
-            menuItemSubmitBtn.textContent = 'Add Menu Item';
-            loadMenuItems();
-        } catch (error) {
-            console.error('Error saving menu item:', error);
-            menuItemMessage.textContent = 'Error saving menu item: ' + (error.message || 'Server error');
-            menuItemMessage.className = 'error-message';
-        }
-    });
 
-    addTableForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const tableId = newTableIdInput.value.trim();
-        if (!tableId) {
-            addTableMessage.textContent = 'Table ID is required.';
-            addTableMessage.className = 'error-message';
-            return;
-        }
-        try {
-            const data = await api.tables.addTable(tableId);
-            addTableMessage.textContent = data.message || 'Table added successfully!';
-            addTableMessage.className = 'success-message';
-            newTableIdInput.value = '';
-            loadTables();
-        } catch (error) {
-            console.error('Error adding table:', error);
-            addTableMessage.textContent = 'Error adding table: ' + (error.message || 'Server error');
-            addTableMessage.className = 'error-message';
-        }
-    });
+    // --- Tab Navigation Logic ---
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-    storeLogoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const logoFile = storeLogoInput.files[0];
-        if (!logoFile) {
-            storeLogoMessage.textContent = 'Please select a logo file.';
-            storeLogoMessage.className = 'error-message';
-            return;
-        }
-        const formData = new FormData();
-        formData.append('logo', logoFile);
-        
-        try {
-            const data = await api.stores.updateStore(storeId, formData);
-            storeLogoMessage.textContent = data.message || 'Logo updated successfully!';
-            storeLogoMessage.className = 'success-message';
-            if (data.store.logoUrl) {
-                currentStoreLogoPreview.innerHTML = `<p>Current Logo:</p><img src="${data.store.logoUrl}" alt="Current Logo" style="max-width: 150px; display: block; border-radius: 8px; margin-top: 10px;">`;
-            }
-        } catch (error) {
-            console.error('Error uploading logo:', error);
-            storeLogoMessage.textContent = 'Failed to upload logo: ' + (error.message || 'Server error');
-            storeLogoMessage.className = 'error-message';
-        }
-    });
-
-    // --- Category Management Functions ---
-    async function loadCategories() {
-        try {
-            categories = await api.categories.getCategories();
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.dataset.tab;
             
-            // Populate the dropdown
-            itemCategorySelect.innerHTML = '';
+            // Remove 'active' class from all buttons and content
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add 'active' class to the clicked button and its corresponding content
+            button.classList.add('active');
+            const targetContent = document.getElementById(`tab-${tabId}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+
+    // Helper function for loading state for buttons
+    function setLoading(button, isLoading) {
+        if (isLoading) {
+            button.innerHTML = '<i class="fas fa-spinner fa-spin loading-spinner"></i>';
+            button.disabled = true;
+            button.style.cursor = 'wait';
+        } else {
+            // Restore button text/content. This relies on the calling function to restore
+            // the original text, as it's specific to each button.
+            button.disabled = false;
+            button.style.cursor = 'pointer';
+        }
+    }
+
+
+    // --- Core Functions ---
+
+    // Function to load current store details (for receipts and branding form)
+    async function loadStoreDetails() {
+        if (!storeId) return;
+        try {
+            currentStoreDetails = await api.stores.getStoreById(storeId);
+            console.log('Fetched store details:', currentStoreDetails);
+
+            // Populate the store branding form with fetched data
+            if (storeNameInputBranding) storeNameInputBranding.value = currentStoreDetails.name || '';
+            if (storeAddressInput) storeAddressInput.value = currentStoreDetails.address || '';
+            if (storePhoneInput) storePhoneInput.value = currentStoreDetails.phone || '';
+            
+            // Handle logo preview
+            if (currentStoreDetails.logoUrl) {
+                logoPreviewImg.src = currentStoreDetails.logoUrl;
+                logoPreviewImg.classList.remove('hidden');
+                logoPreviewContainer.style.border = 'none';
+            } else {
+                logoPreviewImg.src = ''; // Clear image source if none
+                logoPreviewImg.classList.add('hidden');
+                logoPreviewContainer.style.border = '2px dashed #bdc3c7'; // Show dashed border
+            }
+        } catch (error) {
+            console.error('Error fetching store details:', error);
+            if (storeLogoMessage) {
+                storeLogoMessage.textContent = 'Failed to load store info preview.';
+                storeLogoMessage.className = 'error-message';
+            }
+        }
+    }
+
+    // Load categories for the current store
+    async function loadCategories() {
+        if (!storeId) {
+            console.error('Store ID not found. Cannot load categories.');
+            return;
+        }
+        try {
+            const categories = await api.categories.getCategories(storeId);
+            const categoriesListDiv = document.getElementById('categoriesList');
+            if(categoriesListDiv) categoriesListDiv.innerHTML = '';
+
             if (categories.length === 0) {
-                itemCategorySelect.innerHTML = '<option value="">No categories available</option>';
-                categoriesListDiv.innerHTML = '<p class="empty-state">No categories added yet.</p>';
+                if(categoriesListDiv) categoriesListDiv.innerHTML = '<p class="empty-state">No categories added yet.</p>';
                 return;
             }
-            itemCategorySelect.innerHTML = '<option value="" disabled selected>Select a category</option>';
+
+            categories.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.classList.add('table-card'); // Reusing table-card style for categories
+                categoryCard.innerHTML = `
+                    <p class="table-id-label">${category.name}</p>
+                    <div class="table-card-actions">
+                        <button class="edit-category-btn secondary-btn" data-id="${category._id}" data-name="${category.name}">Edit</button>
+                        <button class="delete-category-btn secondary-btn" data-id="${category._id}">Delete</button>
+                    </div>
+                `;
+                if(categoriesListDiv) categoriesListDiv.appendChild(categoryCard);
+            });
+
+            // Add event listeners for edit and delete category buttons
+            if(categoriesListDiv) {
+                categoriesListDiv.querySelectorAll('.edit-category-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.dataset.id;
+                        const name = e.target.dataset.name;
+                        // Populate form and change button text for editing
+                        document.getElementById('categoryName').value = name;
+                        document.getElementById('addCategoryForm').dataset.editingId = id;
+                        document.querySelector('#addCategoryForm button[type="submit"]').textContent = 'Update Category';
+                    });
+                });
+                categoriesListDiv.querySelectorAll('.delete-category-btn').forEach(button => {
+                    button.addEventListener('click', (e) => deleteCategory(e.target.dataset.id));
+                });
+            }
+
+            // Populate category select for menu item form
+            itemCategorySelect.innerHTML = '';
             categories.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat._id;
                 option.textContent = cat.name;
                 itemCategorySelect.appendChild(option);
             });
-
-            // Populate the list for deletion and editing
-            categoriesListDiv.innerHTML = '';
-            categories.forEach(cat => {
-                const catCard = document.createElement('div');
-                catCard.classList.add('table-card', 'category-card');
-                catCard.innerHTML = `
-                    <div class="table-card-header">
-                        <h4 class="table-id-label">${cat.name}</h4>
-                    </div>
-                    <div class="table-card-actions">
-                        <button class="edit-category-btn primary-btn" data-id="${cat._id}">Edit</button>
-                        <button class="delete-category-btn secondary-btn" data-id="${cat._id}">Delete</button>
-                    </div>
-                `;
-                categoriesListDiv.appendChild(catCard);
-            });
-            
-            document.querySelectorAll('.edit-category-btn').forEach(button => {
-                button.addEventListener('click', (e) => editCategory(e.target.dataset.id));
-            });
-            document.querySelectorAll('.delete-category-btn').forEach(button => {
-                button.addEventListener('click', (e) => deleteCategory(e.target.dataset.id));
-            });
-
-            categoryListMessage.textContent = '';
+            // Update filter buttons for menu
+            if(menuCategoryFilterButtons){
+                menuCategoryFilterButtons.innerHTML = '';
+                const allBtn = document.createElement('button');
+                allBtn.textContent = 'All';
+                allBtn.classList.add('category-btn', 'active');
+                allBtn.dataset.categoryId = 'all';
+                allBtn.addEventListener('click', () => {
+                    filterMenu('all');
+                    menuSearchInput.value = ''; // Clear search when filtering by category
+                });
+                menuCategoryFilterButtons.appendChild(allBtn);
+                categories.forEach(cat => {
+                    const btn = document.createElement('button');
+                    btn.textContent = cat.name;
+                    btn.classList.add('category-btn');
+                    btn.dataset.categoryId = cat._id;
+                    btn.addEventListener('click', () => {
+                        filterMenu(cat._id);
+                        menuSearchInput.value = ''; // Clear search when filtering by category
+                    });
+                    menuCategoryFilterButtons.appendChild(btn);
+                });
+            }
         } catch (error) {
             console.error('Error loading categories:', error);
-            categoryListMessage.textContent = 'Failed to load categories: ' + (error.message || 'Server error');
-            categoryListMessage.className = 'error-message';
         }
     }
-
-    async function editCategory(id) {
-        const categoryToEdit = categories.find(cat => cat._id === id);
-        if (categoryToEdit) {
-            categoryNameInput.value = categoryToEdit.name;
-            editingCategoryId = categoryToEdit._id;
-            addCategoryForm.querySelector('button').textContent = 'Update Category';
-        }
-    }
-
-    async function deleteCategory(id) {
-        if (!confirm('Are you sure you want to delete this category? This will affect all linked menu items.')) {
-            return;
-        }
-        try {
-            await api.categories.deleteCategory(id);
-            alert('Category deleted successfully');
-            loadCategories();
-        } catch (error) {
-            console.error('Error deleting category:', error);
-            alert('Failed to delete category: ' + (error.message || 'Server error'));
-        }
-    }
-
-    // --- Menu Management Functions ---
+    
+    // Load menu items for the current store
     async function loadMenuItems() {
+        if (!storeId) return;
         try {
-            allMenuItems = await window.api.menu.getMenu();
-            displayCategoryFilters(categories);
+            const menuItems = await api.menu.getMenu(storeId);
+            allMenuItems = menuItems; // Store all menu items for filtering/searching
             displayMenuItems(allMenuItems);
             menuListMessage.textContent = '';
         } catch (error) {
             console.error('Error loading menu items:', error);
-            menuListMessage.textContent = 'Failed to load menu items: ' + (error.message || 'Server error');
+            menuListMessage.textContent = 'Failed to load menu items.';
             menuListMessage.className = 'error-message';
         }
     }
     
-    function displayCategoryFilters(categories) {
-        menuCategoryFilterButtons.innerHTML = '';
-        const allBtn = createFilterButton('All', 'all', true);
-        allBtn.classList.add('active');
-        allBtn.addEventListener('click', () => filterMenu('all'));
-        menuCategoryFilterButtons.appendChild(allBtn);
-
-        categories.forEach(cat => {
-            const btn = createFilterButton(cat.name, cat._id);
-            btn.addEventListener('click', () => filterMenu(cat._id));
-            menuCategoryFilterButtons.appendChild(btn);
-        });
-    }
-
-    function createFilterButton(name, id, isAll = false) {
-        const btn = document.createElement('button');
-        btn.textContent = name;
-        btn.classList.add('category-btn');
-        btn.dataset.categoryId = id;
-        return btn;
-    }
-
-    function filterMenu(categoryId) {
-        const buttons = document.querySelectorAll('#menu-category-filter-buttons .category-btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`[data-category-id="${categoryId}"]`).classList.add('active');
-
-        const filteredItems = categoryId === 'all'
-            ? allMenuItems
-            : allMenuItems.filter(item => item.categoryId && item.categoryId._id === categoryId);
-
-        displayMenuItems(filteredItems);
-    }
-    
+    // Display menu items in the grid
     function displayMenuItems(items) {
         menuItemsList.innerHTML = '';
         if (items.length === 0) {
-            menuItemsList.innerHTML = '<p class="empty-state">No menu items added yet.</p>';
+            menuItemsList.innerHTML = '<p class="empty-state">No menu items found.</p>';
             return;
         }
+
         items.forEach(item => {
             const itemCard = document.createElement('div');
             itemCard.classList.add('menu-card');
+            // Conditionally add the out of stock overlay class
+            if (!item.isAvailable) {
+                itemCard.classList.add('out-of-stock-card');
+            }
             itemCard.innerHTML = `
+                ${item.isBestSeller ? '<div class="best-seller-tag">Best Seller</div>' : ''}
+                ${!item.isAvailable ? '<div class="out-of-stock-overlay"><div class="out-of-stock-tag">Out of Stock</div></div>' : ''}
                 ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" class="menu-card-image">` : ''}
                 <div class="menu-card-content">
                     <h3>${item.name}</h3>
                     <p>${item.description || ''}</p>
                     <p class="price">Price: $${item.price.toFixed(2)}</p>
-                    <div class="menu-card-actions">
-                        <button class="edit-btn secondary-btn" data-id="${item._id}">Edit</button>
-                        <button class="delete-btn secondary-btn" data-id="${item._id}">Delete</button>
-                    </div>
+                </div>
+                <div class="menu-card-actions">
+                    <button class="edit-btn secondary-btn" data-id="${item._id}">Edit</button>
+                    <button class="delete-btn delete-btn" data-id="${item._id}">Delete</button>
                 </div>
             `;
             menuItemsList.appendChild(itemCard);
         });
-
-        document.querySelectorAll('.edit-btn').forEach(button => {
+        
+        // Add event listeners for dynamically created buttons
+        menuItemsList.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', (e) => editMenuItem(e.target.dataset.id));
         });
-        document.querySelectorAll('.delete-btn').forEach(button => {
+        menuItemsList.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', (e) => deleteMenuItem(e.target.dataset.id));
         });
-        menuListMessage.textContent = '';
     }
-    
+
+    // Filter menu items by category
+    function filterMenu(categoryId) {
+        const buttons = document.querySelectorAll('#menu-category-filter-buttons .category-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.querySelector(`[data-category-id="${categoryId}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        if (categoryId === 'all') {
+            displayMenuItems(allMenuItems);
+            return;
+        }
+
+        const filteredItems = allMenuItems.filter(item => item.categoryId && item.categoryId._id === categoryId);
+        displayMenuItems(filteredItems);
+    }
+
+    // Menu item search logic
+    if (menuSearchInput) {
+        menuSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredItems = allMenuItems.filter(item =>
+                item.name.toLowerCase().includes(searchTerm) ||
+                (item.description && item.description.toLowerCase().includes(searchTerm))
+            );
+            displayMenuItems(filteredItems);
+            // Deactivate all category filter buttons when searching
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        });
+    }
+
+    // Handle menu item form submission (add/update)
+    async function handleMenuItemSubmit(e) {
+        e.preventDefault();
+        const itemId = menuItemIdInput.value;
+        const isEditing = !!itemId;
+        const formData = new FormData();
+        formData.append('name', itemNameInput.value.trim());
+        formData.append('description', itemDescriptionInput.value.trim());
+        formData.append('price', parseFloat(itemPriceInput.value));
+        formData.append('categoryId', itemCategorySelect.value);
+        // Append the best seller and availability checkbox values
+        formData.append('isBestSeller', isBestSellerCheckbox.checked);
+        formData.append('isAvailable', isAvailableCheckbox.checked);
+
+        if (itemImageInput.files[0]) {
+            formData.append('image', itemImageInput.files[0]);
+        }
+
+        const originalBtnText = menuItemSubmitBtn.textContent;
+        setLoading(menuItemSubmitBtn, true);
+
+        try {
+            let response;
+            if (isEditing) {
+                response = await api.menu.updateMenuItem(itemId, formData);
+                menuItemMessage.textContent = 'Menu item updated successfully!';
+            } else {
+                response = await api.menu.addMenuItem(formData);
+                menuItemMessage.textContent = 'Menu item added successfully!';
+            }
+            menuItemMessage.className = 'success-message';
+            menuItemForm.reset(); // Clear form fields
+            menuItemIdInput.value = ''; // Clear hidden ID
+            currentImagePreview.innerHTML = ''; // Clear image preview
+            menuItemSubmitBtn.textContent = 'Add Menu Item'; // Reset button text
+            await loadMenuItems(); // Reload menu items
+        } catch (error) {
+            console.error('Error saving menu item:', error);
+            menuItemMessage.textContent = 'Failed to save menu item: ' + (error.message || 'Server error');
+            menuItemMessage.className = 'error-message';
+        } finally {
+            setLoading(menuItemSubmitBtn, false);
+            menuItemSubmitBtn.textContent = originalBtnText; // Ensure text is restored
+        }
+    }
+    menuItemForm.addEventListener('submit', handleMenuItemSubmit);
+
+    // Populate form for editing a menu item
     async function editMenuItem(id) {
         try {
-            const menuItems = await window.api.menu.getMenu();
-            const itemToEdit = menuItems.find(item => item._id === id);
-            
-            if (itemToEdit) {
-                menuItemIdInput.value = itemToEdit._id;
-                itemNameInput.value = itemToEdit.name;
-                itemDescriptionInput.value = itemToEdit.description || '';
-                itemPriceInput.value = itemToEdit.price;
-                itemCategorySelect.value = itemToEdit.categoryId._id;
-                menuItemSubmitBtn.textContent = 'Update Menu Item';
-                if (itemToEdit.imageUrl) {
-                    currentImagePreview.innerHTML = `<p>Current Image:</p><img src="${itemToEdit.imageUrl}" alt="Current Image" style="max-width: 150px; display: block; border-radius: 8px; margin-top: 10px;">`;
-                } else {
-                    currentImagePreview.innerHTML = '';
-                }
-                menuItemMessage.textContent = '';
+            const item = allMenuItems.find(i => i._id === id);
+            if (!item) {
+                console.error('Item not found for editing.');
+                return;
             }
+            menuItemIdInput.value = item._id;
+            itemNameInput.value = item.name;
+            itemDescriptionInput.value = item.description;
+            itemPriceInput.value = item.price;
+            itemCategorySelect.value = item.categoryId._id;
+            // Populate the best seller and availability checkboxes
+            isBestSellerCheckbox.checked = item.isBestSeller;
+            isAvailableCheckbox.checked = item.isAvailable;
+
+            currentImagePreview.innerHTML = '';
+            if (item.imageUrl) {
+                const img = document.createElement('img');
+                img.src = item.imageUrl;
+                img.alt = item.name;
+                img.classList.add('menu-item-preview-img');
+                currentImagePreview.appendChild(img);
+            }
+            menuItemSubmitBtn.textContent = 'Update Menu Item';
+            menuItemMessage.textContent = 'Editing: ' + item.name;
+            menuItemMessage.className = 'message';
+            menuItemForm.scrollIntoView({ behavior: 'smooth' }); // Scroll to form
         } catch (error) {
             console.error('Error fetching menu item for edit:', error);
-            menuItemMessage.textContent = 'Failed to load item for edit: ' + (error.message || 'Server error');
-            menuItemMessage.className = 'error-message';
         }
     }
 
+    // Delete a menu item
     async function deleteMenuItem(id) {
         if (!confirm('Are you sure you want to delete this menu item?')) {
             return;
@@ -370,102 +462,383 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             await api.menu.deleteMenuItem(id);
             alert('Menu item deleted successfully');
-            loadMenuItems();
+            await loadMenuItems(); // Reload menu items
         } catch (error) {
             console.error('Error deleting menu item:', error);
             alert('Failed to delete menu item: ' + (error.message || 'Server error'));
         }
     }
-    
-    // --- Table Management & QR Codes Functions ---
-    async function loadTables() {
+
+    // Handle category form submission (add/update)
+    const addCategoryForm = document.getElementById('addCategoryForm');
+    addCategoryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const categoryName = document.getElementById('categoryName').value.trim();
+        const editingId = addCategoryForm.dataset.editingId; // Check if editing
+
+        if (!categoryName) return;
+
+        const submitBtn = document.querySelector('#addCategoryForm button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        setLoading(submitBtn, true);
+
         try {
-            const tables = await window.api.tables.getTables();
-            tablesList.innerHTML = '';
-            if (tables.length === 0) {
-                tablesList.innerHTML = '<p class="empty-state">No tables added yet.</p>';
-                return;
+            let response;
+            if (editingId) {
+                // Update existing category
+                response = await api.categories.updateCategory(editingId, { name: categoryName });
+                document.getElementById('addCategoryMessage').textContent = 'Category updated successfully!';
+            } else {
+                // Add new category
+                response = await api.categories.addCategory({ name: categoryName });
+                document.getElementById('addCategoryMessage').textContent = 'Category created successfully!';
             }
-            tables.forEach(table => {
-                const tableCard = document.createElement('div');
-                tableCard.classList.add('table-card');
-                tableCard.innerHTML = `
-                    <div class="table-card-header">
-                        <h4 class="table-id-label">Table: ${table.tableId}</h4>
-                    </div>
-                    <div class="qr-code-container" id="qrCode-${table._id}"></div>
-                    <div class="table-card-actions">
-                        <button class="order-link-btn primary-btn" data-url="/order.html?storeId=${storeId}&table=${table.tableId}">Order Page</button>
-                        <button class="delete-table-btn secondary-btn" data-id="${table._id}">Delete Table</button>
-                    </div>
-                `;
-                tablesList.appendChild(tableCard);
-
-                const orderPageUrl = `${window.location.protocol}//${window.location.host}/order.html?storeId=${storeId}&table=${table.tableId}`;
-                generateQrCode(orderPageUrl, `qrCode-${table._id}`);
-            });
-            
-            document.querySelectorAll('.delete-table-btn').forEach(button => {
-                button.addEventListener('click', (e) => deleteTable(e.target.dataset.id));
-            });
-            
-            document.querySelectorAll('.order-link-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const url = e.target.dataset.url;
-                    window.open(url, '_blank');
-                });
-            });
-
-            tablesListMessage.textContent = '';
+            document.getElementById('addCategoryMessage').className = 'success-message';
+            document.getElementById('categoryName').value = ''; // Clear input
+            delete addCategoryForm.dataset.editingId; // Clear editing ID
+            submitBtn.textContent = 'Add Category'; // Reset button text
+            await loadCategories(); // Reload categories
+            await loadMenuItems(); // Reload menu items (as categories might affect them)
         } catch (error) {
-            console.error('Error loading tables:', error);
-            tablesListMessage.textContent = 'Failed to load tables: ' + (error.message || 'Server error');
-            tablesListMessage.className = 'error-message';
+            console.error('Error saving category:', error);
+            document.getElementById('addCategoryMessage').textContent = 'Failed to save category: ' + (error.message || 'Server error');
+            document.getElementById('addCategoryMessage').className = 'error-message';
+        } finally {
+            setLoading(submitBtn, false);
+            submitBtn.textContent = originalBtnText; // Restore text
         }
-    }
+    });
 
-    async function deleteTable(id) {
-        if (!confirm('Are you sure you want to delete this table? This will invalidate its QR code.')) {
+    // Delete a category
+    async function deleteCategory(id) {
+        if (!confirm('Are you sure you want to delete this category?')) {
             return;
         }
         try {
-            await api.tables.deleteTable(id);
-            alert('Table deleted successfully');
-            loadTables();
+            await api.categories.deleteCategory(id);
+            alert('Category deleted successfully');
+            await loadCategories(); // Reload categories
+            await loadMenuItems(); // Reload menu items (as category might be removed)
         } catch (error) {
-            console.error('Error deleting table:', error);
-            alert('Failed to delete table: ' + (error.message || 'Server error'));
+            console.error('Error deleting category:', error);
+            alert('Failed to delete category: ' + (error.message || 'Server error'));
         }
     }
 
-    // --- Live Orders Dashboard (Polling) ---
-    async function loadOrders() {
+    // Load Stores for Admin Creation (Superadmin only)
+    async function loadStores() {
+        if (role !== 'superadmin') return;
         try {
-            const orders = await api.orders.getStoreOrders();
-            ordersDashboard.innerHTML = '';
+            const stores = await api.stores.getStores();
+            adminStoreSelect.innerHTML = '';
+            stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = store._id;
+                option.textContent = store.name;
+                adminStoreSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading stores:', error);
+            createAdminMessage.textContent = 'Failed to load stores: ' + (error.message || 'Server error');
+            createAdminMessage.className = 'error-message';
+        }
+    }
 
-            if (orders.length === 0) {
-                ordersDashboard.innerHTML = '<p class="empty-state">No new orders.</p>';
+    // Load Admins (Superadmin only)
+    async function loadAdmins() {
+        if (role !== 'superadmin') return;
+        try {
+            const admins = await api.users.getAdmins();
+            adminsTableBody.innerHTML = '';
+            if (admins.length === 0) {
+                adminsTableBody.innerHTML = '<tr><td colspan="3">No admins found.</td></tr>';
+                return;
+            }
+            admins.forEach(admin => {
+                const row = adminsTableBody.insertRow();
+                row.insertCell(0).textContent = admin.email;
+                row.insertCell(1).textContent = admin.storeId ? admin.storeId.name : 'N/A';
+                const actionsCell = row.insertCell(2);
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-btn');
+                deleteButton.addEventListener('click', () => deleteAdmin(admin._id));
+                actionsCell.appendChild(deleteButton);
+            });
+            adminListMessage.textContent = '';
+        } catch (error) {
+            console.error('Error loading admins:', error);
+            adminListMessage.textContent = 'Failed to load admins: ' + (error.message || 'Server error');
+            adminListMessage.className = 'error-message';
+        }
+    }
+    
+    // Load store logo for the branding section
+    async function loadStoreLogo() {
+        if (!storeId) {
+            console.warn('Store ID not found in local storage for logo. Skipping logo load for admin page.');
+            if (logoPreviewContainer) {
+                logoPreviewContainer.style.border = '2px dashed #bdc3c7';
+            }
+            if (logoPreviewImg) {
+                 logoPreviewImg.classList.add('hidden');
+            }
+            return;
+        }
+        try {
+            const store = await api.stores.getStoreById(storeId);
+            if (store && store.logoUrl) {
+                logoPreviewImg.src = store.logoUrl;
+                logoPreviewImg.classList.remove('hidden');
+                logoPreviewContainer.style.border = 'none';
+            } else {
+                logoPreviewImg.src = '';
+                logoPreviewImg.classList.add('hidden');
+                logoPreviewContainer.style.border = '2px dashed #bdc3c7';
+            }
+        } catch (error) {
+            console.error('Error fetching store logo:', error);
+            if (storeLogoMessage) {
+                storeLogoMessage.textContent = 'Failed to load store logo preview.';
+                storeLogoMessage.className = 'error-message';
+            }
+            if (logoPreviewContainer) logoPreviewContainer.style.border = '2px dashed #bdc3c7';
+            if (logoPreviewImg) logoPreviewImg.classList.add('hidden');
+        }
+    }
+
+    // Load tables for the current store
+    async function loadTables() {
+        if (!storeId) {
+            if(tablesListMessage) {
+                tablesListMessage.textContent = 'Store ID not found. Cannot load tables.';
+                tablesListMessage.className = 'error-message';
+            }
+            return;
+        }
+        try {
+            const tables = await api.tables.getTables(storeId);
+            const tablesListDiv = document.getElementById('tablesList');
+            if(tablesListDiv) tablesListDiv.innerHTML = '';
+            if (tables.length === 0) {
+                if(tablesListDiv) tablesListDiv.innerHTML = '<p class="empty-state">No tables added yet.</p>';
                 return;
             }
 
-            orders.forEach(order => {
-                const orderDiv = document.createElement('div');
-                orderDiv.classList.add('order-card');
-                
-                const orderItemsHtml = order.items.map(item => `
-                    <li>${item.quantity} x ${item.menuItemId.name} ($${item.menuItemId.price.toFixed(2)} each)</li>
-                `).join('');
+            tables.forEach(table => {
+                const tableCard = document.createElement('div');
+                tableCard.classList.add('table-card'); 
+                const qrCodeId = `qr-${table._id}`;
+                tableCard.innerHTML = `
+                    <p class="table-id-label">Table: ${table.tableId}</p>
+                    <div id="${qrCodeId}" class="qr-code-container"></div>
+                    <div class="table-card-actions">
+                        <button class="order-link-btn primary-btn" data-table-id="${table.tableId}">View Order Link</button>
+                        <button class="delete-table-btn secondary-btn" data-id="${table._id}">Delete Table</button>
+                        <button class="clear-table-btn secondary-btn" data-table-id="${table.tableId}">Clear Table Orders</button>
+                    </div>
+                `;
+                if(tablesListDiv) tablesListDiv.appendChild(tableCard);
+                const orderPageUrl = `${window.location.origin}/order.html?storeId=${storeId}&table=${table.tableId}`;
+                generateQrCode(orderPageUrl, qrCodeId); // Assuming generateQrCode is available globally from utils.js
+            });
 
-                orderDiv.innerHTML = `
-                    <h3>Order for Table: ${order.tableId}</h3>
-                    <p>Status: <span class="order-status-label">${order.status}</span></p>
-                    <p>Order Time: ${new Date(order.createdAt).toLocaleString()}</p>
-                    <h4>Items:</h4>
-                    <ul>
-                        ${orderItemsHtml}
-                    </ul>
-                    <select class="order-status-select" data-id="${order._id}">
+            // Add event listeners for table action buttons
+            tablesListDiv.querySelectorAll('.order-link-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const tableId = e.target.dataset.tableId;
+                    const orderPageUrl = `${window.location.origin}/order.html?storeId=${storeId}&table=${tableId}`;
+                    window.open(orderPageUrl, '_blank'); // Open in new tab
+                });
+            });
+
+            tablesListDiv.querySelectorAll('.delete-table-btn').forEach(button => {
+                button.addEventListener('click', (e) => deleteTable(e.target.dataset.id));
+            });
+
+            tablesListDiv.querySelectorAll('.clear-table-btn').forEach(button => {
+                button.addEventListener('click', (e) => clearTableOrders(e.target.dataset.tableId));
+            });
+
+            if (tablesListMessage) tablesListMessage.textContent = '';
+        } catch (error) {
+            console.error('Error loading tables:', error);
+            if (tablesListMessage) {
+                tablesListMessage.textContent = 'Failed to load tables: ' + (error.message || 'Server error');
+                tablesListMessage.className = 'error-message';
+            }
+        }
+    }
+
+    // Fetch and display live orders
+    async function fetchAndDisplayOrders() {
+        if (!storeId) {
+            if(ordersMessage) {
+                ordersMessage.textContent = 'Store ID not found. Cannot load orders.';
+                ordersMessage.className = 'error-message';
+            }
+            return;
+        }
+
+        try {
+            const currentOrders = await api.orders.getStoreOrders();
+            
+            // Group orders by table ID
+            const ordersByTable = currentOrders.reduce((acc, order) => {
+                if (!acc[order.tableId]) {
+                    acc[order.tableId] = [];
+                }
+                acc[order.tableId].push(order);
+                return acc;
+            }, {});
+
+            const previousOrderCount = Object.values(previousOrders).flat().length;
+            const currentOrderCount = Object.values(ordersByTable).flat().length;
+            
+            // Play sound and show alert for new orders
+            if (currentOrderCount > previousOrderCount) {
+                if (notificationSound) {
+                    notificationSound.play().catch(error => {
+                        console.error("Audio playback failed:", error);
+                    });
+                }
+                if (newOrderAlert) {
+                    newOrderAlert.classList.add('show');
+                    setTimeout(() => {
+                        newOrderAlert.classList.remove('show');
+                    }, 3000); // Hide after 3 seconds
+                }
+            }
+            
+            // Update dashboard overview counts
+            const pendingOrders = currentOrders.filter(o => o.status === 'Pending').length;
+            const readyOrders = currentOrders.filter(o => o.status === 'Ready').length;
+            if (totalLiveOrdersEl) totalLiveOrdersEl.textContent = currentOrders.length;
+            if (pendingOrdersCountEl) pendingOrdersCountEl.textContent = pendingOrders;
+            if (readyOrdersCountEl) readyOrdersCountEl.textContent = readyOrders;
+
+            if (ordersDashboard) ordersDashboard.innerHTML = ''; // Clear previous display
+
+            if (Object.keys(ordersByTable).length === 0) {
+                if (ordersDashboard) ordersDashboard.innerHTML = '<p class="empty-state">No live orders at the moment.</p>';
+                return;
+            }
+
+            const newOrderTables = new Set();
+            for (const tableId in ordersByTable) {
+                const tableOrders = ordersByTable[tableId];
+                const prevTableOrders = previousOrders[tableId] || [];
+
+                // Check for new orders or status changes for highlighting
+                if (tableOrders.length > prevTableOrders.length) {
+                    newOrderTables.add(tableId);
+                } else {
+                    for (const order of tableOrders) {
+                        const prevOrder = prevTableOrders.find(po => po._id === order._id);
+                        if (!prevOrder || prevOrder.status !== order.status) {
+                            newOrderTables.add(tableId);
+                            break;
+                        }
+                    }
+                }
+
+                const tableOrderCard = document.createElement('div');
+                tableOrderCard.classList.add('order-table-card');
+                if (newOrderTables.has(tableId)) {
+                    tableOrderCard.classList.add('new-order-highlight');
+                    setTimeout(() => {
+                        tableOrderCard.classList.remove('new-order-highlight');
+                    }, 3000); // Remove highlight after 3 seconds
+                }
+                
+                const pendingItemsCount = tableOrders.filter(order => order.status === 'Pending').length;
+                const latestStatus = tableOrders[0] ? tableOrders[0].status : 'N/A'; // Assuming latest order is first
+
+                tableOrderCard.innerHTML = `
+                    <div class="table-info-header">
+                        <h3>Table: ${tableId}</h3>
+                        <span class="status-badge ${latestStatus.toLowerCase()}">${latestStatus}</span>
+                    </div>
+                    <p>Total Orders: ${tableOrders.length}</p>
+                    <p>Pending Items: ${pendingItemsCount}</p>
+                    <button class="view-table-orders-btn primary-btn" data-table-id="${tableId}">View Details</button>
+                `;
+                if(ordersDashboard) ordersDashboard.appendChild(tableOrderCard);
+            }
+            previousOrders = ordersByTable; // Update previous orders for next poll
+
+            if(ordersDashboard) {
+                ordersDashboard.querySelectorAll('.view-table-orders-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const tableId = e.target.dataset.tableId;
+                        displayOrderDetailsModal(tableId, ordersByTable[tableId]);
+                    });
+                });
+            }
+
+            if(ordersMessage) ordersMessage.textContent = '';
+        } catch (error) {
+            console.error('Error loading live orders:', error);
+            if(ordersMessage) {
+                ordersMessage.textContent = 'Failed to load live orders: ' + (error.message || 'Server error');
+                ordersMessage.className = 'error-message';
+            }
+        }
+    }
+
+    // Display order details in a modal
+    function displayOrderDetailsModal(tableId, orders) {
+        currentOrdersForModal = orders; // Store the orders for receipt functions
+        
+        if(modalTableIdSpan) modalTableIdSpan.textContent = tableId;
+        if(modalOrderListDiv) modalOrderListDiv.innerHTML = ''; // Clear previous content
+        if(modalOrdersMessage) modalOrdersMessage.textContent = ''; // Clear previous messages
+
+        let totalAllOrdersPrice = 0;
+        if (orders && orders.length > 0) {
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    totalAllOrdersPrice += item.menuItemId.price * item.quantity;
+                });
+            });
+        }
+        if (modalTotalPrice) {
+            modalTotalPrice.textContent = `Total for Table ${tableId}: $${totalAllOrdersPrice.toFixed(2)}`;
+        }
+
+
+        if (!orders || orders.length === 0) {
+            if(modalOrdersMessage) {
+                modalOrdersMessage.textContent = 'No orders for this table.';
+                modalOrdersMessage.className = 'empty-state';
+            }
+            if(clearTableHistoryBtn) clearTableHistoryBtn.disabled = true;
+            // Disable print/download buttons if no orders
+            if(printReceiptBtn) printReceiptBtn.disabled = true;
+            if(downloadReceiptBtn) downloadReceiptBtn.disabled = true;
+            return;
+        }
+
+        // Enable print/download buttons if orders exist
+        if(clearTableHistoryBtn) clearTableHistoryBtn.disabled = false;
+        if(printReceiptBtn) printReceiptBtn.disabled = false;
+        if(downloadReceiptBtn) downloadReceiptBtn.disabled = false;
+
+        orders.forEach(order => {
+            const orderDiv = document.createElement('div');
+            orderDiv.classList.add('modal-order-item');
+            orderDiv.innerHTML = `
+                <h4>Order ID: ${order._id.substring(0, 8)}... (Status: <span class="status-badge ${order.status.toLowerCase()}">${order.status}</span>)</h4>
+                <ul>
+                    ${order.items.map(item => `
+                        <li>
+                            ${item.menuItemId.imageUrl ? `<img src="${item.menuItemId.imageUrl}" class="modal-item-img" alt="${item.menuItemId.name}">` : ''}
+                            <span>${item.menuItemId.name} x ${item.quantity} ($${item.menuItemId.price.toFixed(2)})</span>
+                        </li>
+                    `).join('')}
+                </ul>
+                <div class="modal-order-actions">
+                    <select class="order-status-select" data-order-id="${order._id}">
                         <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
                         <option value="Confirmed" ${order.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                         <option value="Preparing" ${order.status === 'Preparing' ? 'selected' : ''}>Preparing</option>
@@ -473,44 +846,383 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
                         <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                     </select>
-                `;
-                ordersDashboard.appendChild(orderDiv);
-            });
+                </div>
+            `;
+            if(modalOrderListDiv) modalOrderListDiv.appendChild(orderDiv);
+        });
 
-            document.querySelectorAll('.order-status-select').forEach(select => {
+        // Add event listeners for status change selects
+        if(modalOrderListDiv) {
+            modalOrderListDiv.querySelectorAll('.order-status-select').forEach(select => {
                 select.addEventListener('change', async (e) => {
-                    const orderId = e.target.dataset.id;
+                    const orderId = e.target.dataset.orderId;
                     const newStatus = e.target.value;
                     try {
                         await api.orders.updateOrderStatus(orderId, newStatus);
-                        alert('Order status updated!');
-                        loadOrders();
+                        if(modalOrdersMessage) {
+                            modalOrdersMessage.textContent = `Order ${orderId.substring(0, 8)}... status updated to ${newStatus}.`;
+                            modalOrdersMessage.className = 'message success-message';
+                        }
+                        // Re-fetch and display orders to reflect status change
+                        fetchAndDisplayOrders();
+                        // Also update the modal itself to show the new status
+                        displayOrderDetailsModal(tableId, await api.orders.getStoreOrders().then(orders => orders.filter(o => o.tableId === tableId)));
                     } catch (error) {
                         console.error('Error updating order status:', error);
-                        alert('Failed to update order status: ' + (error.message || 'Server error'));
+                        if(modalOrdersMessage) {
+                            modalOrdersMessage.textContent = 'Failed to update status: ' + (error.message || 'Server error');
+                            modalOrdersMessage.className = 'error-message';
+                        }
                     }
                 });
             });
-            ordersMessage.textContent = '';
+        }
+
+        if(clearTableHistoryBtn) {
+            clearTableHistoryBtn.dataset.tableId = tableId;
+            clearTableHistoryBtn.disabled = false;
+        }
+
+        if(orderDetailsModal) {
+            orderDetailsModal.style.display = 'block'; // Show the modal
+            document.body.classList.add('modal-open'); // Prevent body scrolling
+        }
+    }
+
+    // Receipt generation logic
+    function generateReceiptHtml(orders, storeInfo) {
+        let itemsHtml = '';
+        let subtotal = 0;
+        
+        // Flatten all items from all orders for the receipt
+        const allItems = orders.flatMap(order => order.items);
+        
+        allItems.forEach(item => {
+            const itemPrice = item.menuItemId.price * item.quantity;
+            subtotal += itemPrice;
+            itemsHtml += `
+                <tr>
+                    <td>${item.menuItemId.name} x ${item.quantity}</td>
+                    <td>$${itemPrice.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+        
+        // Use storeInfo from the fetched details
+        const storeName = storeInfo.name || "SHOP NAME";
+        const storeAddress = storeInfo.address || "No Address Provided";
+        const storePhone = storeInfo.phone || "No Phone Provided";
+
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Receipt for Table ${orders[0].tableId}</title>
+                <style>
+                    body { font-family: 'monospace', 'Courier New', monospace; font-size: 12px; margin: 0; padding: 20px; }
+                    .receipt-container { width: 300px; margin: 0 auto; border: 1px dashed #ccc; padding: 10px; }
+                    .header, .footer { text-align: center; margin-bottom: 15px; }
+                    .header h2 { margin: 0; font-size: 1.5em; }
+                    .info { font-size: 0.9em; margin-bottom: 15px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    table th, table td { padding: 5px 0; text-align: left; }
+                    table th:last-child, table td:last-child { text-align: right; }
+                    .divider { border-top: 1px dashed #000; margin: 15px 0; }
+                    .total-line { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; font-size: 1.1em;}
+                    .payment-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                    .thank-you { text-align: center; font-weight: bold; margin-top: 20px; font-size: 1.2em; }
+                    @media print {
+                        body { background-color: #fff; }
+                        .receipt-container { border: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="receipt-container">
+                    <div class="header">
+                        <h2>${storeName}</h2>
+                        <div class="info">
+                            Address: ${storeAddress}<br>
+                            Telp: ${storePhone}
+                        </div>
+                    </div>
+                    <div class="divider">******************************</div>
+                    <div class="header">
+                        <h3> RECEIPT</h3>
+                    </div>
+                    <div class="divider">******************************</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    <div class="divider">******************************</div>
+                    <div class="total-line">
+                        <span>Total</span>
+                        <span>$${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="thank-you">THANK YOU!</div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    // Function to handle printing the receipt
+    function printReceipt() {
+        if (!currentOrdersForModal || currentOrdersForModal.length === 0 || !currentStoreDetails) {
+            modalOrdersMessage.textContent = 'No order data available for printing.';
+            modalOrdersMessage.className = 'message error-message';
+            return;
+        }
+
+        const receiptHtml = generateReceiptHtml(currentOrdersForModal, currentStoreDetails);
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    }
+
+    // Function to handle downloading the receipt as HTML
+    function downloadReceipt() {
+        if (!currentOrdersForModal || currentOrdersForModal.length === 0 || !currentStoreDetails) {
+            modalOrdersMessage.textContent = 'No order data available for download.';
+            modalOrdersMessage.className = 'message error-message';
+            return;
+        }
+
+        const receiptHtml = generateReceiptHtml(currentOrdersForModal, currentStoreDetails);
+        const blob = new Blob([receiptHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const tableId = currentOrdersForModal[0] ? currentOrdersForModal[0].tableId : 'unknown';
+        a.href = url;
+        a.download = `receipt_table_${tableId}_${new Date().getTime()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url); // Clean up
+    }
+
+
+    // Delete an admin user (Superadmin only)
+    async function deleteAdmin(id) {
+        if (!confirm('Are you sure you want to delete this admin?')) {
+            return;
+        }
+        try {
+            await api.users.deleteAdmin(id);
+            alert('Admin deleted successfully');
+            loadAdmins(); // Reload admins list
         } catch (error) {
-            console.error('Error loading orders:', error);
-            ordersMessage.textContent = 'Failed to load orders: ' + (error.message || 'Server error');
-            ordersMessage.className = 'error-message';
+            console.error('Error deleting admin:', error);
+            alert('Failed to delete admin: ' + (error.message || 'Server error'));
         }
     }
 
-    // Start polling for orders (e.g., every 5 seconds)
-    function startOrderPolling() {
-        if (currentPollingInterval) {
-            clearInterval(currentPollingInterval);
+    // Delete a table
+    async function deleteTable(id) {
+        if (!confirm('Are you sure you want to delete this table? This will also clear associated orders.')) {
+            return;
         }
-        loadOrders();
-        currentPollingInterval = setInterval(loadOrders, 5000);
+        try {
+            await api.tables.deleteTable(id);
+            alert('Table deleted successfully');
+            loadTables(); // Reload tables list
+            fetchAndDisplayOrders(); // Refresh orders dashboard
+        } catch (error) {
+            console.error('Error deleting table:', error);
+            alert('Failed to delete table: ' + (error.message || 'Server error'));
+        }
     }
 
-    // --- Initial data loads on page load ---
-    loadCategories();
-    loadMenuItems();
-    loadTables();
-    startOrderPolling();
+    // Clear all active orders for a specific table
+    async function clearTableOrders(tableId) {
+        if (!confirm(`Are you sure you want to clear all active orders for Table ${tableId}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await api.orders.clearTableOrders(tableId);
+            if (modalOrdersMessage) {
+                modalOrdersMessage.textContent = response.message;
+                modalOrdersMessage.className = 'message success-message';
+            }
+            // Close modal after a short delay
+            setTimeout(() => {
+                if(orderDetailsModal) orderDetailsModal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                if(modalOrdersMessage) modalOrdersMessage.textContent = ''; // Clear message
+            }, 2000);
+            
+            fetchAndDisplayOrders(); // Refresh orders dashboard
+        } catch (error) {
+            console.error('Error clearing table orders:', error);
+            if(modalOrdersMessage) {
+                modalOrdersMessage.textContent = 'Failed to clear orders: ' + (error.message || 'Server error');
+                modalOrdersMessage.className = 'error-message';
+            }
+        }
+    }
+
+    // Event Listeners for Modals
+    if (closeOrderDetailsModalBtn) {
+        closeOrderDetailsModalBtn.addEventListener('click', () => {
+            if(orderDetailsModal) orderDetailsModal.style.display = 'none';
+            document.body.classList.remove('modal-open'); // Re-enable body scrolling
+        });
+    }
+
+    if (orderDetailsModal) {
+        window.addEventListener('click', (event) => {
+            if (event.target == orderDetailsModal) {
+                orderDetailsModal.style.display = 'none';
+                document.body.classList.remove('modal-open'); // Re-enable body scrolling
+            }
+        });
+    }
+
+    if(clearTableHistoryBtn) {
+        clearTableHistoryBtn.addEventListener('click', async (e) => {
+            const tableIdToClear = e.target.dataset.tableId;
+            if (tableIdToClear) {
+                await clearTableOrders(tableIdToClear);
+            }
+        });
+    }
+    
+    // Event listeners for receipt buttons
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener('click', printReceipt);
+    }
+    if (downloadReceiptBtn) {
+        downloadReceiptBtn.addEventListener('click', downloadReceipt);
+    }
+
+    // Store Branding Form Submission
+    if (storeInfoForm) {
+        storeInfoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            
+            // Append all store info fields
+            formData.append('name', storeNameInputBranding.value.trim());
+            formData.append('address', storeAddressInput.value.trim());
+            formData.append('phone', storePhoneInput.value.trim());
+
+            // Append logo file if selected
+            if (storeLogoInput.files[0]) {
+                formData.append('logo', storeLogoInput.files[0]);
+            }
+
+            // Log the FormData content before sending it
+            console.log('FormData being sent:');
+            for (const pair of formData.entries()) {
+                console.log(pair[0] + ', ' + pair[1]);
+            }
+
+            // Add loading state to the button
+            const originalBtnText = updateStoreInfoBtn.textContent;
+            setLoading(updateStoreInfoBtn, true);
+
+            try {
+                // Use the storeId from local storage
+                await api.stores.updateStore(storeId, formData);
+                storeLogoMessage.textContent = 'Store information and logo updated successfully!';
+                storeLogoMessage.className = 'success-message';
+                storeLogoInput.value = null; // Clear file input
+                await loadStoreDetails(); // Reload to show updated info
+            } catch (error) {
+                console.error('Error updating store info:', error);
+                storeLogoMessage.textContent = 'Failed to update store info: ' + (error.message || 'Server error');
+                storeLogoMessage.className = 'error-message';
+            } finally {
+                setLoading(updateStoreInfoBtn, false);
+                updateStoreInfoBtn.textContent = originalBtnText;
+            }
+        });
+        
+        // Add image preview logic for the logo input
+        if (storeLogoInput) {
+            storeLogoInput.addEventListener('change', () => {
+                const file = storeLogoInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        logoPreviewImg.src = e.target.result;
+                        logoPreviewImg.classList.remove('hidden');
+                        logoPreviewContainer.style.border = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    logoPreviewImg.src = '';
+                    logoPreviewImg.classList.add('hidden');
+                    logoPreviewContainer.style.border = '2px dashed #bdc3c7';
+                }
+            });
+        }
+    }
+
+    // Handle add table form submission
+    if (addTableForm) {
+        addTableForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newTableId = newTableIdInput.value.trim();
+            if (!newTableId) {
+                addTableMessage.textContent = 'Table ID cannot be empty.';
+                addTableMessage.className = 'error-message';
+                return;
+            }
+
+            const submitBtn = document.querySelector('#addTableForm button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            setLoading(submitBtn, true);
+
+            try {
+                // FIX: Ensure an object with 'tableId' property is sent
+                const data = await api.tables.addTable({ tableId: newTableId }); 
+                addTableMessage.textContent = data.message;
+                addTableMessage.className = 'success-message';
+                newTableIdInput.value = ''; // Clear input field
+                await loadTables(); // Reload tables to show the new one
+            } catch (error) {
+                console.error('Error adding table:', error);
+                addTableMessage.textContent = 'Failed to add table: ' + (error.message || 'Server error');
+                addTableMessage.className = 'error-message';
+            } finally {
+                setLoading(submitBtn, false);
+                submitBtn.textContent = originalBtnText;
+            }
+        });
+    }
+
+
+    // Initial loads
+    // Load superadmin-specific data only if the role is superadmin
+    if (role === 'superadmin') {
+        await loadStores();
+        await loadAdmins();
+    }
+    
+    // Load admin-specific data (also relevant for superadmin if they manage a store)
+    if (role === 'admin' || role === 'superadmin') {
+        await loadStoreDetails(); // Load store details for branding tab
+        await loadStoreLogo(); // Load store logo for branding tab
+        await loadTables();
+        await loadCategories();
+        await loadMenuItems();
+        
+        // Start polling for live orders if admin
+        if (role === 'admin') {
+            fetchAndDisplayOrders();
+            setInterval(fetchAndDisplayOrders, 5000); // Poll every 5 seconds
+        }
+    }
 });

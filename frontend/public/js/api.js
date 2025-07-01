@@ -45,11 +45,14 @@ const api = {
         createAdmin: (userData) => request('/users', 'POST', userData),
         getAdmins: () => request('/users'),
         deleteAdmin: (id) => request(`/users/${id}`, 'DELETE'),
+        updateAdmin: (id, userData) => request(`/users/${id}`, 'PUT', userData),
     },
     stores: {
         createStore: (name) => request('/stores', 'POST', { name }),
         getStores: () => request('/stores'),
         updateStore: (id, formData) => request(`/stores/${id}`, 'PUT', formData, true),
+        // CITE: Function to get a single store by its ID
+        getStoreById: (id) => request(`/stores/${id}`),
     },
     menu: {
         getMenu: (storeId) => request(`/menu?storeId=${storeId}`),
@@ -59,17 +62,21 @@ const api = {
     },
     tables: {
         getTables: (storeId) => request(`/tables?storeId=${storeId}`),
-        addTable: (tableId) => request('/tables', 'POST', { tableId }),
+        // CITE: CORRECTED: The function now accepts the data object directly.
+        addTable: (data) => request('/tables', 'POST', data),
         deleteTable: (id) => request(`/tables/${id}`, 'DELETE'),
     },
     orders: {
         placeOrder: (orderData) => request('/orders', 'POST', orderData),
         getStoreOrders: () => request('/orders'),
         updateOrderStatus: (id, status) => request(`/orders/${id}`, 'PUT', { status }),
+        // CITE: New function to clear orders for a specific table
+        clearTableOrders: (tableId) => request(`/orders/table/${tableId}`, 'DELETE'),
     },
     categories: {
         getCategories: (storeId) => request(`/categories?storeId=${storeId}`),
-        addCategory: (name) => request('/categories', 'POST', { name }),
+        // CITE: CORRECTED: The function now accepts the data object directly.
+        addCategory: (data) => request('/categories', 'POST', data),
         updateCategory: (id, data) => request(`/categories/${id}`, 'PUT', data), 
         deleteCategory: (id) => request(`/categories/${id}`, 'DELETE'),
     }

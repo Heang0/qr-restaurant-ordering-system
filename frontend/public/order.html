@@ -9,19 +9,25 @@
 </head>
 <body>
     <header class="order-app-header">
-        <div class="header-text-container">
-            <h1 id="storeNameHeader">Loading Menu...</h1>
+        <div class="header-left">
+            <div class="store-logo-container">
+                <img id="storeLogoDisplay" src="" alt="Store Logo" class="store-logo hidden">
+            </div>
+            <div class="header-text-container">
+                <h1 id="storeNameHeader">Loading Menu...</h1>
+            </div>
+        </div>
+        <div class="header-right">
             <p class="table-info">Table: <span id="tableIdDisplay"></span></p>
         </div>
-        <button id="viewCartBtn" class="cart-icon-btn">
-            <i class="fas fa-shopping-cart"></i>
-            <span id="cartItemCount" class="cart-badge">0</span>
-        </button>
     </header>
 
     <main class="container order-container">
-        <section class="card-section">
-            <h2 class="section-title">Our Menu</h2>
+        <section class="menu-section" id="menuSection">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="search" id="menuSearchInput" class="search-input" placeholder="Search for a dish...">
+            </div>
             <div id="category-filter-buttons" class="category-buttons">
                 </div>
             <div id="menuList" class="menu-grid">
@@ -29,28 +35,70 @@
             <p id="menuErrorMessage" class="message error-message"></p>
         </section>
 
-        <div id="orderModal" class="modal modal-drawer">
-            <div class="modal-content modal-content-drawer">
-                <div class="modal-header">
-                    <h2 class="section-title">Your Order</h2>
-                    <span class="close-button">&times;</span>
+        <section class="order-tracking-section card-section" id="ordersSection">
+            <h2 class="section-title">Your Orders</h2>
+            <div id="customerOrdersList" class="customer-orders-grid">
                 </div>
-                <div class="modal-body">
-                    <div id="orderSummaryContent">
-                        <ul id="orderItemsList" class="order-summary-list">
-                            </ul>
-                    </div>
-                    <p id="emptyOrderMessage" class="empty-state hidden">Your cart is empty. Add some delicious items!</p>
+            <p id="customerOrdersMessage" class="empty-state">No orders placed yet.</p>
+        </section>
+    </main>
+
+    <button id="floatingCartBtn" class="floating-cart-btn">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="floatingCartItemCount" class="cart-badge">0</span>
+    </button>
+
+    <footer class="bottom-nav">
+        <a href="#home" class="nav-item" id="bottomNavHomeBtn">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#menu" class="nav-item" id="bottomNavMenuBtn">
+            <i class="fas fa-book"></i>
+            <span>Menu</span>
+        </a>
+        <a href="#cart" class="nav-item cart-nav-item" id="bottomNavCartBtn">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Cart</span>
+            <span id="bottomNavCartItemCount" class="cart-badge">0</span>
+            <!-- <span id="bottomNavCartTotal" class="cart-total-badge"></span> -->
+        </a>
+        <a href="#orders" class="nav-item" id="bottomNavOrdersBtn">
+            <i class="fas fa-receipt"></i>
+            <span>Orders</span>
+        </a>
+    </footer>
+
+    <div id="orderModal" class="modal modal-drawer">
+        <div class="modal-content modal-content-drawer">
+            <div class="modal-header">
+                <h2 class="section-title">Your Order</h2>
+                <span class="close-button">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="orderSummaryContent">
+                    <ul id="orderItemsList" class="order-summary-list">
+                    </ul>
                 </div>
-                <div class="modal-footer">
-                    <p class="order-total-summary">Total: $<span id="orderTotal">0.00</span></p>
-                    <button id="submitOrderBtn" class="primary-btn full-width">Place Order Now</button>
-                    <p id="orderMessage" class="message success-message"></p>
-                    <p id="orderErrorMessage" class="message error-message"></p>
-                </div>
+                <p id="emptyOrderMessage" class="empty-state hidden">Your cart is empty. Add some delicious items!</p>
+            </div>
+            <div class="modal-footer">
+                <p class="order-total-summary">Total: $<span id="orderTotal">0.00</span></p>
+                <button id="submitOrderBtn" class="primary-btn full-width">Place Order Now</button>
             </div>
         </div>
-    </main>
+    </div>
+
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content confirmation-content">
+            <div class="confirmation-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="section-title">Order Successfully Placed</h2>
+            <p class="section-description">We will process your order as soon as possible.</p>
+            <button id="continueShoppingBtn" class="primary-btn">CONTINUE SHOPPING</button>
+        </div>
+    </div>
 
     <script src="../js/api.js"></script>
     <script src="../js/customer.js"></script>

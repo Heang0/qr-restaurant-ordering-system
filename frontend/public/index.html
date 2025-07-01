@@ -4,58 +4,716 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Dashboard - QR Restaurant</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- General Styles --- */
+        @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Battambang", cursive, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #2c3e50;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .message {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .success-message {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Main Layout --- */
+        .app-header {
+            background-color: #fff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .app-header h1 {
+            font-size: 1.8em;
+            margin: 0;
+            color: #34495e;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .header-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .card-section {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 700;
+            color: #2980b9;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0f2f5;
+        }
+
+        .section-subtitle {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+
+        /* --- Forms --- */
+        .form-card {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #bdc3c7;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+            outline: none;
+        }
+
+        /* --- Buttons --- */
+        .primary-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+            width: 100%;
+        }
+
+        .primary-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .secondary-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        .secondary-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        /* --- Table --- */
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            overflow: hidden; /* Ensures the rounded corners are visible */
+        }
+
+        .styled-table thead tr {
+            background-color: #2980b9;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 15px;
+            border: none;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+            transition: background-color 0.3s;
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid #2980b9;
+        }
+        
+        .styled-table tbody tr:hover {
+            background-color: #ecf0f1;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* --- Modal --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 95%;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #2980b9;
+        }
+
+        .close-button {
+            color: #aaa;
+            font-size: 2em;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close-button:hover {
+            color: #555;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 15px auto;
+            }
+            .app-header {
+                padding: 10px 15px;
+            }
+            .app-header h1 {
+                font-size: 1.5em;
+            }
+            .card-section {
+                padding: 20px;
+            }
+            .section-title {
+                font-size: 1.6em;
+            }
+            .styled-table {
+                font-size: 0.8em;
+            }
+            .styled-table th, .styled-table td {
+                padding: 10px;
+            }
+            .delete-btn, .secondary-btn {
+                padding: 6px 10px;
+                font-size: 0.75em;
+            }
+            .form-card {
+                gap: 15px;
+            }
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <header class="app-header">
         <h1>Super Admin Dashboard</h1>
-        <button id="logoutBtn">Logout</button>
+        <button id="logoutBtn" class="header-btn">Logout</button>
+    </header>
 
-        <hr>
+    <main class="container">
+        <section class="card-section">
+            <h2 class="section-title">Create Store</h2>
+            <form id="createStoreForm" class="form-card">
+                <label for="storeName">Store Name:</label>
+                <input type="text" id="storeName" placeholder="e.g., My Awesome Restaurant" required>
+                <button type="submit" class="primary-btn">Create Store</button>
+                <p id="createStoreMessage" class="message"></p>
+            </form>
+        </section>
 
-        <h2>Create Store</h2>
-        <form id="createStoreForm">
-            <label for="storeName">Store Name:</label>
-            <input type="text" id="storeName" required>
-            <button type="submit">Create Store</button>
-            <p id="createStoreMessage" class="success-message"></p>
-        </form>
+        <section class="card-section">
+            <h2 class="section-title">Manage Admins</h2>
+            <div class="form-container">
+                <h3 class="section-subtitle">Create Admin</h3>
+                <form id="createAdminForm" class="form-card">
+                    <label for="adminEmail">Email:</label>
+                    <input type="email" id="adminEmail" placeholder="admin@example.com" required>
 
-        <hr>
+                    <label for="adminPassword">Password:</label>
+                    <input type="password" id="adminPassword" required>
 
-        <h2>Manage Admins</h2>
-        <h3>Create Admin</h3>
-        <form id="createAdminForm">
-            <label for="adminEmail">Email:</label>
-            <input type="email" id="adminEmail" required>
+                    <label for="adminStore">Assign to Store:</label>
+                    <select id="adminStore" required></select>
 
-            <label for="adminPassword">Password:</label>
-            <input type="password" id="adminPassword" required>
+                    <button type="submit" class="primary-btn">Create Admin</button>
+                    <p id="createAdminMessage" class="message"></p>
+                </form>
+            </div>
 
-            <label for="adminStore">Assign to Store:</label>
-            <select id="adminStore" required></select>
+            <div class="table-container">
+                <h3 class="section-subtitle">Existing Admins</h3>
+                <table id="adminsTable" class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Store</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+                <p id="adminListMessage" class="error-message"></p>
+            </div>
+        </section>
+    </main>
 
-            <button type="submit">Create Admin</button>
-            <p id="createAdminMessage" class="success-message"></p>
-        </form>
-
-        <h3>Existing Admins</h3>
-        <table id="adminsTable">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Store</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-        <p id="adminListMessage" class="error-message"></p>
+    <div id="editAdminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Admin</h2>
+                <span class="close-button" id="closeEditModal">&times;</span>
+            </div>
+            <form id="editAdminForm" class="form-card">
+                <input type="hidden" id="editAdminId">
+                <label for="editAdminEmail">Email:</label>
+                <input type="email" id="editAdminEmail" required disabled>
+                
+                <label for="editAdminStore">Assign to Store:</label>
+                <select id="editAdminStore" required></select>
+                
+                <p id="editAdminMessage" class="message"></p>
+                <button type="submit" class="primary-btn">Update Admin</button>
+            </form>
+        </div>
     </div>
 
-    <script src="../js/api.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/superadmin.js"></script>
+    <script>
+        // CITE: This is the centralized API helper from your api.js file.
+        // It's included here to make this a single file.
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        async function request(url, method = 'GET', data = null, isFormData = false) {
+            const headers = {};
+            const token = localStorage.getItem('token');
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const config = {
+                method,
+                headers: { ...headers },
+            };
+
+            if (!isFormData) {
+                config.headers['Content-Type'] = 'application/json';
+            }
+            
+            if (data) {
+                config.body = isFormData ? data : JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${url}`, config);
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    const error = new Error(responseData.message || 'Something went wrong');
+                    error.statusCode = response.status;
+                    throw error;
+                }
+                return responseData;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        const api = {
+            auth: {
+                login: (email, password) => request('/auth/login', 'POST', { email, password }),
+            },
+            users: {
+                createAdmin: (userData) => request('/users', 'POST', userData),
+                getAdmins: () => request('/users'),
+                deleteAdmin: (id) => request(`/users/${id}`, 'DELETE'),
+                updateAdmin: (id, userData) => request(`/users/${id}`, 'PUT', userData), // CITE: Added updateAdmin function
+            },
+            stores: {
+                createStore: (name) => request('/stores', 'POST', { name }),
+                getStores: () => request('/stores'),
+                updateStore: (id, formData) => request(`/stores/${id}`, 'PUT', formData, true),
+                getStoreById: (id) => request(`/stores/${id}`),
+            },
+            menu: {
+                getMenu: (storeId) => request(`/menu?storeId=${storeId}`),
+                addMenuItem: (formData) => request('/menu', 'POST', formData, true),
+                updateMenuItem: (id, formData) => request(`/menu/${id}`, 'PUT', formData, true),
+                deleteMenuItem: (id) => request(`/menu/${id}`, 'DELETE'),
+            },
+            tables: {
+                getTables: (storeId) => request(`/tables?storeId=${storeId}`),
+                addTable: (tableId) => request('/tables', 'POST', { tableId }),
+                deleteTable: (id) => request(`/tables/${id}`, 'DELETE'),
+            },
+            orders: {
+                placeOrder: (orderData) => request('/orders', 'POST', orderData),
+                getStoreOrders: () => request('/orders'),
+                updateOrderStatus: (id, status) => request(`/orders/${id}`, 'PUT', { status }),
+                clearTableOrders: (tableId) => request(`/orders/table/${tableId}`, 'DELETE'),
+            },
+            categories: {
+                getCategories: (storeId) => request(`/categories?storeId=${storeId}`),
+                addCategory: (name) => request('/categories', 'POST', { name }),
+                updateCategory: (id, data) => request(`/categories/${id}`, 'PUT', data), 
+                deleteCategory: (id) => request(`/categories/${id}`, 'DELETE'),
+            }
+        };
+
+        // CITE: Main JavaScript logic for the super admin dashboard.
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            if (!token || role !== 'superadmin') {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // CITE: Modal elements
+            const editAdminModal = document.getElementById('editAdminModal');
+            const closeEditModalBtn = document.getElementById('closeEditModal');
+            const editAdminForm = document.getElementById('editAdminForm');
+            const editAdminIdInput = document.getElementById('editAdminId');
+            const editAdminEmailInput = document.getElementById('editAdminEmail');
+            const editAdminStoreSelect = document.getElementById('editAdminStore');
+            const editAdminMessage = document.getElementById('editAdminMessage');
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            const createStoreForm = document.getElementById('createStoreForm');
+            const storeNameInput = document.getElementById('storeName');
+            const createStoreMessage = document.getElementById('createStoreMessage');
+
+            const createAdminForm = document.getElementById('createAdminForm');
+            const adminEmailInput = document.getElementById('adminEmail');
+            const adminPasswordInput = document.getElementById('adminPassword');
+            const adminStoreSelect = document.getElementById('adminStore');
+            const createAdminMessage = document.getElementById('createAdminMessage');
+
+            const adminsTableBody = document.querySelector('#adminsTable tbody');
+            const adminListMessage = document.getElementById('adminListMessage');
+            
+            let allStores = []; // CITE: Store all stores for the edit modal dropdown
+
+            // --- Load Stores for Admin Creation & Edit Modal ---
+            async function loadStores() {
+                try {
+                    const stores = await api.stores.getStores();
+                    allStores = stores; // Store for later use
+                    
+                    adminStoreSelect.innerHTML = '';
+                    editAdminStoreSelect.innerHTML = '';
+                    
+                    stores.forEach(store => {
+                        const option = document.createElement('option');
+                        option.value = store._id;
+                        option.textContent = store.name;
+                        adminStoreSelect.appendChild(option);
+                        
+                        const option2 = option.cloneNode(true);
+                        editAdminStoreSelect.appendChild(option2);
+                    });
+                } catch (error) {
+                    console.error('Error loading stores:', error);
+                    createAdminMessage.textContent = 'Failed to load stores: ' + (error.message || 'Server error');
+                    createAdminMessage.className = 'error-message';
+                }
+            }
+
+            // --- Load Admins ---
+            async function loadAdmins() {
+                try {
+                    const admins = await api.users.getAdmins();
+                    adminsTableBody.innerHTML = '';
+                    if (admins.length === 0) {
+                        adminsTableBody.innerHTML = '<tr><td colspan="3">No admins found.</td></tr>';
+                        return;
+                    }
+                    admins.forEach(admin => {
+                        const row = adminsTableBody.insertRow();
+                        row.insertCell(0).textContent = admin.email;
+                        row.insertCell(1).textContent = admin.storeId ? admin.storeId.name : 'N/A';
+                        const actionsCell = row.insertCell(2);
+                        actionsCell.classList.add('table-actions'); // CITE: Use flexbox for actions
+                        
+                        // CITE: Add Edit button
+                        const editButton = document.createElement('button');
+                        editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                        editButton.classList.add('secondary-btn');
+                        editButton.addEventListener('click', () => editAdmin(admin._id));
+                        
+                        const deleteButton = document.createElement('button');
+                        deleteButton.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                        deleteButton.classList.add('delete-btn');
+                        deleteButton.addEventListener('click', () => deleteAdmin(admin._id));
+                        
+                        actionsCell.appendChild(editButton);
+                        actionsCell.appendChild(deleteButton);
+                    });
+                    adminListMessage.textContent = '';
+                } catch (error) {
+                    console.error('Error loading admins:', error);
+                    adminListMessage.textContent = 'Failed to load admins: ' + (error.message || 'Server error');
+                    adminListMessage.className = 'error-message';
+                }
+            }
+            
+            // CITE: Function to populate the modal with admin data for editing
+            async function editAdmin(adminId) {
+                try {
+                    const admins = await api.users.getAdmins();
+                    const adminToEdit = admins.find(admin => admin._id === adminId);
+                    if (!adminToEdit) {
+                        alert('Admin not found!');
+                        return;
+                    }
+                    
+                    editAdminIdInput.value = adminToEdit._id;
+                    editAdminEmailInput.value = adminToEdit.email;
+                    editAdminStoreSelect.value = adminToEdit.storeId ? adminToEdit.storeId._id : '';
+                    
+                    editAdminMessage.textContent = ''; // Clear previous messages
+                    editAdminModal.style.display = 'flex'; // Show the modal
+                } catch (error) {
+                    console.error('Error fetching admin for edit:', error);
+                    alert('Failed to load admin data for editing.');
+                }
+            }
+            
+            // CITE: Function to handle updating an admin user
+            async function handleUpdateAdmin(e) {
+                e.preventDefault();
+                const adminId = editAdminIdInput.value;
+                const newStoreId = editAdminStoreSelect.value;
+                
+                try {
+                    const response = await api.users.updateAdmin(adminId, { storeId: newStoreId });
+                    editAdminMessage.textContent = response.message;
+                    editAdminMessage.className = 'success-message';
+                    
+                    // Refresh the admins list and close the modal after a delay
+                    setTimeout(() => {
+                        editAdminModal.style.display = 'none';
+                        loadAdmins();
+                    }, 1500);
+                } catch (error) {
+                    console.error('Error updating admin:', error);
+                    editAdminMessage.textContent = 'Error updating admin: ' + (error.message || 'Server error');
+                    editAdminMessage.className = 'error-message';
+                }
+            }
+
+            // --- Delete Admin ---
+            async function deleteAdmin(id) {
+                if (!confirm('Are you sure you want to delete this admin?')) {
+                    return;
+                }
+                try {
+                    await api.users.deleteAdmin(id);
+                    alert('Admin deleted successfully');
+                    loadAdmins();
+                } catch (error) {
+                    console.error('Error deleting admin:', error);
+                    alert('Failed to delete admin: ' + (error.message || 'Server error'));
+                }
+            }
+
+            // --- Event Listeners ---
+            createStoreForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const storeName = storeNameInput.value.trim();
+                if (!storeName) return;
+
+                try {
+                    const data = await api.stores.createStore(storeName);
+                    createStoreMessage.textContent = data.message;
+                    createStoreMessage.className = 'success-message';
+                    storeNameInput.value = '';
+                    await loadStores();
+                } catch (error) {
+                    createStoreMessage.textContent = 'Error creating store: ' + (error.message || 'Server error');
+                    createStoreMessage.className = 'error-message';
+                }
+            });
+
+            createAdminForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = adminEmailInput.value.trim();
+                const password = adminPasswordInput.value.trim();
+                const storeId = adminStoreSelect.value;
+
+                if (!email || !password || !storeId) {
+                    createAdminMessage.textContent = 'All fields are required.';
+                    createAdminMessage.className = 'error-message';
+                    return;
+                }
+
+                try {
+                    const data = await api.users.createAdmin({ email, password, storeId });
+                    createAdminMessage.textContent = data.message;
+                    createAdminMessage.className = 'success-message';
+                    adminEmailInput.value = '';
+                    adminPasswordInput.value = '';
+                    await loadAdmins();
+                } catch (error) {
+                    createAdminMessage.textContent = 'Error creating admin: ' + (error.message || 'Server error');
+                    createAdminMessage.className = 'error-message';
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                localStorage.removeItem('storeId');
+                window.location.href = 'login.html';
+            });
+            
+            // CITE: Modal event listeners
+            closeEditModalBtn.addEventListener('click', () => {
+                editAdminModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == editAdminModal) {
+                    editAdminModal.style.display = 'none';
+                }
+            });
+
+            editAdminForm.addEventListener('submit', handleUpdateAdmin);
+
+
+            // CITE: Initial loads
+            await loadStores();
+            await loadAdmins();
+        });
+    </script>
 </body>
 </html>
