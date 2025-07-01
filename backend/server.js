@@ -6,7 +6,7 @@ const config = require('./config');
 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-const storeRoutes = require('routes/stores'); // Corrected path, assuming it's in routes/
+const storeRoutes = require('./routes/stores'); // Corrected path
 const menuRoutes = require('./routes/menu');
 const tableRoutes = require('./routes/tables');
 const orderRoutes = require('./routes/orders');
