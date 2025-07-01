@@ -23,14 +23,15 @@ mongoose.connect(config.mongoURI)
 app.use(express.json());
 app.use(cors());
 
-// --- API Routes (STILL COMMENTED OUT FOR NOW - will uncomment later) ---
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/stores', storeRoutes);
-// app.use('/api/menu', menuRoutes);
-// app.use('/api/tables', tableRoutes);
-// app.use('/api/orders', orderRoutes);
-// app.use('/api/categories', categoriesRoutes);
+// --- API Routes (ALL RE-ENABLED) ---
+// These routes should come first to ensure API requests are handled before static file serving
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/stores', storeRoutes);
+app.use('/api/menu', menuRoutes);
+app.use('/api/tables', tableRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/categories', categoriesRoutes);
 
 // Define the absolute path to your frontend public directory
 const frontendPublicPath = path.join(__dirname, '..', 'frontend', 'public');
@@ -42,7 +43,6 @@ app.use(express.static(frontendPublicPath));
 
 // --- Explicit Root Route for Frontend ---
 // Handle the root path explicitly to serve login.html.
-// Using the pre-defined frontendPublicPath for clarity and directness.
 app.get('/', (req, res) => {
     res.sendFile(path.join(frontendPublicPath, 'login.html')); // Assuming login.html is your entry point
 });
