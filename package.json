@@ -1,0 +1,18 @@
+{
+  "name": "qr-restaurant-ordering-system-root",
+  "version": "1.0.0",
+  "description": "Root package for QR Restaurant Ordering System",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo 'Run backend/server.js directly or deploy with Render'",
+    "install-all": "npm install --prefix backend && npm install --prefix frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
