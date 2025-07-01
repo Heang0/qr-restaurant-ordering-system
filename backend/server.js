@@ -23,15 +23,15 @@ mongoose.connect(config.mongoURI)
 app.use(express.json()); // Body parser for JSON
 app.use(cors()); // Enable CORS for all origins (you might want to restrict this in production)
 
-// --- API Routes ---
+// --- API Routes (COMMENTED OUT FOR DEBUGGING) ---
 // These routes should come first to ensure API requests are handled before static file serving
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/stores', storeRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/tables', tableRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/categories', categoriesRoutes);
+// app.use('/api/auth', authRoutes);
+// app.use('/api/users', userRoutes);
+// app.use('/api/stores', storeRoutes);
+// app.use('/api/menu', menuRoutes);
+// app.use('/api/tables', tableRoutes);
+// app.use('/api/orders', orderRoutes);
+// app.use('/api/categories', categoriesRoutes);
 
 // --- Serve static frontend assets ---
 // This tells Express to serve static files from the 'frontend/public' directory.
@@ -51,4 +51,3 @@ app.get('*', (req, res) => {
 
 const PORT = config.port;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
