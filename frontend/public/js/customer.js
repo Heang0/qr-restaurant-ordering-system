@@ -1,5 +1,5 @@
 (function() {
-    const API_BASE_URL = 'http://localhost:5000/api'; // Use localhost for local dev
+    const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com'; // Use localhost for local dev
 
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);

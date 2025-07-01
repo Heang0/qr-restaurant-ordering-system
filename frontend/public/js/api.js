@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api'; // Use localhost for local dev
+const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com'; // Use localhost for local dev
 
 async function request(url, method = 'GET', data = null, isFormData = false) {
     const headers = {};
