@@ -23,8 +23,9 @@ mongoose.connect(config.mongoURI)
 app.use(express.json());
 app.use(cors());
 
-// --- API Routes (ALL RE-ENABLED) ---
-// These routes should come first to ensure API requests are handled before static file serving
+// --- API Routes ---
+// These routes MUST come before any general static file serving or wildcard routes
+// to ensure API requests are handled first.
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
@@ -36,22 +37,21 @@ app.use('/api/categories', categoriesRoutes);
 // Define the absolute path to your frontend public directory
 const frontendPublicPath = path.join(__dirname, '..', 'frontend', 'public');
 
-// --- Serve static frontend assets ---
-// This should be placed BEFORE any wildcard routes or API routes that might
-// accidentally intercept requests for static files.
+// --- Serve static assets (CSS, JS, images) directly ---
+// This middleware will serve files like style.css, customer.js, etc.
+// It should be placed AFTER API routes to avoid conflicts.
 app.use(express.static(frontendPublicPath));
 
-// --- Explicit Root Route for Frontend ---
-// Handle the root path explicitly to serve login.html.
-app.get('/', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'login.html')); // Assuming login.html is your entry point
-});
-
-// --- SPA Fallback for other frontend routes ---
-// For any other GET request that doesn't match a static file or the explicit root,
-// serve index.html. This is for client-side routing (e.g., /admin.html, /order.html etc.)
-// that might be directly accessed or navigated to.
+// --- Handle all other GET requests (including root and frontend routes) ---
+// This is the SPA fallback. It will serve the appropriate HTML file.
+// For the root URL, we explicitly serve login.html.
+// For any other path, we serve index.html, and the frontend JS handles routing.
 app.get('*', (req, res) => {
+    // If the request is for the root path, serve login.html
+    if (req.path === '/') {
+        return res.sendFile(path.join(frontendPublicPath, 'login.html'));
+    }
+    // For any other path, serve index.html (which will then redirect or load content)
     res.sendFile(path.join(frontendPublicPath, 'index.html'));
 });
 
