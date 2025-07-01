@@ -16,7 +16,7 @@ router.get('/public', async (req, res) => {
             return res.status(400).json({ message: 'Store ID is required' });
         }
         
-        const menuItems = await MenuItem.find({ storeId, isAvailable: true })
+        const menuItems = await MenuItem.find({ storeId, isAvailable: true }) // Filter for available items
                                       .populate('categoryId', 'name')
                                       .populate('storeId', 'name logoUrl'); 
         console.log('Found menu items from DB:', menuItems);
@@ -49,7 +49,7 @@ router.post('/', protect, authorize('admin'), upload.single('image'), async (req
         if (req.file) {
             const result = await cloudinary.uploader.upload(req.file.path, { folder: 'menu_items' });
             imageUrl = result.secure_url;
-            const fs = require('fs');
+            const fs = require('fs'); // Ensure fs is required if used here
             fs.unlinkSync(req.file.path);
         }
         
@@ -73,10 +73,11 @@ router.post('/', protect, authorize('admin'), upload.single('image'), async (req
 });
 
 // Update Menu Item (Admin)
+// Ensure ':id' is correctly named as 'id'
 router.put('/:id', protect, authorize('admin'), upload.single('image'), async (req, res) => {
     const { name, description, price, categoryId, isBestSeller, isAvailable } = req.body;
     const storeId = req.user.storeId;
-    const { id } = req.params;
+    const { id } = req.params; // Correctly destructure 'id' from req.params
     let imageUrl = null;
 
     try {
@@ -92,7 +93,7 @@ router.put('/:id', protect, authorize('admin'), upload.single('image'), async (r
             }
             const result = await cloudinary.uploader.upload(req.file.path, { folder: 'menu_items' });
             imageUrl = result.secure_url;
-            const fs = require('fs');
+            const fs = require('fs'); // Ensure fs is required if used here
             fs.unlinkSync(req.file.path); 
         }
 
@@ -121,8 +122,9 @@ router.put('/:id', protect, authorize('admin'), upload.single('image'), async (r
 });
 
 // Delete Menu Item (Admin)
+// Ensure ':id' is correctly named as 'id'
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // Correctly destructure 'id' from req.params
     const storeId = req.user.storeId;
 
     try {
@@ -136,8 +138,7 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
         }
         await MenuItem.deleteOne({ _id: id, storeId: storeId });
         res.json({ message: 'Menu item deleted successfully' });
-    }
-    catch (error) {
+    } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
