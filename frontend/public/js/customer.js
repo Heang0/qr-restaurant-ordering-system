@@ -279,6 +279,28 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             checkScrollability(); // Re-check scrollability after rendering categories
         }
 
+        // --- START ADDITION: filterMenu function ---
+        function filterMenu(categoryId) {
+            let filteredItems = [];
+            if (categoryId === 'all') {
+                filteredItems = allMenuItems;
+            } else {
+                filteredItems = allMenuItems.filter(item => item.categoryId && item.categoryId._id === categoryId);
+            }
+
+            displayMenuItems(filteredItems);
+
+            // Update active state of category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.dataset.categoryId === categoryId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        // --- END ADDITION: filterMenu function ---
+
         function displayMenuItems(items) {
             if (menuList) menuList.innerHTML = '';
             if (menuErrorMessage) {
