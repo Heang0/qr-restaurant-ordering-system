@@ -612,6 +612,9 @@ input[type="file"] {
     gap: 3px;
     flex-grow: 1;
 }
+
+/* menu admin scroll bar */
+
 .menu-card-content h3 {
     text-align: left;
     margin: 0;
@@ -1020,7 +1023,7 @@ input[type="file"] {
     font-size: 1.3em;
     font-weight: 700;
     text-align: center; /* Centered for column layout */
-    color: #28a745;
+    color: #e74c3c; /* Changed to your primary red color */
     margin: 0;
     padding-bottom: 0;
     width: 100%; /* Ensure it takes full width to center text */
@@ -1105,21 +1108,21 @@ input[type="file"] {
 }
 
 .item-control-btn.primary-btn {
-    background-color: #3498db;
+    background-color: #e74c3c; /* Changed to your primary red color */
     color: white;
 }
 
 .item-control-btn.primary-btn:hover {
-    background-color: #2980b9;
+    background-color: #c0392b; /* Darker red on hover */
 }
-
 .item-control-btn.secondary-btn {
     background-color: white;
-    color: #3498db;
+    color: #e74c3c; /* Changed to your primary red color */
+    border: 1px solid #e74c3c; /* Changed to your primary red color */
 }
 
 .item-control-btn.secondary-btn:hover {
-    background-color: #f0f2f5;
+    background-color: #fcebeb; /* A very light red tint on hover */
 }
 
 .item-quantity {
@@ -1144,7 +1147,6 @@ input[type="file"] {
 }
 
 /* Tablet & Smaller Desktop (768px to 1399px) - Show 3-4 cards per row (unchanged, still good) */
-/* Tablet & Smaller Desktop (768px to 1399px) - Show 3-4 cards per row (unchanged, still good) */
 @media (min-width: 768px) and (max-width: 1399px) {
     .container {
         padding: 20px;
@@ -1163,6 +1165,15 @@ input[type="file"] {
         grid-template-columns: repeat(4, 1fr); /* Enforce 4 columns for iPad/tablet */
         gap: 15px; /* Adjust gap as needed */
     }
+
+    /* --- START UPDATED SECTION FOR ORDER PAGE MENU GRID --- */
+    .order-container .menu-grid { /* Targeting menu grid specifically for order page */
+        grid-template-columns: repeat(auto-fit, minmax(200px, max-content)); /* Prevents single item stretching */
+        justify-content: center; /* Centers items if there are fewer than a full row */
+        gap: 15px; /* Adjust gap as needed for tablet */
+    }
+    /* --- END UPDATED SECTION FOR ORDER PAGE MENU GRID --- */
+
     /* Remove .order-container .menu-card max-width here if it causes issues, or keep it if desired */
     /* .order-container .menu-card {
         max-width: 280px;
@@ -1195,6 +1206,9 @@ input[type="file"] {
         grid-template-columns: repeat(2, 1fr); /* Enforce 2 cards per row on mobile */
         gap: 10px;
         padding: 0 10px;
+    }
+    .order-container .menu-card .menu-card-content h3 {
+        font-size: 0.95em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
     }
     .order-container .menu-grid { /* Targeting menu-grid specifically for this fix */
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Allow flexible columns, prevent single item from stretching */
