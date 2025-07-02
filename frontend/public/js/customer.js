@@ -1,5 +1,5 @@
 (function() {
-    const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com'; // Use localhost for local dev
+    // REMOVED: const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com'; // This was previously local to customer.js, but not needed anymore
 
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -42,7 +42,7 @@
         const ordersSection = document.getElementById('ordersSection');
 
         // --- Scroll indicator elements ---
-        const categoryFilterWrapper = document.querySelector('.category-filter-wrapper');
+        const categoryFilterWrapper = document.querySelector('.category-filter-wrapper'); // Not defined in HTML, likely meant to wrap categoryFilterButtons
         const scrollIndicatorRight = document.querySelector('.scroll-indicator.right');
 
 
@@ -50,31 +50,8 @@
         let customerOrder = {}; // { menuItemId: { itemDetails, quantity } }
         let customerPlacedOrders = []; // To store customer's placed orders
 
-        // API Helper (assuming it's available or defined here)
-        const api = {
-            fetch: async (endpoint, options = {}) => {
-                const headers = {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                };
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Something went wrong');
-                }
-                return response.json();
-            },
-            menu: {
-                getPublicMenu: async (storeId) => api.fetch(`/menu/public?storeId=${storeId}`)
-            },
-            orders: {
-                placeOrder: async (orderData) => api.fetch('/orders', {
-                    method: 'POST',
-                    body: JSON.stringify(orderData)
-                }),
-                getCustomerOrders: async (storeId, tableId) => api.fetch(`/orders/customer?storeId=${storeId}&tableId=${tableId}`)
-            }
-        };
+        // REMOVED THE LOCAL 'API' HELPER OBJECT AND LOCAL API_BASE_URL DEFINITION.
+        // It will now correctly use the global 'api' object defined in frontend/public/js/api.js
 
 
         // Check if storeId and tableId are present in the URL
@@ -212,8 +189,8 @@
         // --- Fetch Menu Data ---
         async function fetchMenuData() {
             try {
-                // Use the PUBLIC menu endpoint and pass the storeId
-                const response = await api.menu.getPublicMenu(storeId);
+                // Use the PUBLIC menu endpoint from the GLOBAL api object
+                const response = await api.menu.getPublicMenu(storeId); // FIX: Use global 'api'
                 allMenuItems = response;
                 
                 // Sort menu items to bring best sellers to the top
@@ -623,4 +600,4 @@
         // Set up polling for customer orders to track status changes
         setInterval(fetchAndDisplayCustomerOrders, 10000); // Poll every 10 seconds
     });
-})();
+})
