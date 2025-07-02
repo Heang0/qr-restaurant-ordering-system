@@ -1,13 +1,25 @@
+import api from './api.js'; // Correctly imports default export
+import { checkAuthAndRedirect, logout } from './auth.js'; // Correctly imports named exports
+import { generateQrCode } from './utils.js'; // Correctly imports named export
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // Attach logout button listener as early as possible within DOMContentLoaded
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout); // Uses imported logout function
+    }
+
     // Check authentication and redirect if necessary
     if (!checkAuthAndRedirect()) {
+        console.log("Authentication check failed or redirected.");
         return; // Stop execution if not authorized
     }
+    console.log("Authentication successful. Loading admin dashboard.");
 
     const role = localStorage.getItem('role');
     const storeId = localStorage.getItem('storeId'); // Get storeId for admin user
 
-    // Redirect non-superadmin/admin roles to login
+    // Redirect non-superadmin/admin roles to login (redundant if checkAuthAndRedirect works, but safe)
     if (role !== 'superadmin' && role !== 'admin') {
         window.location.href = 'login.html';
         return;
@@ -1226,3 +1238,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+

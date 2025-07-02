@@ -6,7 +6,7 @@
 // For simple vanilla JS, you'd typically include qrcode.min.js in your HTML:
 // <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-function generateQrCode(text, elementId) {
+export function generateQrCode(text, elementId) { // ADDED 'export'
     const element = document.getElementById(elementId);
     if (!element) {
         console.error(`Element with ID '${elementId}' not found for QR code generation.`);

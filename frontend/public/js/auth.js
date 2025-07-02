@@ -1,5 +1,5 @@
 // Function to check if user is authenticated and redirect
-function checkAuthAndRedirect() {
+export function checkAuthAndRedirect() { // ADDED 'export'
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
 
@@ -29,15 +29,15 @@ function checkAuthAndRedirect() {
     return true; // User is authenticated and on the correct page
 }
 
-function logout() {
+export function logout() { // ADDED 'export'
     localStorage.clear(); // Clear all stored user data
     window.location.href = 'login.html';
 }
 
-// Attach logout to a button if it exists
-document.addEventListener('DOMContentLoaded', () => {
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-});
+// REMOVED: Attaching logout to a button here. This will be handled by admin.js or index.html
+// document.addEventListener('DOMContentLoaded', () => {
+//     const logoutBtn = document.getElementById('logoutBtn');
+//     if (logoutBtn) {
+//         logoutBtn.addEventListener('click', logout);
+//     }
+// });
