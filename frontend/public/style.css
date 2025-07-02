@@ -88,7 +88,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 .order-app-header {
     background-color: #fff; /* White background for header */
     color: #333;
-    padding: 15px 20px;
+    padding: 15px; /* Sets 15px padding on all four sides to move from edges */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
@@ -488,7 +488,7 @@ input[type="file"] {
 .modal-header h2 {
     margin: 0;
     font-size: 1.5em;
-    color: #2980b9;
+    color: #e74c3c; /* Changed to your primary red color for "Your Order" title */
 }
 
 .close-button {
@@ -568,16 +568,6 @@ input[type="file"] {
     font-size: 0.9em;
     box-sizing: border-box;
 }
-
-/* .modal-footer {
-    display: flex;
-    flex-direction: column; 
-    gap: 10px;
-    padding-top: 15px;
-    border-top: 1px solid #f0f2f5;
-    margin-top: 15px;
-    align-items: center; 
-} */
 
 .modal-total-price {
     font-size: 1.3em;
@@ -984,7 +974,7 @@ input[type="file"] {
     padding: 0;
     border-bottom: none;
     font-size: 1.8em;
-     color: #e74c3c; /* Change to your primary red color */
+    color: #e74c3c; /* Change to your primary red color */
 }
 
 .modal-body {
@@ -1067,7 +1057,7 @@ input[type="file"] {
 .order-summary-item .item-details {
     flex-grow: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack item name, subtotal, and remark */
     align-items: flex-start;
 }
 .order-summary-item .item-name {
@@ -1133,6 +1123,31 @@ input[type="file"] {
     text-align: center;
 }
 
+/* ADDED: Style for the remark input textarea in the order modal */
+.item-remark-input {
+    width: calc(100% - 10px); /* Adjust width to fit */
+    margin-top: 8px; /* Space from price/name */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9em;
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 40px; /* Minimum height */
+    max-height: 100px; /* Maximum height */
+    box-sizing: border-box; /* Include padding/border in width */
+    font-family: "Battambang", cursive, sans-serif; /* Ensure font consistency */
+}
+
+.item-remark-input::placeholder {
+    color: #999;
+}
+
+.item-remark-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
+
 /* --- RESPONSIVE MEDIA QUERIES --- */
 
 /* Large Desktop (>= 1400px) - Show 6 cards per row */
@@ -1158,7 +1173,7 @@ input[type="file"] {
         gap: 15px; /* Adjust gap as needed */
     }
 
-    /* --- THIS IS THE CRUCIAL PART FOR THE ORDER PAGE MENU GRID ON TABLETS --- */
+    /* THIS IS THE CRUCIAL PART FOR THE ORDER PAGE MENU GRID ON TABLETS */
     .order-container .menu-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, max-content)); /* Prevents single item stretching */
         justify-content: center; /* Centers items if there are fewer than a full row */
@@ -1174,6 +1189,11 @@ input[type="file"] {
     }
     .modal-content {
         width: 95%;
+    }
+
+    /* Order page menu item name font size adjustment */
+    .order-container .menu-card .menu-card-content h3 {
+        font-size: 0.95em; /* Adjust this value as needed */
     }
 }
 
@@ -1218,7 +1238,7 @@ input[type="file"] {
 
     /* Order Page Specific Mobile Adjustments */
     .order-app-header {
-        padding: 15px 20px;
+        padding: 15px; /* Consistent padding on all sides for mobile */
     }
     .order-app-header .header-left {
         flex-grow: 0; /* Allow it to shrink */
@@ -1790,6 +1810,16 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
     border-top: 1px dashed #eee;
 }
 
+/* ADDED: Style for displaying remark in customer's placed orders */
+.customer-order-card .item-remark-display {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+    margin-bottom: 0;
+    font-style: italic;
+    padding-left: 4px; /* Indent slightly */
+    border-left: 2px solid #ccc; /* Small visual cue */
+}
 
 
 /* Styles for the buttons in the order details modal footer */
@@ -1819,4 +1849,16 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
     margin-top: 20px;
     padding-top: 15px;
     border-top: 2px solid #eee; /* A more prominent border for the grand total */
+}
+
+/* --- Admin Dashboard Order Details Modal --- */
+/* ADDED: Style for displaying remark in admin's order details modal */
+.admin-item-remark {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+    margin-bottom: 0;
+    font-style: italic;
+    padding-left: 4px; /* Indent slightly */
+    border-left: 2px solid #ccc; /* Small visual cue */
 }

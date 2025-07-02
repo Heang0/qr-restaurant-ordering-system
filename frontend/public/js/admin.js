@@ -1,23 +1,23 @@
-import api from './api.js'; // Correctly imports default export
-import { checkAuthAndRedirect, logout } from './auth.js'; // Correctly imports named exports
-import { generateQrCode } from './utils.js'; // Correctly imports named export
+import api from './api.js';
+import { checkAuthAndRedirect, logout } from './auth.js';
+import { generateQrCode } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Attach logout button listener as early as possible within DOMContentLoaded
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout); // Uses imported logout function
+        logoutBtn.addEventListener('click', logout);
     }
 
     // Check authentication and redirect if necessary
     if (!checkAuthAndRedirect()) {
         console.log("Authentication check failed or redirected.");
-        return; // Stop execution if not authorized
+        return;
     }
     console.log("Authentication successful. Loading admin dashboard.");
 
     const role = localStorage.getItem('role');
-    const storeId = localStorage.getItem('storeId'); // Get storeId for admin user
+    const storeId = localStorage.getItem('storeId');
 
     // Redirect non-superadmin/admin roles to login (redundant if checkAuthAndRedirect works, but safe)
     if (role !== 'superadmin' && role !== 'admin') {
@@ -798,7 +798,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Display order details in a modal
+    // MODIFIED: Display order details in a modal to show remarks
     function displayOrderDetailsModal(tableId, orders) {
         currentOrdersForModal = orders; // Store the orders for receipt functions
         
@@ -846,6 +846,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <li>
                             ${item.menuItemId.imageUrl ? `<img src="${item.menuItemId.imageUrl}" class="modal-item-img" alt="${item.menuItemId.name}">` : ''}
                             <span>${item.menuItemId.name} x ${item.quantity} ($${item.menuItemId.price.toFixed(2)})</span>
+                            ${item.remark ? `<p class="admin-item-remark">Note: ${item.remark}</p>` : ''} <!-- ADDED: Display remark -->
                         </li>
                     `).join('')}
                 </ul>
@@ -901,7 +902,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Receipt generation logic
+    // MODIFIED: Generate Receipt HTML to include remarks
     function generateReceiptHtml(orders, storeInfo) {
         let itemsHtml = '';
         let subtotal = 0;
@@ -914,7 +915,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             subtotal += itemPrice;
             itemsHtml += `
                 <tr>
-                    <td>${item.menuItemId.name} x ${item.quantity}</td>
+                    <td>
+                        ${item.menuItemId.name} x ${item.quantity}
+                        ${item.remark ? `<br><small>(${item.remark})</small>` : ''} <!-- ADDED: Remark on receipt -->
+                    </td>
                     <td>$${itemPrice.toFixed(2)}</td>
                 </tr>
             `;
@@ -1079,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error clearing table orders:', error);
             if(modalOrdersMessage) {
                 modalOrdersMessage.textContent = 'Failed to clear orders: ' + (error.message || 'Server error');
-                modalOrdersMessage.className = 'error-message';
+                modalOrdersMessage.className = 'error-message'; // Corrected class name
             }
         }
     }
@@ -1238,4 +1242,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
-

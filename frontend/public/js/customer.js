@@ -1,4 +1,4 @@
-import api from './api.js'; // ADDED THIS LINE: Import the api object
+import api from './api.js';
 
 (function() {
     document.addEventListener('DOMContentLoaded', async () => {
@@ -52,7 +52,8 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
 
 
         let allMenuItems = [];
-        let customerOrder = {}; // { menuItemId: { itemDetails, quantity } }
+        // MODIFIED: Added 'remark' to the initial structure of customerOrder item
+        let customerOrder = {}; // { menuItemId: { itemDetails, quantity, remark } }
         let customerPlacedOrders = []; // To store customer's placed orders
 
 
@@ -279,7 +280,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             checkScrollability(); // Re-check scrollability after rendering categories
         }
 
-        // --- START ADDITION: filterMenu function ---
         function filterMenu(categoryId) {
             let filteredItems = [];
             if (categoryId === 'all') {
@@ -299,7 +299,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                 }
             });
         }
-        // --- END ADDITION: filterMenu function ---
 
         function displayMenuItems(items) {
             if (menuList) menuList.innerHTML = '';
@@ -356,6 +355,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             });
         }
 
+        // MODIFIED: Initialize remark for new items
         function addToOrder(menuItemId) {
             const item = allMenuItems.find(i => i._id === menuItemId);
             if (!item || !item.isAvailable) return;
@@ -363,7 +363,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             if (customerOrder[menuItemId]) {
                 customerOrder[menuItemId].quantity++;
             } else {
-                customerOrder[menuItemId] = { ...item, quantity: 1 };
+                customerOrder[menuItemId] = { ...item, quantity: 1, remark: '' }; // Initialize remark as empty string
             }
             updateCartSummary();
         }
@@ -400,6 +400,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             }
         }
 
+        // MODIFIED: Add remark input field to order summary
         function updateOrderSummary() {
             if (orderItemsList) orderItemsList.innerHTML = '';
             let total = 0;
@@ -416,6 +417,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     <div class="item-details">
                         <span class="item-name">${item.name}</span>
                         <span class="item-subtotal">$${(item.quantity * item.price).toFixed(2)}</span>
+                        <textarea class="item-remark-input" data-id="${item._id}" placeholder="Add special instructions (e.g., no onions)" rows="2">${item.remark || ''}</textarea>
                     </div>
                     <div class="item-price-controls">
                         <button class="remove-item-btn item-control-btn secondary-btn" data-id="${item._id}">-</button>
@@ -449,13 +451,25 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     updateOrderSummary();
                 });
             });
+
+            // ADDED: Event listener for remark input
+            document.querySelectorAll('.item-remark-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const itemId = e.target.dataset.id;
+                    if (customerOrder[itemId]) {
+                        customerOrder[itemId].remark = e.target.value;
+                    }
+                });
+            });
         }
 
         if (submitOrderBtn) {
             submitOrderBtn.addEventListener('click', async () => {
+                // MODIFIED: Include remark in the orderItems sent to backend
                 const orderItems = Object.values(customerOrder).map(item => ({
                     menuItemId: item._id,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    remark: item.remark || '' // Ensure remark is sent, defaulting to empty string
                 }));
 
                 if (orderItems.length === 0) {
@@ -553,6 +567,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                                 <li>
                                     ${item.menuItemId.imageUrl ? `<img src="${item.menuItemId.imageUrl}" alt="${item.menuItemId.name}" class="item-thumbnail">` : ''}
                                     <span>${item.menuItemId.name} x ${item.quantity}</span>
+                                    ${item.remark ? `<p class="item-remark-display">Note: ${item.remark}</p>` : ''} <!-- ADDED: Display remark -->
                                 </li>
                             `;
                         }).join('');
