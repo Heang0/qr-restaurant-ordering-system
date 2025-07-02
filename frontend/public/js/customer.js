@@ -1,4 +1,4 @@
-import api from './api.js';
+import api from './api.js'; // ADDED THIS LINE: Import the api object
 
 (function() {
     document.addEventListener('DOMContentLoaded', async () => {
@@ -410,6 +410,7 @@ import api from './api.js';
                 const item = customerOrder[itemId];
                 const li = document.createElement('li');
                 li.classList.add('order-summary-item');
+                // MODIFIED: Use a span for display and a textarea for input, toggle visibility
                 li.innerHTML = `
                     <div class="item-image-wrapper">
                         <img src="${item.imageUrl}" alt="${item.name}" class="item-thumbnail">
@@ -417,7 +418,12 @@ import api from './api.js';
                     <div class="item-details">
                         <span class="item-name">${item.name}</span>
                         <span class="item-subtotal">$${(item.quantity * item.price).toFixed(2)}</span>
-                        <textarea class="item-remark-input" data-id="${item._id}" placeholder="Add special instructions (e.g., no onions)" rows="2">${item.remark || ''}</textarea>
+                        <div class="item-remark-container">
+                            <span class="item-remark-display-toggle" data-id="${item._id}">
+                                ${item.remark ? `Remark: ${item.remark}` : 'Add Remark'}
+                            </span>
+                            <textarea class="item-remark-input hidden" data-id="${item._id}" placeholder="e.g., no onions" rows="1">${item.remark || ''}</textarea>
+                        </div>
                     </div>
                     <div class="item-price-controls">
                         <button class="remove-item-btn item-control-btn secondary-btn" data-id="${item._id}">-</button>
@@ -452,12 +458,49 @@ import api from './api.js';
                 });
             });
 
-            // ADDED: Event listener for remark input
+            // ADDED/MODIFIED: Event listeners for remark display/input toggle
+            document.querySelectorAll('.item-remark-display-toggle').forEach(span => {
+                span.addEventListener('click', (e) => {
+                    const itemId = e.target.dataset.id;
+                    const container = e.target.closest('.item-remark-container');
+                    const displaySpan = container.querySelector('.item-remark-display-toggle');
+                    const inputField = container.querySelector('.item-remark-input');
+
+                    displaySpan.classList.add('hidden');
+                    inputField.classList.remove('hidden');
+                    inputField.focus(); // Focus on the input field
+                    inputField.select(); // Select all text for easy editing
+                });
+            });
+
             document.querySelectorAll('.item-remark-input').forEach(input => {
+                // Update remark on input
                 input.addEventListener('input', (e) => {
                     const itemId = e.target.dataset.id;
                     if (customerOrder[itemId]) {
                         customerOrder[itemId].remark = e.target.value;
+                    }
+                });
+
+                // Hide input and show display span on blur
+                input.addEventListener('blur', (e) => {
+                    const itemId = e.target.dataset.id;
+                    const container = e.target.closest('.item-remark-container');
+                    const displaySpan = container.querySelector('.item-remark-display-toggle');
+                    const inputField = container.querySelector('.item-remark-input');
+
+                    // Update display text
+                    displaySpan.textContent = customerOrder[itemId].remark ? `Remark: ${customerOrder[itemId].remark}` : 'Add Remark';
+                    
+                    inputField.classList.add('hidden');
+                    displaySpan.classList.remove('hidden');
+                });
+
+                // Optional: Hide input on 'Enter' key press
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent new line in textarea
+                        e.target.blur(); // Trigger blur to hide input
                     }
                 });
             });
@@ -611,6 +654,6 @@ import api from './api.js';
         updateCartSummary();
         fetchAndDisplayCustomerOrders(); // Load customer's orders on page load
         // Set up polling for customer orders to track status changes
-        setInterval(fetchAndDisplayCustomerOrders, 10000); // Poll every 10 seconds
+        setInterval(fetchAndDisplayCustomerOrders, 5000); // Poll every 10 seconds
     });
 })();

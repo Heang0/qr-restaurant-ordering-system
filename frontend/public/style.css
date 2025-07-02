@@ -1862,3 +1862,69 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
     padding-left: 4px; /* Indent slightly */
     border-left: 2px solid #ccc; /* Small visual cue */
 }
+
+
+/* ADDED: Container for remark display/input */
+.item-remark-container {
+    margin-top: 5px;
+    width: 100%;
+    position: relative; /* For potential absolute positioning of input */
+    min-height: 25px; /* Ensure it takes up some space even when empty */
+}
+
+/* ADDED: Style for the "Add Remark" / "Remark: ..." display span */
+.item-remark-display-toggle {
+    display: block; /* Takes full width */
+    font-size: 0.85em;
+    color: #666;
+    padding: 5px 8px;
+    border: 1px dashed #ccc; /* Dashed border to indicate clickable */
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f8f8f8;
+    transition: background-color 0.2s, border-color 0.2s;
+    overflow: hidden; /* Hide overflow text */
+    white-space: nowrap; /* Prevent wrapping */
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+}
+
+.item-remark-display-toggle:hover {
+    background-color: #f0f0f0;
+    border-color: #999;
+}
+
+/* MODIFIED: Style for the remark input textarea in the order modal */
+.item-remark-input {
+    width: 100%; /* Take full width of container */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9em;
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 40px; /* Minimum height when active */
+    max-height: 100px; /* Maximum height */
+    box-sizing: border-box; /* Include padding/border in width */
+    font-family: "Battambang", cursive, sans-serif;
+    position: absolute; /* Position over the display span */
+    top: 0;
+    left: 0;
+    z-index: 1; /* Ensure it's above the span when visible */
+}
+
+.item-remark-input::placeholder {
+    color: #999;
+}
+
+.item-remark-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
+/* Ensure the item-details section can properly contain the remark container */
+.order-summary-item .item-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column; /* Stack item name, subtotal, and remark */
+    align-items: flex-start;
+    position: relative; /* For positioning children */
+}
