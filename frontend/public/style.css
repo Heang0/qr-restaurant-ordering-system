@@ -984,6 +984,7 @@ input[type="file"] {
     padding: 0;
     border-bottom: none;
     font-size: 1.8em;
+     color: #e74c3c; /* Change to your primary red color */
 }
 
 .modal-body {
@@ -1151,33 +1152,20 @@ input[type="file"] {
     .container {
         padding: 20px;
     }
-    /* This rule should now apply to .table-grid and .order-grid if they are not explicitly defined elsewhere */
-    /* If .table-grid and .order-grid need specific settings for this breakpoint, define them separately */
-    /* For example:
-    .table-grid {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-    .order-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-    */
+    /* Keep .menu-grid for admin dashboard as it was */
     .menu-grid { /* Target .menu-grid directly for admin dashboard */
         grid-template-columns: repeat(4, 1fr); /* Enforce 4 columns for iPad/tablet */
         gap: 15px; /* Adjust gap as needed */
     }
 
-    /* --- START UPDATED SECTION FOR ORDER PAGE MENU GRID --- */
-    .order-container .menu-grid { /* Targeting menu grid specifically for order page */
+    /* --- THIS IS THE CRUCIAL PART FOR THE ORDER PAGE MENU GRID ON TABLETS --- */
+    .order-container .menu-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, max-content)); /* Prevents single item stretching */
         justify-content: center; /* Centers items if there are fewer than a full row */
         gap: 15px; /* Adjust gap as needed for tablet */
     }
-    /* --- END UPDATED SECTION FOR ORDER PAGE MENU GRID --- */
+    /* --- END CRUCIAL PART --- */
 
-    /* Remove .order-container .menu-card max-width here if it causes issues, or keep it if desired */
-    /* .order-container .menu-card {
-        max-width: 280px;
-    } */
     .section-title {
         font-size: 1.8em;
     }
@@ -1208,7 +1196,7 @@ input[type="file"] {
         padding: 0 10px;
     }
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 0.95em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
+        font-size: 0.85em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
     }
     .order-container .menu-grid { /* Targeting menu-grid specifically for this fix */
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Allow flexible columns, prevent single item from stretching */
