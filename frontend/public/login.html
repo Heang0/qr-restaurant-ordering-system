@@ -95,20 +95,21 @@
         </form>
     </div>
 
-    <!-- Load api.js as a module -->
-    <script src="../js/api.js?v=20250702104500" type="module"></script> <!-- ADDED type="module" and cache-buster -->
-    <script src="../js/auth.js?v=20250702104500"></script> <!-- Added cache-buster -->
-    
-    <!-- Inline script needs to be a module to import 'api' -->
-    <script type="module">
-        import api from '../js/api.js'; // IMPORTED API HERE
-        import { checkAuthAndRedirect } from '../js/auth.js'; // Assuming auth.js also exports this
+    <script src="../js/auth.js?v=20250702105700"></script> <script type="module">
+        import api from '../js/api.js'; // IMPORTED API
+        // If checkAuthAndRedirect is defined globally in auth.js, it might be accessible here.
+        // Otherwise, if auth.js uses 'export', it needs to be imported:
+        // import { checkAuthAndRedirect } from '../js/auth.js'; 
+        // For now, assuming it's global or included by default.
 
         document.addEventListener('DOMContentLoaded', () => {
             // If already logged in, redirect based on role
             const token = localStorage.getItem('token');
             if (token) {
-                checkAuthAndRedirect();
+                // If checkAuthAndRedirect is global, it will work.
+                // If it needs to be imported, ensure 'import { checkAuthAndRedirect } from ../js/auth.js;'
+                // is uncommented above.
+                checkAuthAndRedirect(); 
                 return;
             }
 
