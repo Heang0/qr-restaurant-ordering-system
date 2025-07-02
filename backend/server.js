@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); // Keep cors import
-const path = require('path'); // Still needed if other modules use it, but not for static serving here
+const cors = require('cors');
+const path = require('path');
 const config = require('./config');
 
 const authRoutes = require('./routes/auth');
@@ -21,26 +21,17 @@ mongoose.connect(config.mongoURI)
 
 // Middleware
 app.use(express.json());
+app.use(cors());
 
-// --- Explicit CORS Configuration (REQUIRED for separate deployments) ---
-// Allow requests only from your specific frontend domain.
-const corsOptions = {
-    origin: 'https://qr-restaurant-ordering-system-1.onrender.com', // **IMPORTANT: Replace with your actual Frontend Static Site URL**
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Allow cookies to be sent (if your auth uses them)
-    optionsSuccessStatus: 204 // For preflight requests
-};
-app.use(cors(corsOptions));
-
-
-// --- API Request Logger Middleware (Optional, good for debugging) ---
-app.use('/api', (req, res, next) => {
-    console.log(`API Request: ${req.method} ${req.originalUrl}`);
-    next();
+// --- ULTIMATE DEBUGGING LOGGING ---
+// This middleware will log ALL incoming requests to the backend.
+app.use((req, res, next) => {
+    console.log(`[INCOMING REQUEST] Method: ${req.method}, Path: ${req.path}, OriginalUrl: ${req.originalUrl}, Query: ${JSON.stringify(req.query)}, Headers: ${JSON.stringify(req.headers.host)}`);
+    next(); // Pass control to the next middleware/route handler
 });
 
+
 // --- API Routes ---
-// These are the ONLY routes this server will handle.
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
@@ -49,19 +40,15 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoriesRoutes);
 
-// --- No static file serving or wildcard routes here ---
-// This server will NOT serve HTML, CSS, JS files directly.
-// It will only respond to /api/* requests.
+// --- Backend Root Route ---
 app.get('/', (req, res) => {
     res.send('QR Restaurant Ordering System Backend API is running.');
 });
 
-// Optional: Add a 404 handler for any non-API routes that fall through
+// --- 404 Handler for unmatched routes ---
 app.use((req, res, next) => {
-    if (!req.originalUrl.startsWith('/api')) {
-        return res.status(404).send('Not Found: This server only hosts the API.');
-    }
-    next();
+    console.log(`[404] No route matched: ${req.method} ${req.originalUrl}`);
+    res.status(404).send('Not Found: This server only hosts the API.');
 });
 
 
