@@ -1,6 +1,6 @@
 // IMPORTANT: This API_BASE_URL should point to the root of your backend API,
 // without a trailing slash, as all your backend routes already start with a leading slash.
-const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api'; // Removed trailing slash if it was there before
+const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api'; // Ensure no trailing slash here
 
 async function request(url, method = 'GET', data = null, isFormData = false) {
     const headers = {};
@@ -23,8 +23,10 @@ async function request(url, method = 'GET', data = null, isFormData = false) {
     }
 
     try {
-        // The 'url' parameter already starts with a '/', so combining them correctly
-        const response = await fetch(`${API_BASE_URL}${url}`, config); 
+        // Ensure the 'url' parameter always starts with a '/' and API_BASE_URL does not end with one.
+        // This prevents issues like 'domain.com//api/endpoint' or 'domain.com/apiendpoint'
+        const finalUrl = `${API_BASE_URL}${url.startsWith('/') ? url : '/' + url}`; // FIX: Ensure proper URL concatenation
+        const response = await fetch(finalUrl, config); 
         const responseData = await response.json();
 
         if (!response.ok) {
