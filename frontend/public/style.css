@@ -1078,7 +1078,7 @@ input[type="file"] {
 
 .order-summary-item .item-subtotal {
     font-weight: bold;
-    color: #28a745;
+    color: #3498db; /* Changed to blue */
     font-size: 1em;
 }
 
@@ -1218,7 +1218,7 @@ input[type="file"] {
 
     /* Order Page Specific Mobile Adjustments */
     .order-app-header {
-        padding: 10px 15px;
+        padding: 15px 20px;
     }
     .order-app-header .header-left {
         flex-grow: 0; /* Allow it to shrink */
