@@ -14,15 +14,22 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        const orderItemsToSave = []; // Create a new array to satore validated items with remarks
         for (const item of items) {
             const menuItem = await MenuItem.findById(item.menuItemId);
             // Ensure the menu item exists and belongs to the correct store
             if (!menuItem || menuItem.storeId.toString() !== storeId) {
                 return res.status(400).json({ message: `Invalid menu item or item not found for store: ${item.menuItemId}` });
             }
+            // Push validated item details, including remark
+            orderItemsToSave.push({
+                menuItemId: item.menuItemId,
+                quantity: item.quantity,
+                remark: item.remark || '' // Capture remark, default to empty string if not provided
+            });
         }
 
-        const order = new Order({ storeId, tableId, items, status: 'Pending' });
+        const order = new Order({ storeId, tableId, items: orderItemsToSave, status: 'Pending' }); // Use orderItemsToSave
         await order.save();
         res.status(201).json({ message: 'Order placed successfully', order });
     } catch (error) {
@@ -42,8 +49,7 @@ router.get('/customer', async (req, res) => {
 
     try {
         // Find orders for the specific storeId and tableId.
-        // Populate menu item details (name, price, imageUrl) for display.
-        // Sort by creation date in descending order (newest first).
+        // Populate menu item details (name, price, imageUrl) and also include 'remark'.
         const orders = await Order.find({ storeId, tableId })
                                   .populate('items.menuItemId', 'name price imageUrl')
                                   .sort({ createdAt: -1 }); // Newest orders first
@@ -69,6 +75,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     }
     try {
         // Updated populate to include 'imageUrl' from MenuItem
+        // Ensure 'remark' is also fetched for admin view
         const orders = await Order.find(query)
                                   .populate('items.menuItemId', 'name price imageUrl')
                                   .sort({ createdAt: -1 });

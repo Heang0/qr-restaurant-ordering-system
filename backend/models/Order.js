@@ -5,7 +5,9 @@ const OrderSchema = new mongoose.Schema({
     tableId: { type: String, required: true },
     items: [{
         menuItemId: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
-        quantity: { type: Number, required: true, min: 1 }
+        quantity: { type: Number, required: true, min: 1 },
+        // ADDED THIS LINE: Remark field for individual order items
+        remark: { type: String, default: '' }
     }],
     status: { type: String, enum: ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Completed', 'Cancelled'], default: 'Pending' },
     createdAt: { type: Date, default: Date.now }
