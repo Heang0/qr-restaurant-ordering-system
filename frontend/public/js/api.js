@@ -1,6 +1,4 @@
-// IMPORTANT: This API_BASE_URL should point to the root of your backend API,
-// without a trailing slash, as all your backend routes already start with a leading slash.
-const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api'; // Ensure no trailing slash here
+const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api';
 
 async function request(url, method = 'GET', data = null, isFormData = false) {
     const headers = {};
@@ -17,16 +15,14 @@ async function request(url, method = 'GET', data = null, isFormData = false) {
     if (!isFormData) {
         config.headers['Content-Type'] = 'application/json';
     }
-    
+
     if (data) {
         config.body = isFormData ? data : JSON.stringify(data);
     }
 
     try {
-        // Ensure the 'url' parameter always starts with a '/' and API_BASE_URL does not end with one.
-        // This prevents issues like 'domain.com//api/endpoint' or 'domain.com/apiendpoint'
-        const finalUrl = `${API_BASE_URL}${url.startsWith('/') ? url : '/' + url}`; // FIX: Ensure proper URL concatenation
-        const response = await fetch(finalUrl, config); 
+        const finalUrl = `${API_BASE_URL}${url.startsWith('/') ? url : '/' + url}`;
+        const response = await fetch(finalUrl, config);
         const responseData = await response.json();
 
         if (!response.ok) {
@@ -34,6 +30,7 @@ async function request(url, method = 'GET', data = null, isFormData = false) {
             error.statusCode = response.status;
             throw error;
         }
+
         return responseData;
     } catch (error) {
         console.error('API Error:', error);
@@ -41,8 +38,6 @@ async function request(url, method = 'GET', data = null, isFormData = false) {
     }
 }
 
-
-// Export specific API functions
 const api = {
     auth: {
         login: (email, password) => request('/auth/login', 'POST', { email, password }),
@@ -60,11 +55,8 @@ const api = {
         getStoreById: (id) => request(`/stores/${id}`),
     },
     menu: {
-        // Note: The backend's /menu/public endpoint is still useful if you ever decide
-        // to separate frontend hosting again, but for a single service, /menu?storeId=...
-        // would work for both admin and public if not using authentication middleware.
-        // However, sticking to the public endpoint for customers is safer.
-        getMenu: (storeId) => request(`/menu?storeId=${storeId}`), // This is for admin
+        getMenu: (storeId) => request(`/menu?storeId=${storeId}`), // Admin access
+        getPublicMenu: (storeId) => request(`/menu/public?storeId=${storeId}`), // No auth
         addMenuItem: (formData) => request('/menu', 'POST', formData, true),
         updateMenuItem: (id, formData) => request(`/menu/${id}`, 'PUT', formData, true),
         deleteMenuItem: (id) => request(`/menu/${id}`, 'DELETE'),
@@ -76,18 +68,17 @@ const api = {
     },
     orders: {
         placeOrder: (orderData) => request('/orders', 'POST', orderData),
-        getStoreOrders: () => request('/orders'), // Admin orders
+        getStoreOrders: () => request('/orders'),
         updateOrderStatus: (id, status) => request(`/orders/${id}`, 'PUT', { status }),
         clearTableOrders: (tableId) => request(`/orders/table/${tableId}`, 'DELETE'),
-        // Customer orders endpoint now uses the relative API_BASE_URL
         getCustomerOrders: (storeId, tableId) => request(`/orders/customer?storeId=${storeId}&tableId=${tableId}`),
     },
     categories: {
         getCategories: (storeId) => request(`/categories?storeId=${storeId}`),
         addCategory: (data) => request('/categories', 'POST', data),
-        updateCategory: (id, data) => request(`/categories/${id}`, 'PUT', data), 
+        updateCategory: (id, data) => request(`/categories/${id}`, 'PUT', data),
         deleteCategory: (id) => request(`/categories/${id}`, 'DELETE'),
-    }
+    },
 };
 
-window.api = api;
+export default api;

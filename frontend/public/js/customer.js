@@ -1,6 +1,6 @@
-(function() {
-    // REMOVED: const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com'; // This was previously local to customer.js, but not needed anymore
+import api from './api.js'; // ADDED THIS LINE: Import the api object
 
+(function() {
     document.addEventListener('DOMContentLoaded', async () => {
         console.log("DOMContentLoaded fired. Starting customer.js execution.");
 
@@ -47,14 +47,14 @@
         const ordersSection = document.getElementById('ordersSection');
 
         // --- Scroll indicator elements ---
-        // Ensure these elements exist in order.html if you want to use them
-        // const categoryFilterWrapper = document.querySelector('.category-filter-wrapper');
+        const categoryFilterWrapper = document.querySelector('.category-filter-wrapper');
         const scrollIndicatorRight = document.querySelector('.scroll-indicator.right');
 
 
         let allMenuItems = [];
         let customerOrder = {}; // { menuItemId: { itemDetails, quantity } }
         let customerPlacedOrders = []; // To store customer's placed orders
+
 
         // Check if storeId and tableId are present in the URL
         if (!storeId || !tableId) {
@@ -186,8 +186,8 @@
         async function fetchMenuData() {
             console.log("Attempting to fetch menu data...");
             try {
-                // Use the PUBLIC menu endpoint from the GLOBAL api object
-                const response = await api.menu.getPublicMenu(storeId);
+                // Ensure api.menu.getPublicMenu is correctly defined in api.js
+                const response = await api.menu.getPublicMenu(storeId); // FIX: Use global 'api'
                 allMenuItems = response;
                 console.log("Menu data fetched successfully:", allMenuItems);
                 
