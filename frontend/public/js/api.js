@@ -1,7 +1,7 @@
 // Change the API_BASE_URL to a relative path
 // When deployed as a single service, the frontend is served from the same domain
 // as the backend API. So, '/api' will correctly point to the backend routes.
-const API_BASE_URL = '/api'; 
+ const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api'; // This is YOUR backend URL + /api
 
 async function request(url, method = 'GET', data = null, isFormData = false) {
     const headers = {};
