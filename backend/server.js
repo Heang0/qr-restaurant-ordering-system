@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
+const path = require('path'); // Still needed if other modules use it, but not for static serving here
 const config = require('./config');
 
 const authRoutes = require('./routes/auth');
@@ -21,17 +21,17 @@ mongoose.connect(config.mongoURI)
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors()); // Keep CORS enabled for cross-origin requests from your frontend
 
-// --- NEW: API Request Logger Middleware ---
+// --- API Request Logger Middleware ---
 // This logs requests that hit /api
 app.use('/api', (req, res, next) => {
     console.log(`API Request: ${req.method} ${req.originalUrl}`);
     next(); // Pass control to the next middleware/route handler
 });
 
-// --- API Routes (MUST BE FIRST AND EXPLICITLY HANDLED) ---
-// These routes handle all your backend API calls.
+// --- API Routes ---
+// These are the ONLY routes this server will handle.
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
@@ -40,45 +40,20 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoriesRoutes);
 
-// Define the absolute path to your frontend public directory
-const frontendPublicPath = path.join(__dirname, '..', 'frontend', 'public');
-
-// --- Explicitly serve core HTML files ---
-// These routes are defined BEFORE the general static middleware
-// to ensure they are served directly and not intercepted.
-app.get('/login.html', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'login.html'));
+// --- No static file serving or wildcard routes here ---
+// This server will NOT serve HTML, CSS, JS files directly.
+// It will only respond to /api/* requests.
+app.get('/', (req, res) => {
+    res.send('QR Restaurant Ordering System Backend API is running.');
 });
 
-app.get('/index.html', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'index.html'));
-});
-
-app.get('/admin.html', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'admin.html'));
-});
-
-app.get('/order.html', (req, res) => {
-    res.sendFile(path.join(frontendPublicPath, 'order.html'));
-});
-
-// --- Serve other static assets (CSS, JS, images, etc.) ---
-// This middleware will serve all other files from the 'public' directory.
-// It comes AFTER explicit HTML routes and all API routes.
-// The key is that it will ONLY be hit if the request URL does NOT match
-// an API route or one of the explicitly defined HTML files above.
-app.use(express.static(frontendPublicPath));
-
-// --- SPA Fallback / Handle root and any unmatched routes ---
-// This is the final catch-all.
-app.get('*', (req, res) => {
-    // If the request is for the root path, serve login.html
-    if (req.path === '/') {
-        return res.sendFile(path.join(frontendPublicPath, 'login.html'));
+// Optional: Add a 404 handler for any non-API routes that fall through
+app.use((req, res, next) => {
+    // If a request reaches here and doesn't start with /api, it's an unhandled route
+    if (!req.originalUrl.startsWith('/api')) {
+        return res.status(404).send('Not Found: This server only hosts the API.');
     }
-    // For any other path not caught by previous routes (including client-side routes),
-    // serve index.html.
-    res.sendFile(path.join(frontendPublicPath, 'index.html'));
+    next(); // For /api routes that might not be matched (e.g., /api/nonexistent)
 });
 
 
