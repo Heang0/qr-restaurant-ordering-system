@@ -95,21 +95,17 @@
         </form>
     </div>
 
-    <script src="../js/auth.js?v=20250702105700"></script> <script type="module">
-        import api from '../js/api.js'; // IMPORTED API
-        // If checkAuthAndRedirect is defined globally in auth.js, it might be accessible here.
-        // Otherwise, if auth.js uses 'export', it needs to be imported:
-        // import { checkAuthAndRedirect } from '../js/auth.js'; 
-        // For now, assuming it's global or included by default.
+    <script type="module">
+        // Import api and auth functions
+        import api from '../js/api.js'; // CORRECT: Import api as default export
+        import { checkAuthAndRedirect } from '../js/auth.js'; // CORRECT: Import named export
+        // Note: auth.js must export checkAuthAndRedirect
 
         document.addEventListener('DOMContentLoaded', () => {
             // If already logged in, redirect based on role
             const token = localStorage.getItem('token');
             if (token) {
-                // If checkAuthAndRedirect is global, it will work.
-                // If it needs to be imported, ensure 'import { checkAuthAndRedirect } from ../js/auth.js;'
-                // is uncommented above.
-                checkAuthAndRedirect(); 
+                checkAuthAndRedirect(); // This function is now correctly imported
                 return;
             }
 
