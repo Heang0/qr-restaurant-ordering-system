@@ -2,10 +2,15 @@
     // REMOVED: const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com'; // This was previously local to customer.js, but not needed anymore
 
     document.addEventListener('DOMContentLoaded', async () => {
+        console.log("DOMContentLoaded fired. Starting customer.js execution.");
+
         const urlParams = new URLSearchParams(window.location.search);
         const storeId = urlParams.get('storeId');
         const tableId = urlParams.get('table');
 
+        console.log(`URL Params - storeId: ${storeId}, tableId: ${tableId}`);
+
+        // Get all elements and add null checks for robustness
         const storeNameHeader = document.getElementById('storeNameHeader');
         const tableIdDisplay = document.getElementById('tableIdDisplay');
         const menuList = document.getElementById('menuList');
@@ -42,7 +47,8 @@
         const ordersSection = document.getElementById('ordersSection');
 
         // --- Scroll indicator elements ---
-        const categoryFilterWrapper = document.querySelector('.category-filter-wrapper'); // Not defined in HTML, likely meant to wrap categoryFilterButtons
+        // Ensure these elements exist in order.html if you want to use them
+        // const categoryFilterWrapper = document.querySelector('.category-filter-wrapper');
         const scrollIndicatorRight = document.querySelector('.scroll-indicator.right');
 
 
@@ -50,72 +56,65 @@
         let customerOrder = {}; // { menuItemId: { itemDetails, quantity } }
         let customerPlacedOrders = []; // To store customer's placed orders
 
-        // REMOVED THE LOCAL 'API' HELPER OBJECT AND LOCAL API_BASE_URL DEFINITION.
-        // It will now correctly use the global 'api' object defined in frontend/public/js/api.js
-
-
         // Check if storeId and tableId are present in the URL
         if (!storeId || !tableId) {
-            menuErrorMessage.textContent = 'Missing store ID or table ID in URL. Please scan a valid QR code.';
+            console.error("Missing storeId or tableId in URL.");
+            if (menuErrorMessage) menuErrorMessage.textContent = 'Missing store ID or table ID in URL. Please scan a valid QR code.';
             if (submitOrderBtn) submitOrderBtn.disabled = true;
-            if (floatingCartBtn) floatingCartBtn.style.display = 'none'; // Hide floating cart if invalid URL
-            if (bottomNavCartBtn) bottomNavCartBtn.style.display = 'none'; // Hide bottom nav cart
-            if (bottomNavOrdersBtn) bottomNavOrdersBtn.style.display = 'none'; // Hide bottom nav orders
-            return;
+            if (floatingCartBtn) floatingCartBtn.style.display = 'none';
+            if (bottomNavCartBtn) bottomNavCartBtn.style.display = 'none';
+            if (bottomNavOrdersBtn) bottomNavOrdersBtn.style.display = 'none';
+            return; // Stop execution if critical params are missing
         }
 
         if (tableIdDisplay) tableIdDisplay.textContent = tableId;
+        console.log("Store ID and Table ID found. Initializing event listeners and data fetches.");
+
 
         // --- Modal Functionality ---
         if (floatingCartBtn) {
             floatingCartBtn.addEventListener('click', () => {
-                updateOrderSummary(); // Ensure summary is fresh when modal opens
+                updateOrderSummary();
                 if (orderModal) {
-                    orderModal.style.display = 'flex'; // Use flex for centering
-                    document.body.classList.add('modal-open'); // Add class to body to prevent scrolling
+                    orderModal.style.display = 'flex';
+                    document.body.classList.add('modal-open');
                 }
             });
         }
 
-        // Event listener for the bottom navigation cart button
         if (bottomNavCartBtn) {
             bottomNavCartBtn.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default link behavior
-                updateOrderSummary(); // Ensure summary is fresh when modal opens
+                e.preventDefault();
+                updateOrderSummary();
                 if (orderModal) {
-                    orderModal.style.display = 'flex'; // Show the order modal
-                    document.body.classList.add('modal-open'); // Prevent body scrolling
+                    orderModal.style.display = 'flex';
+                    document.body.classList.add('modal-open');
                 }
             });
         }
 
-        // Event listener for the bottom navigation Orders button
         if (bottomNavOrdersBtn) {
             bottomNavOrdersBtn.addEventListener('click', async (e) => {
-                e.preventDefault(); // Prevent default link behavior
-                // Fetch and display customer's orders
+                e.preventDefault();
                 await fetchAndDisplayCustomerOrders();
-                // Scroll to the orders section
                 if (ordersSection) {
                     ordersSection.scrollIntoView({ behavior: 'smooth' });
                 }
             });
         }
 
-        // Event listener for the bottom navigation Home button
         if (bottomNavHomeBtn) {
             bottomNavHomeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top of the page
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
 
-        // Event listener for the bottom navigation Menu button
         if (bottomNavMenuBtn) {
             bottomNavMenuBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (menuSection) {
-                    menuSection.scrollIntoView({ behavior: 'smooth' }); // Scroll to menu section
+                    menuSection.scrollIntoView({ behavior: 'smooth' });
                 }
             });
         }
@@ -135,7 +134,6 @@
             }
         });
 
-        // Event listener for the Continue Shopping button on the confirmation modal
         if (continueShoppingBtn) {
             continueShoppingBtn.addEventListener('click', () => {
                 if (confirmationModal) confirmationModal.style.display = 'none';
@@ -143,7 +141,6 @@
             });
         }
         
-        // Close confirmation modal if user clicks outside
         window.addEventListener('click', (event) => {
             if (event.target == confirmationModal) {
                 if (confirmationModal) confirmationModal.style.display = 'none';
@@ -165,7 +162,6 @@
             }
         }
 
-        // Event listener for the right scroll indicator
         if (scrollIndicatorRight) {
             scrollIndicatorRight.addEventListener('click', () => {
                 if (categoryFilterButtons) {
@@ -188,10 +184,12 @@
 
         // --- Fetch Menu Data ---
         async function fetchMenuData() {
+            console.log("Attempting to fetch menu data...");
             try {
                 // Use the PUBLIC menu endpoint from the GLOBAL api object
-                const response = await api.menu.getPublicMenu(storeId); // FIX: Use global 'api'
+                const response = await api.menu.getPublicMenu(storeId);
                 allMenuItems = response;
+                console.log("Menu data fetched successfully:", allMenuItems);
                 
                 // Sort menu items to bring best sellers to the top
                 allMenuItems.sort((a, b) => {
@@ -263,7 +261,7 @@
             allBtn.dataset.categoryId = 'all';
             allBtn.addEventListener('click', () => {
                 filterMenu('all');
-                if (menuSearchInput) menuSearchInput.value = ''; // Clear search when filtering by category
+                if (menuSearchInput) menuSearchInput.value = '';
             });
             if (categoryFilterButtons) categoryFilterButtons.appendChild(allBtn);
 
@@ -274,26 +272,11 @@
                 btn.dataset.categoryId = cat.id;
                 btn.addEventListener('click', () => {
                     filterMenu(cat.id);
-                    if (menuSearchInput) menuSearchInput.value = ''; // Clear search when filtering by category
+                    if (menuSearchInput) menuSearchInput.value = '';
                 });
                 if (categoryFilterButtons) categoryFilterButtons.appendChild(btn);
             });
             checkScrollability(); // Re-check scrollability after rendering categories
-        }
-
-        function filterMenu(categoryId) {
-            const buttons = document.querySelectorAll('.category-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.querySelector(`[data-category-id="${categoryId}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            }
-
-            const filteredItems = categoryId === 'all'
-                ? allMenuItems
-                : allMenuItems.filter(item => item.categoryId && item.categoryId._id === categoryId);
-
-            displayMenuItems(filteredItems);
         }
 
         function displayMenuItems(items) {
@@ -312,7 +295,6 @@
                 const itemCard = document.createElement('div');
                 itemCard.classList.add('menu-card');
                 
-                // Construct the HTML for each menu card based on the new design
                 itemCard.innerHTML = `
                     <div class="menu-card-image-wrapper">
                         ${item.isBestSeller ? '<div class="best-seller-tag">Best Seller</div>' : ''}
@@ -334,14 +316,12 @@
             });
 
             document.querySelectorAll('.add-to-order-btn').forEach(button => {
-                // Only add event listener if the button is not disabled (i.e., item is available)
                 if (!button.disabled) {
                     button.addEventListener('click', (e) => addToOrder(e.currentTarget.dataset.id));
                 }
             });
         }
 
-        // --- Menu Search Logic ---
         if (menuSearchInput) {
             menuSearchInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
@@ -350,15 +330,13 @@
                     (item.description && item.description.toLowerCase().includes(searchTerm))
                 );
                 displayMenuItems(filteredItems);
-                // Deactivate all category filter buttons when searching
                 document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
             });
         }
 
-        // --- Cart Management ---
         function addToOrder(menuItemId) {
             const item = allMenuItems.find(i => i._id === menuItemId);
-            if (!item || !item.isAvailable) return; // Prevent adding out of stock items
+            if (!item || !item.isAvailable) return;
 
             if (customerOrder[menuItemId]) {
                 customerOrder[menuItemId].quantity++;
@@ -388,11 +366,9 @@
                 bottomNavCartItemCount.textContent = totalItems;
             }
 
-            // Show/hide floating cart button based on total items
             if (floatingCartBtn) {
                 floatingCartBtn.style.display = totalItems > 0 ? 'flex' : 'none';
             }
-            // Add/remove 'active' class for bottom nav cart button if it exists
             if (bottomNavCartBtn) {
                 if (totalItems > 0) {
                     bottomNavCartBtn.classList.add('active');
@@ -594,10 +570,10 @@
 
 
         // Initial load
-        fetchMenuData();
+        fetchMenuData(); // This is where the menu data fetch is initiated
         updateCartSummary();
         fetchAndDisplayCustomerOrders(); // Load customer's orders on page load
         // Set up polling for customer orders to track status changes
         setInterval(fetchAndDisplayCustomerOrders, 10000); // Poll every 10 seconds
     });
-})
+})();
