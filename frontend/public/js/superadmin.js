@@ -1,5 +1,5 @@
-import api from './api.js'; // Correctly imports default export
-import { checkAuthAndRedirect, logout } from './auth.js'; // Correctly imports named exports
+import api from './api.js'; // ADDED THIS LINE: Import the api object
+import { checkAuthAndRedirect, logout } from './auth.js'; // ADDED THIS LINE: Import auth functions
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Attach logout button listener as early as possible within DOMContentLoaded
@@ -10,8 +10,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check authentication and redirect if necessary
     if (!checkAuthAndRedirect()) {
+        console.log("Authentication check failed or redirected.");
         return; // Stop execution if not authorized
     }
+    console.log("Authentication successful. Loading super admin dashboard.");
 
     const role = localStorage.getItem('role');
     if (role !== 'superadmin') {
