@@ -114,7 +114,7 @@ import api from './api.js';
         }
 
         if (bottomNavMenuBtn) {
-            e.preventDefault();
+            
             bottomNavMenuBtn.addEventListener('click', (e) => {
                 if (menuSection) {
                     menuSection.scrollIntoView({ behavior: 'smooth' });
