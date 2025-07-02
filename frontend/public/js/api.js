@@ -1,6 +1,6 @@
 // IMPORTANT: This API_BASE_URL should point to the root of your backend API,
-// including the /api prefix, as all your backend routes are mounted under /api.
-const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api'; // **USE YOUR ACTUAL BACKEND URL HERE**
+// without a trailing slash, as all your backend routes already start with a leading slash.
+const API_BASE_URL = 'https://qr-restaurant-ordering-system.onrender.com/api'; // Removed trailing slash if it was there before
 
 async function request(url, method = 'GET', data = null, isFormData = false) {
     const headers = {};
@@ -23,7 +23,8 @@ async function request(url, method = 'GET', data = null, isFormData = false) {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}${url}`, config);
+        // The 'url' parameter already starts with a '/', so combining them correctly
+        const response = await fetch(`${API_BASE_URL}${url}`, config); 
         const responseData = await response.json();
 
         if (!response.ok) {
@@ -37,6 +38,7 @@ async function request(url, method = 'GET', data = null, isFormData = false) {
         throw error;
     }
 }
+
 
 // Export specific API functions
 const api = {
