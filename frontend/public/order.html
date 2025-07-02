@@ -103,6 +103,28 @@
         </div>
     </div>
 
+    <!-- Product Quick View Modal -->
+    <div id="productQuickViewModal" class="modal">
+        <div class="modal-content product-quick-view-content">
+            <div class="modal-header">
+                <h2 class="section-title" id="quickViewItemName"></h2>
+                <span class="close-button" id="closeQuickViewModal">&times;</span>
+            </div>
+            <div class="modal-body quick-view-body">
+                <div class="quick-view-image-container">
+                    <img id="quickViewItemImage" src="" alt="Item Image" class="quick-view-image">
+                </div>
+                <p id="quickViewItemDescription" class="quick-view-description"></p>
+                <div class="quick-view-price-section">
+                    <span class="quick-view-price" id="quickViewItemPrice"></span>
+                </div>
+            </div>
+            <div class="modal-footer quick-view-footer">
+                <button id="quickViewAddToCartBtn" class="primary-btn full-width">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/api.js?v=20250702104000" type="module"></script>
     <script src="../js/customer.js?v=20250702104000" type="module"></script>
 </body>

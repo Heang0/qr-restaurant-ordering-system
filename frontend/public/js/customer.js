@@ -1,4 +1,4 @@
-import api from './api.js'; // ADDED THIS LINE: Import the api object
+import api from './api.js';
 
 (function() {
     document.addEventListener('DOMContentLoaded', async () => {
@@ -10,7 +10,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
 
         console.log(`URL Params - storeId: ${storeId}, tableId: ${tableId}`);
 
-        // Get all elements and add null checks for robustness
         const storeNameHeader = document.getElementById('storeNameHeader');
         const tableIdDisplay = document.getElementById('tableIdDisplay');
         const menuList = document.getElementById('menuList');
@@ -23,41 +22,44 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
         const floatingCartBtn = document.getElementById('floatingCartBtn');
         const floatingCartItemCount = document.getElementById('floatingCartItemCount');
         const orderModal = document.getElementById('orderModal');
-        const closeModalBtn = document.querySelector('.close-button');
+        const closeModalBtn = document.querySelector('.close-button'); // For order modal
         const orderSummaryContent = document.getElementById('orderSummaryContent');
         const emptyOrderMessage = document.getElementById('emptyOrderMessage');
         const storeLogoDisplay = document.getElementById('storeLogoDisplay');
         const menuSearchInput = document.getElementById('menuSearchInput');
 
-        // --- Confirmation Modal Elements ---
         const confirmationModal = document.getElementById('confirmationModal');
         const continueShoppingBtn = document.getElementById('continueShoppingBtn');
 
-        // --- Bottom Navigation Elements ---
         const bottomNavHomeBtn = document.getElementById('bottomNavHomeBtn');
         const bottomNavMenuBtn = document.getElementById('bottomNavMenuBtn');
         const bottomNavCartBtn = document.getElementById('bottomNavCartBtn');
         const bottomNavCartItemCount = document.getElementById('bottomNavCartItemCount');
         const bottomNavOrdersBtn = document.getElementById('bottomNavOrdersBtn');
 
-        // --- Order Tracking Elements ---
         const customerOrdersList = document.getElementById('customerOrdersList');
         const customerOrdersMessage = document.getElementById('customerOrdersMessage');
         const menuSection = document.getElementById('menuSection');
         const ordersSection = document.getElementById('ordersSection');
 
-        // --- Scroll indicator elements ---
         const categoryFilterWrapper = document.querySelector('.category-filter-wrapper');
         const scrollIndicatorRight = document.querySelector('.scroll-indicator.right');
 
+        // ADDED: Quick View Modal Elements
+        const productQuickViewModal = document.getElementById('productQuickViewModal');
+        const closeQuickViewModalBtn = document.getElementById('closeQuickViewModal');
+        const quickViewItemName = document.getElementById('quickViewItemName');
+        const quickViewItemImage = document.getElementById('quickViewItemImage');
+        const quickViewItemDescription = document.getElementById('quickViewItemDescription');
+        const quickViewItemPrice = document.getElementById('quickViewItemPrice');
+        const quickViewAddToCartBtn = document.getElementById('quickViewAddToCartBtn');
+
 
         let allMenuItems = [];
-        // MODIFIED: Added 'remark' to the initial structure of customerOrder item
-        let customerOrder = {}; // { menuItemId: { itemDetails, quantity, remark } }
-        let customerPlacedOrders = []; // To store customer's placed orders
+        let customerOrder = {};
+        let customerPlacedOrders = [];
 
 
-        // Check if storeId and tableId are present in the URL
         if (!storeId || !tableId) {
             console.error("Missing storeId or tableId in URL.");
             if (menuErrorMessage) menuErrorMessage.textContent = 'Missing store ID or table ID in URL. Please scan a valid QR code.';
@@ -65,14 +67,14 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             if (floatingCartBtn) floatingCartBtn.style.display = 'none';
             if (bottomNavCartBtn) bottomNavCartBtn.style.display = 'none';
             if (bottomNavOrdersBtn) bottomNavOrdersBtn.style.display = 'none';
-            return; // Stop execution if critical params are missing
+            return;
         }
 
         if (tableIdDisplay) tableIdDisplay.textContent = tableId;
         console.log("Store ID and Table ID found. Initializing event listeners and data fetches.");
 
 
-        // --- Modal Functionality ---
+        // --- Modal Functionality (Order Modal) ---
         if (floatingCartBtn) {
             floatingCartBtn.addEventListener('click', () => {
                 updateOrderSummary();
@@ -112,8 +114,8 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
         }
 
         if (bottomNavMenuBtn) {
+            e.preventDefault();
             bottomNavMenuBtn.addEventListener('click', (e) => {
-                e.preventDefault();
                 if (menuSection) {
                     menuSection.scrollIntoView({ behavior: 'smooth' });
                 }
@@ -149,6 +151,22 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             }
         });
 
+        // ADDED: Quick View Modal Close Functionality
+        if (closeQuickViewModalBtn) {
+            closeQuickViewModalBtn.addEventListener('click', () => {
+                if (productQuickViewModal) productQuickViewModal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            });
+        }
+
+        window.addEventListener('click', (event) => {
+            if (event.target == productQuickViewModal) {
+                if (productQuickViewModal) productQuickViewModal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
+        });
+
+
         // --- Scroll Indicator Logic ---
         function checkScrollability() {
             if (categoryFilterButtons && scrollIndicatorRight) {
@@ -178,21 +196,19 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
         window.addEventListener('load', checkScrollability);
         window.addEventListener('resize', checkScrollability);
         if (categoryFilterButtons) {
-            categoryFilterButtons.addEventListener('scroll', checkScrollability); // Check on scroll too
+            categoryFilterButtons.addEventListener('scroll', checkScrollability);
         }
-        setTimeout(checkScrollability, 500); // Small delay to ensure layout is rendered
+        setTimeout(checkScrollability, 500);
 
 
         // --- Fetch Menu Data ---
         async function fetchMenuData() {
             console.log("Attempting to fetch menu data...");
             try {
-                // Ensure api.menu.getPublicMenu is correctly defined in api.js
-                const response = await api.menu.getPublicMenu(storeId); // FIX: Use global 'api'
+                const response = await api.menu.getPublicMenu(storeId);
                 allMenuItems = response;
                 console.log("Menu data fetched successfully:", allMenuItems);
                 
-                // Sort menu items to bring best sellers to the top
                 allMenuItems.sort((a, b) => {
                     if (a.isBestSeller && !b.isBestSeller) {
                         return -1;
@@ -203,7 +219,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     return 0;
                 });
 
-                // Set store name and logo from the fetched data
                 if (allMenuItems.length > 0) {
                     const storeDetails = allMenuItems[0].storeId;
                     if (storeDetails) {
@@ -227,7 +242,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     }
                 }
 
-                // Group items by category to build the filter UI
                 const categoriesMap = new Map();
                 allMenuItems.forEach(item => {
                     if (item.categoryId && item.categoryId.name) {
@@ -241,7 +255,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                 const categories = Array.from(categoriesMap.values());
 
                 displayCategoryFilters(categories);
-                displayMenuItems(allMenuItems); // Display all by default
+                displayMenuItems(allMenuItems);
                 if (menuErrorMessage) menuErrorMessage.textContent = '';
                 updateCartSummary();
             } catch (error) {
@@ -277,7 +291,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                 });
                 if (categoryFilterButtons) categoryFilterButtons.appendChild(btn);
             });
-            checkScrollability(); // Re-check scrollability after rendering categories
+            checkScrollability();
         }
 
         function filterMenu(categoryId) {
@@ -290,7 +304,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
 
             displayMenuItems(filteredItems);
 
-            // Update active state of category buttons
             document.querySelectorAll('.category-btn').forEach(btn => {
                 if (btn.dataset.categoryId === categoryId) {
                     btn.classList.add('active');
@@ -300,6 +313,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             });
         }
 
+        // MODIFIED: Add click listener to image for quick view
         function displayMenuItems(items) {
             if (menuList) menuList.innerHTML = '';
             if (menuErrorMessage) {
@@ -317,7 +331,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                 itemCard.classList.add('menu-card');
                 
                 itemCard.innerHTML = `
-                    <div class="menu-card-image-wrapper">
+                    <div class="menu-card-image-wrapper" data-id="${item._id}"> <!-- Added data-id for click -->
                         ${item.isBestSeller ? '<div class="best-seller-tag">Best Seller</div>' : ''}
                         ${!item.isAvailable ? '<div class="out-of-stock-overlay"><div class="out-of-stock-tag">Out of Stock</div></div>' : ''}
                         ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" class="menu-card-image">` : ''}
@@ -341,6 +355,17 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     button.addEventListener('click', (e) => addToOrder(e.currentTarget.dataset.id));
                 }
             });
+
+            // ADDED: Event listener for clicking menu item images to open quick view
+            document.querySelectorAll('.menu-card-image-wrapper').forEach(wrapper => {
+                wrapper.addEventListener('click', (e) => {
+                    const itemId = e.currentTarget.dataset.id;
+                    const item = allMenuItems.find(i => i._id === itemId);
+                    if (item) {
+                        displayQuickViewModal(item);
+                    }
+                });
+            });
         }
 
         if (menuSearchInput) {
@@ -355,7 +380,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             });
         }
 
-        // MODIFIED: Initialize remark for new items
         function addToOrder(menuItemId) {
             const item = allMenuItems.find(i => i._id === menuItemId);
             if (!item || !item.isAvailable) return;
@@ -363,7 +387,7 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             if (customerOrder[menuItemId]) {
                 customerOrder[menuItemId].quantity++;
             } else {
-                customerOrder[menuItemId] = { ...item, quantity: 1, remark: '' }; // Initialize remark as empty string
+                customerOrder[menuItemId] = { ...item, quantity: 1, remark: '' };
             }
             updateCartSummary();
         }
@@ -400,7 +424,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             }
         }
 
-        // MODIFIED: Add remark input field to order summary
         function updateOrderSummary() {
             if (orderItemsList) orderItemsList.innerHTML = '';
             let total = 0;
@@ -410,7 +433,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                 const item = customerOrder[itemId];
                 const li = document.createElement('li');
                 li.classList.add('order-summary-item');
-                // MODIFIED: Use a span for display and a textarea for input, toggle visibility
                 li.innerHTML = `
                     <div class="item-image-wrapper">
                         <img src="${item.imageUrl}" alt="${item.name}" class="item-thumbnail">
@@ -458,7 +480,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                 });
             });
 
-            // ADDED/MODIFIED: Event listeners for remark display/input toggle
             document.querySelectorAll('.item-remark-display-toggle').forEach(span => {
                 span.addEventListener('click', (e) => {
                     const itemId = e.target.dataset.id;
@@ -468,13 +489,12 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
 
                     displaySpan.classList.add('hidden');
                     inputField.classList.remove('hidden');
-                    inputField.focus(); // Focus on the input field
-                    inputField.select(); // Select all text for easy editing
+                    inputField.focus();
+                    inputField.select();
                 });
             });
 
             document.querySelectorAll('.item-remark-input').forEach(input => {
-                // Update remark on input
                 input.addEventListener('input', (e) => {
                     const itemId = e.target.dataset.id;
                     if (customerOrder[itemId]) {
@@ -482,37 +502,65 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     }
                 });
 
-                // Hide input and show display span on blur
                 input.addEventListener('blur', (e) => {
                     const itemId = e.target.dataset.id;
                     const container = e.target.closest('.item-remark-container');
                     const displaySpan = container.querySelector('.item-remark-display-toggle');
                     const inputField = container.querySelector('.item-remark-input');
 
-                    // Update display text
                     displaySpan.textContent = customerOrder[itemId].remark ? `Remark: ${customerOrder[itemId].remark}` : 'Add Remark';
                     
                     inputField.classList.add('hidden');
                     displaySpan.classList.remove('hidden');
                 });
 
-                // Optional: Hide input on 'Enter' key press
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
-                        e.preventDefault(); // Prevent new line in textarea
-                        e.target.blur(); // Trigger blur to hide input
+                        e.preventDefault();
+                        e.target.blur();
                     }
                 });
             });
         }
 
+        // ADDED: Function to display the Quick View Modal
+        function displayQuickViewModal(item) {
+            if (!productQuickViewModal) return;
+
+            quickViewItemName.textContent = item.name;
+            quickViewItemImage.src = item.imageUrl || 'https://placehold.co/400x400/cccccc/333333?text=No+Image'; // Placeholder if no image
+            quickViewItemDescription.textContent = item.description || 'No description available.';
+            quickViewItemPrice.textContent = `$${item.price.toFixed(2)}`;
+            
+            // Set data-id on the add to cart button in quick view
+            quickViewAddToCartBtn.dataset.id = item._id;
+            quickViewAddToCartBtn.disabled = !item.isAvailable;
+            quickViewAddToCartBtn.textContent = item.isAvailable ? 'Add to Cart' : 'Out of Stock';
+
+            // Remove existing listener to prevent multiple bindings
+            quickViewAddToCartBtn.removeEventListener('click', handleQuickViewAddToCart);
+            // Add new listener
+            quickViewAddToCartBtn.addEventListener('click', handleQuickViewAddToCart);
+
+            productQuickViewModal.style.display = 'flex'; // Show the modal
+            document.body.classList.add('modal-open'); // Prevent body scrolling
+        }
+
+        // ADDED: Handler for Add to Cart button in Quick View Modal
+        function handleQuickViewAddToCart(e) {
+            const itemId = e.currentTarget.dataset.id;
+            addToOrder(itemId); // Use existing addToOrder function
+            if (productQuickViewModal) productQuickViewModal.style.display = 'none'; // Close quick view modal
+            document.body.classList.remove('modal-open'); // Re-enable body scrolling
+        }
+
+
         if (submitOrderBtn) {
             submitOrderBtn.addEventListener('click', async () => {
-                // MODIFIED: Include remark in the orderItems sent to backend
                 const orderItems = Object.values(customerOrder).map(item => ({
                     menuItemId: item._id,
                     quantity: item.quantity,
-                    remark: item.remark || '' // Ensure remark is sent, defaulting to empty string
+                    remark: item.remark || ''
                 }));
 
                 if (orderItems.length === 0) {
@@ -541,16 +589,15 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                     if (confirmationModal) confirmationModal.style.display = 'flex';
                     document.body.classList.add('modal-open');
 
-                    customerOrder = {}; // Clear the cart
+                    customerOrder = {};
                     updateCartSummary();
                     updateOrderSummary();
-                    await fetchAndDisplayCustomerOrders(); // Refresh customer's orders after placing a new one
+                    await fetchAndDisplayCustomerOrders();
 
                 } catch (error) {
                     console.error('Error placing order:', error);
-                    // Using a custom message box instead of alert()
                     const messageBox = document.createElement('div');
-                    messageBox.classList.add('modal'); // Reuse modal styling
+                    messageBox.classList.add('modal');
                     messageBox.innerHTML = `
                         <div class="modal-content confirmation-content">
                             <h2 class="section-title error-message">Order Failed</h2>
@@ -566,7 +613,6 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                         document.body.removeChild(messageBox);
                         document.body.classList.remove('modal-open');
                     });
-                     // Close if clicking outside the message box
                     window.addEventListener('click', (event) => {
                         if (event.target === messageBox) {
                             document.body.removeChild(messageBox);
@@ -580,23 +626,21 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
             });
         }
 
-        // --- New: Fetch and Display Customer's Placed Orders ---
         async function fetchAndDisplayCustomerOrders() {
             try {
                 const response = await api.orders.getCustomerOrders(storeId, tableId);
                 customerPlacedOrders = response;
 
-                if (customerOrdersList) customerOrdersList.innerHTML = ''; // Clear previous orders
-                if (customerOrdersMessage) customerOrdersMessage.classList.remove('hidden'); // Ensure message is visible by default
+                if (customerOrdersList) customerOrdersList.innerHTML = '';
+                if (customerOrdersMessage) customerOrdersMessage.classList.remove('hidden');
 
                 if (customerPlacedOrders.length === 0) {
                     if (customerOrdersMessage) customerOrdersMessage.textContent = 'No orders placed yet.';
                 } else {
                     if (customerOrdersMessage) customerOrdersMessage.classList.add('hidden');
-                    // Sort orders by creation date, newest first
                     customerPlacedOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                    let grandTotalAllOrders = 0; // Initialize grand total
+                    let grandTotalAllOrders = 0;
 
                     customerPlacedOrders.forEach(order => {
                         const orderCard = document.createElement('div');
@@ -610,12 +654,11 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                                 <li>
                                     ${item.menuItemId.imageUrl ? `<img src="${item.menuItemId.imageUrl}" alt="${item.menuItemId.name}" class="item-thumbnail">` : ''}
                                     <span>${item.menuItemId.name} x ${item.quantity}</span>
-                                    ${item.remark ? `<p class="item-remark-display">Note: ${item.remark}</p>` : ''} <!-- ADDED: Display remark -->
+                                    ${item.remark ? `<p class="item-remark-display">Note: ${item.remark}</p>` : ''}
                                 </li>
                             `;
                         }).join('');
 
-                        // Add individual order details (without individual total)
                         orderCard.innerHTML = `
                             <h4>Order ID: ${order._id.substring(0, 8)}...</h4>
                             <div class="order-meta">
@@ -628,12 +671,11 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
                         `;
                         if (customerOrdersList) customerOrdersList.appendChild(orderCard);
 
-                        grandTotalAllOrders += totalOrderPrice; // Add to grand total
+                        grandTotalAllOrders += totalOrderPrice;
                     });
 
-                    // Append the grand total to the customerOrdersList
                     const grandTotalDiv = document.createElement('div');
-                    grandTotalDiv.classList.add('grand-total-summary'); // Add a new class for styling
+                    grandTotalDiv.classList.add('grand-total-summary');
                     grandTotalDiv.innerHTML = `Grand Total: $${grandTotalAllOrders.toFixed(2)}`;
                     if (customerOrdersList) customerOrdersList.appendChild(grandTotalDiv);
 
@@ -650,10 +692,9 @@ import api from './api.js'; // ADDED THIS LINE: Import the api object
 
 
         // Initial load
-        fetchMenuData(); // This is where the menu data fetch is initiated
+        fetchMenuData();
         updateCartSummary();
-        fetchAndDisplayCustomerOrders(); // Load customer's orders on page load
-        // Set up polling for customer orders to track status changes
-        setInterval(fetchAndDisplayCustomerOrders, 5000); // Poll every 10 seconds
+        fetchAndDisplayCustomerOrders();
+        setInterval(fetchAndDisplayCustomerOrders, 5000); // Changed to 5 seconds polling
     });
 })();

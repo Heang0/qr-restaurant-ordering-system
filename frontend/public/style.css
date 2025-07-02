@@ -492,21 +492,25 @@ input[type="file"] {
 }
 
 .close-button {
-    color: #aaa;
-    float: right;
-    font-size: 2em;
-    font-weight: bold;
+    color: #e74c3c; /* Changed to your primary red color */
+    /* Removed float: right; as flexbox/grid usually handles positioning */
+    font-size: 1.5em; /* Adjusted size for a clean icon feel */
+    font-weight: normal; /* Make it a simple 'x' without bolding */
     cursor: pointer;
     transition: color 0.3s;
+    /* Added for better alignment in flex containers and touch target */
+    line-height: 1;
+    padding: 5px; /* Add a bit of padding for easier tapping */
+    background: none; /* Ensure no background if it's implicitly getting one */
+    border: none; /* Ensure no border */
 }
 
 .close-button:hover,
 .close-button:focus {
-    color: #555;
+    color: #c0392b; /* Darker red on hover */
     text-decoration: none;
-    cursor: pointer;
+    outline: none; /* Remove outline on focus for cleaner look */
 }
-
 .modal-body {
     flex-grow: 1;
     overflow-y: auto;
@@ -727,6 +731,7 @@ input[type="file"] {
     display: flex;
     align-items: center;
     justify-content: center;
+    aspect-ratio: 1 / 1; /* Ensures it's always a perfect square */
     font-size: 1.2em; /* Plus icon size */
     box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
     transition: transform 0.2s, background-color 0.2s;
@@ -1877,7 +1882,7 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
     display: block; /* Takes full width */
     font-size: 0.85em;
     color: #666;
-    padding: 5px 8px;
+    padding: 4px 7px;
     border: 1px dashed #ccc; /* Dashed border to indicate clickable */
     border-radius: 8px;
     cursor: pointer;
@@ -1927,4 +1932,84 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
     flex-direction: column; /* Stack item name, subtotal, and remark */
     align-items: flex-start;
     position: relative; /* For positioning children */
+}
+
+/* --- Product Quick View Modal Styles --- */
+.modal-content.product-quick-view-content {
+    max-width: 450px; /* Max width for the quick view modal */
+    padding: 20px;
+    text-align: center;
+}
+
+.quick-view-body {
+    padding: 15px 0; /* Adjust padding for content inside */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.quick-view-image-container {
+    width: 100%;
+    max-width: 250px; /* Max width for the image */
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.quick-view-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#quickViewItemName {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.quick-view-description {
+    font-size: 1em;
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.quick-view-price-section {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.quick-view-price {
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #e74c3c; /* Primary red color for price */
+}
+
+.quick-view-footer {
+    padding-top: 15px;
+    border-top: 1px solid #f0f2f5;
+    margin-top: 15px;
+}
+
+/* Responsive adjustments for Quick View Modal */
+@media (max-width: 767px) {
+    .modal-content.product-quick-view-content {
+        width: 95%; /* Adjust width for smaller screens */
+        max-height: 90vh; /* Allow it to take more height */
+    }
+    .quick-view-image-container {
+        max-width: 200px; /* Smaller image on mobile */
+    }
+    #quickViewItemName {
+        font-size: 1.5em;
+    }
+    .quick-view-price {
+        font-size: 1.4em;
+    }
 }
