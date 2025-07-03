@@ -1,18 +1,12 @@
+// generateHash.js
 const bcrypt = require('bcryptjs');
 
-async function main() {
-    const password = 'Heang6232'; // Your chosen password
-    const saltRounds = 10;
-
-    try {
-        const salt = await bcrypt.genSalt(saltRounds);
-        const hash = await bcrypt.hash(password, salt);
-        console.log('Generated Hash:', hash);
-        process.exit(0); // Exit the script gracefully after generating hash
-    } catch (error) {
-        console.error('Error generating hash:', error);
-        process.exit(1); // Exit with an error code
-    }
+async function generatePasswordHash(password) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    console.log(`Your NEW Plain-Text Password (REMEMBER THIS!): ${password}`);
+    console.log(`Your NEW Hashed Password (PUT THIS IN DB): ${hashedPassword}`);
 }
 
-main();
+// --- IMPORTANT: CHOOSE A NEW PASSWORD YOU WILL REMEMBER HERE! ---
+generatePasswordHash('heang6232#$%@!'); // <--- CHANGE THIS TO SOMETHING YOU'LL REMEMBER!
