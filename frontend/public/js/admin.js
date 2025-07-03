@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const menuItems = await api.menu.getMenu(storeId);
             allMenuItems = menuItems;
-            console.log('Fetched allMenuItems:', allMenuItems); // Log all menu items
+            console.log('Fetched allMenuItems:', allMenuItems); // Log all menu items to verify content
             displayMenuItems(allMenuItems);
             menuListMessage.textContent = '';
         } catch (error) {
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const item = allMenuItems.find(i => i._id === id);
             if (!item) {
-                console.error('Item not found for editing.');
+                console.error('Item not found for editing:', id); // Log the ID that wasn't found
                 return;
             }
             console.log('Editing item object:', item); // Log the full item object for debugging
@@ -461,10 +461,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemMessage.className = 'message';
             
             // Scroll to the form section
-            // Adding a small timeout to ensure the tab content has rendered after the click
+            // Increased timeout to ensure the tab content has fully rendered and is scrollable
+            // Also, added a check if the form is actually visible before scrolling
             setTimeout(() => {
-                menuItemForm.scrollIntoView({ behavior: 'smooth' });
-            }, 100); // 100ms delay, adjust if needed
+                if (menuItemForm.offsetParent !== null) { // Check if the element is visible
+                    menuItemForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); // Added block: 'start' for better positioning
+                } else {
+                    console.warn("menuItemForm is not visible, cannot scroll.");
+                }
+            }, 300); // Increased delay to 300ms
             
         } catch (error) {
             console.error('Error fetching menu item for edit:', error);
