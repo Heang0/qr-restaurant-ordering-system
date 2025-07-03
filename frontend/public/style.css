@@ -147,8 +147,8 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 
 /* Store logo container in header */
 .store-logo-container {
-    height: 50px; /* Fixed height for consistency */
-    width: 50px; /* Fixed width for a square logo */
+    height: 60px; /* Fixed height for consistency */
+    width: 60px; /* Fixed width for a square logo */
     display: flex;
     align-items: center;
     justify-content: center;
