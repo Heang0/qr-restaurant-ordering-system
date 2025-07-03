@@ -45,6 +45,8 @@ const api = {
     users: {
         createAdmin: (userData) => request('/users', 'POST', userData),
         getAdmins: () => request('/users'),
+        // ADDED THIS LINE: New API call for resetting admin password
+        resetAdminPassword: (id, newPassword) => request(`/users/${id}/reset-password`, 'PUT', { newPassword }),
         deleteAdmin: (id) => request(`/users/${id}`, 'DELETE'),
         updateAdmin: (id, userData) => request(`/users/${id}`, 'PUT', userData),
     },

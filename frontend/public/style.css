@@ -2017,3 +2017,76 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
         font-size: 1.4em;
     }
 }
+
+
+/* --- Reset Password Modal Styles --- */
+#resetPasswordModal .modal-content {
+    max-width: 450px; /* Smaller modal for password reset */
+    padding: 30px;
+}
+
+#resetPasswordModal .modal-header {
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+#resetPasswordModal .form-card {
+    gap: 15px; /* Spacing between form elements */
+}
+
+#resetPasswordModal label {
+    margin-bottom: 0; /* Adjust label spacing */
+}
+
+#resetPasswordModal input[type="password"] {
+    margin-bottom: 10px; /* Space between password fields */
+}
+
+#resetPasswordModal .message {
+    margin-top: 15px;
+}
+
+/* Specific styling for the Reset Password button in admin table */
+.reset-password-btn {
+    background-color: #3498db; /* Blue color for reset password */
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    margin-right: 5px; /* Space between reset and delete */
+}
+
+.reset-password-btn:hover {
+    background-color: #2980b9;
+}
+
+/* Ensure table actions have space for new button */
+.styled-table .table-actions {
+    display: flex;
+    gap: 5px; /* Smaller gap between buttons */
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    justify-content: flex-end; /* Align buttons to the right */
+}
+
+/* Adjust column width for actions if needed */
+.styled-table th:nth-child(3),
+.styled-table td:nth-child(3) {
+    width: 200px; /* Adjust as needed to fit buttons */
+    min-width: 180px; /* Ensure minimum width */
+}
+
+/* Responsive adjustments for table actions on very small screens */
+@media (max-width: 480px) {
+    .styled-table .table-actions {
+        flex-direction: column; /* Stack buttons vertically */
+        align-items: stretch; /* Make them full width */
+        gap: 8px;
+    }
+    .styled-table th:nth-child(3),
+    .styled-table td:nth-child(3) {
+        width: auto; /* Allow width to be flexible */
+        min-width: unset;
+    }
+}

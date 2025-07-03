@@ -22,18 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const createStoreForm = document.getElementById('createStoreForm');
-    const storeNameInput = document.getElementById('storeName');
-    const createStoreMessage = document.getElementById('createStoreMessage');
-
-    const createAdminForm = document.getElementById('createAdminForm');
-    const adminEmailInput = document.getElementById('adminEmail');
-    const adminPasswordInput = document.getElementById('adminPassword');
-    const adminStoreSelect = document.getElementById('adminStore');
-    const createAdminMessage = document.getElementById('createAdminMessage');
-
-    const adminsTableBody = document.querySelector('#adminsTable tbody');
-    const adminListMessage = document.getElementById('adminListMessage');
+    // REMOVED: Super Admin Elements (createStoreForm, storeNameInput, createStoreMessage)
+    // REMOVED: Create Admin Form Elements (createAdminForm, adminEmailInput, adminPasswordInput, adminStoreSelect, createAdminMessage)
+    // REMOVED: Admins Table Elements (adminsTableBody, adminListMessage)
 
     const totalLiveOrdersEl = document.getElementById('totalLiveOrders');
     const pendingOrdersCountEl = document.getElementById('pendingOrdersCount');
@@ -95,6 +86,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentStoreDetails = {};
     let currentOrdersForModal = [];
 
+    // REMOVED: Reset Password Modal Elements (all of them)
+
 
     let audioActivated = false;
     function activateAudio() {
@@ -118,12 +111,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (role === 'superadmin') {
         // Superadmin sections are visible by default
+        // Hiding these sections as they are only relevant for superadmin.
+        // This prevents errors if elements are not found in admin.html
+        if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
+        if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
-        if (createStoreForm) createStoreForm.closest('section').style.display = 'none';
-        if (createAdminForm) createAdminForm.closest('section').style.display = 'none';
-        const adminsTable = document.getElementById('adminsTable');
-        if (adminsTable) adminsTable.style.display = 'none';
-        if (adminListMessage) adminListMessage.style.display = 'none';
+        // Hiding superadmin-specific tabs for regular admin
+        const superadminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders']; // All tabs for admin
+        document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
+            if (!superadminTabs.includes(btn.dataset.tab)) {
+                btn.style.display = 'none';
+            }
+        });
     }
 
 
@@ -160,7 +159,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadStoreDetails() {
         if (!storeId) return;
         try {
-            // MODIFIED: Fetch store details by ID, which now includes the slug
             currentStoreDetails = await api.stores.getStoreById(storeId);
             console.log('Fetched store details:', currentStoreDetails);
 
@@ -489,49 +487,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadStores() {
-        if (role !== 'superadmin') return;
-        try {
-            const stores = await api.stores.getStores();
-            adminStoreSelect.innerHTML = '';
-            stores.forEach(store => {
-                const option = document.createElement('option');
-                option.value = store._id;
-                option.textContent = store.name;
-                adminStoreSelect.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error loading stores:', error);
-            createAdminMessage.textContent = 'Failed to load stores: ' + (error.message || 'Server error');
-            createAdminMessage.className = 'error-message';
-        }
+        // This function is not used in admin.js anymore for admin creation dropdown
+        // as admin.html does not have create store form.
+        // It remains here for context if needed for other admin functionalities.
+        console.log("loadStores called in admin.js - this function is typically for superadmin.");
     }
 
     async function loadAdmins() {
-        if (role !== 'superadmin') return;
-        try {
-            const admins = await api.users.getAdmins();
-            adminsTableBody.innerHTML = '';
-            if (admins.length === 0) {
-                adminsTableBody.innerHTML = '<tr><td colspan="3">No admins found.</td></tr>';
-                return;
-            }
-            admins.forEach(admin => {
-                const row = adminsTableBody.insertRow();
-                row.insertCell(0).textContent = admin.email;
-                row.insertCell(1).textContent = admin.storeId ? admin.storeId.name : 'N/A';
-                const actionsCell = row.insertCell(2);
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.classList.add('delete-btn');
-                deleteButton.addEventListener('click', () => deleteAdmin(admin._id));
-                actionsCell.appendChild(deleteButton);
-            });
-            adminListMessage.textContent = '';
-        } catch (error) {
-            console.error('Error loading admins:', error);
-            adminListMessage.textContent = 'Failed to load admins: ' + (error.message || 'Server error');
-            adminListMessage.className = 'error-message';
-        }
+        // This function is not used in admin.js anymore as admin.html does not manage admins.
+        console.log("loadAdmins called in admin.js - this function is typically for superadmin.");
     }
     
     async function loadStoreLogo() {
@@ -585,12 +549,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            // Fetch store details to get the slug *before* generating QR codes
+            // This is crucial to ensure currentStoreDetails.slug is populated
+            await loadStoreDetails(); // Ensure currentStoreDetails is loaded
+
             tables.forEach(table => {
                 const tableCard = document.createElement('div');
                 tableCard.classList.add('table-card'); 
                 const qrCodeId = `qr-${table._id}`;
                 // MODIFIED: Use storeSlug in QR code URL
-                const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${currentStoreDetails.slug}&table=${table.tableId}`;
+                // Check if currentStoreDetails and slug exist before using
+                const storeSlug = currentStoreDetails && currentStoreDetails.slug ? currentStoreDetails.slug : 'default-store'; // Fallback
+                const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${storeSlug}&table=${table.tableId}`;
                 tableCard.innerHTML = `
                     <p class="table-id-label">Table: ${table.tableId}</p>
                     <div id="${qrCodeId}" class="qr-code-container"></div>
@@ -609,7 +579,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 button.addEventListener('click', (e) => {
                     const tableId = e.target.dataset.tableId;
                     // MODIFIED: Use storeSlug in order page URL
-                    const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${currentStoreDetails.slug}&table=${tableId}`;
+                    const storeSlug = currentStoreDetails && currentStoreDetails.slug ? currentStoreDetails.slug : 'default-store'; // Fallback
+                    const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${storeSlug}&table=${tableId}`;
                     window.open(orderPageUrl, '_blank'); // Open in new tab
                 });
             });
@@ -1172,8 +1143,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initial loads
     // Load superadmin-specific data only if the role is superadmin
     if (role === 'superadmin') {
-        await loadStores();
-        await loadAdmins();
+        // These sections are not present in admin.html, so hide them to prevent errors
+        if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
+        if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
+    } else if (role === 'admin') {
+        // Ensure only admin-relevant tabs are visible if the user is a regular admin
+        const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders'];
+        document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
+            if (!adminTabs.includes(btn.dataset.tab)) {
+                btn.style.display = 'none';
+            }
+        });
     }
     
     // Load admin-specific data (also relevant for superadmin if they manage a store)
