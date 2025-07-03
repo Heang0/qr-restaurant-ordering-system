@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const editAdminStoreSelect = document.getElementById('editAdminStore');
     const editAdminMessage = document.getElementById('editAdminMessage');
 
-    // ADDED: Reset Password Modal Elements
+    // ADDED: Reset Password Modal Elements (ensure these are correctly defined)
     const resetPasswordModal = document.getElementById('resetPasswordModal');
     const closeResetPasswordModalBtn = document.getElementById('closeResetPasswordModal');
     const resetAdminEmailSpan = document.getElementById('resetAdminEmail');
@@ -54,6 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmAdminPasswordInput = document.getElementById('confirmAdminPassword');
     const resetPasswordSubmitBtn = document.getElementById('resetPasswordSubmitBtn');
     const resetPasswordMessage = document.getElementById('resetPasswordMessage');
+    // FIX: Ensure resetPasswordForm is correctly referenced at the top
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
 
 
     // Helper function for loading state for buttons
@@ -86,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             createStoreMessage.className = 'success-message';
             storeNameInput.value = ''; // Clear input
             await loadStores(); // Reload stores list
-            await loadAdmins(); // Refresh admin store dropdown
+            await loadAdmins(); // Refresh admin store dropdown (important for assigning admins to new stores)
         } catch (error) {
             console.error('Error creating store:', error);
             createStoreMessage.textContent = 'Failed to create store: ' + (error.message || 'Server error');
@@ -191,7 +193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             adminListMessage.textContent = '';
         } catch (error) {
-            console.error('Error loading admins:', error);
+            console.error('Error loading admins:', error); // Log the error
             adminListMessage.textContent = 'Failed to load admins: ' + (error.message || 'Server error');
             adminListMessage.className = 'error-message';
         }
@@ -301,51 +303,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    resetPasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const adminId = resetAdminIdInput.value;
-        const newPassword = newAdminPasswordInput.value;
-        const confirmPassword = confirmAdminPasswordInput.value;
+    // FIX: Ensure resetPasswordForm is referenced correctly before its event listener
+    // This part is now handled by the const declaration at the top.
+    // The event listener itself is correct.
+    if (resetPasswordForm) { // Check if the element exists
+        resetPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const adminId = resetAdminIdInput.value;
+            const newPassword = newAdminPasswordInput.value;
+            const confirmPassword = confirmAdminPasswordInput.value;
 
-        if (!newPassword || !confirmPassword) {
-            resetPasswordMessage.textContent = 'Please enter and confirm the new password.';
-            resetPasswordMessage.className = 'error-message';
-            return;
-        }
-        if (newPassword.length < 6) {
-            resetPasswordMessage.textContent = 'New password must be at least 6 characters long.';
-            resetPasswordMessage.className = 'error-message';
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            resetPasswordMessage.textContent = 'Passwords do not match.';
-            resetPasswordMessage.className = 'error-message';
-            return;
-        }
+            if (!newPassword || !confirmPassword) {
+                resetPasswordMessage.textContent = 'Please enter and confirm the new password.';
+                resetPasswordMessage.className = 'error-message';
+                return;
+            }
+            if (newPassword.length < 6) {
+                resetPasswordMessage.textContent = 'New password must be at least 6 characters long.';
+                resetPasswordMessage.className = 'error-message';
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                resetPasswordMessage.textContent = 'Passwords do not match.';
+                resetPasswordMessage.className = 'error-message';
+                return;
+            }
 
-        const originalBtnText = resetPasswordSubmitBtn.textContent;
-        setLoading(resetPasswordSubmitBtn, true);
+            const originalBtnText = resetPasswordSubmitBtn.textContent;
+            setLoading(resetPasswordSubmitBtn, true);
 
-        try {
-            const data = await api.users.resetAdminPassword(adminId, newPassword);
-            resetPasswordMessage.textContent = data.message;
-            resetPasswordMessage.className = 'success-message';
-            // Optionally close modal after successful reset
-            setTimeout(() => {
-                if (resetPasswordModal) resetPasswordModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
-                resetPasswordForm.reset(); // Clear form fields
-            }, 1500); // Close after 1.5 seconds
-            
-        } catch (error) {
-            console.error('Error resetting admin password:', error);
-            resetPasswordMessage.textContent = 'Failed to reset password: ' + (error.message || 'Server error');
-            resetPasswordMessage.className = 'error-message';
-        } finally {
-            setLoading(resetPasswordSubmitBtn, false);
-            resetPasswordSubmitBtn.textContent = originalBtnText;
-        }
-    });
+            try {
+                const data = await api.users.resetAdminPassword(adminId, newPassword);
+                resetPasswordMessage.textContent = data.message;
+                resetPasswordMessage.className = 'success-message';
+                // Optionally close modal after successful reset
+                setTimeout(() => {
+                    if (resetPasswordModal) resetPasswordModal.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    resetPasswordForm.reset(); // Clear form fields
+                }, 1500); // Close after 1.5 seconds
+                
+            } catch (error) {
+                console.error('Error resetting admin password:', error);
+                resetPasswordMessage.textContent = 'Failed to reset password: ' + (error.message || 'Server error');
+                resetPasswordMessage.className = 'error-message';
+            } finally {
+                setLoading(resetPasswordSubmitBtn, false);
+                resetPasswordSubmitBtn.textContent = originalBtnText;
+            }
+        });
+    }
 
 
     // Initial loads
