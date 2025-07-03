@@ -22,10 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // REMOVED: Super Admin Elements (createStoreForm, storeNameInput, createStoreMessage)
-    // REMOVED: Create Admin Form Elements (createAdminForm, adminEmailInput, adminPasswordInput, adminStoreSelect, createAdminMessage)
-    // REMOVED: Admins Table Elements (adminsTableBody, adminListMessage)
-
     const totalLiveOrdersEl = document.getElementById('totalLiveOrders');
     const pendingOrdersCountEl = document.getElementById('pendingOrdersCount');
     const readyOrdersCountEl = document.getElementById('readyOrdersCount');
@@ -55,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const itemImageInput = document.getElementById('itemImage');
     const menuItemSubmitBtn = document.getElementById('menuItemSubmitBtn');
     const menuItemMessage = document.getElementById('menuItemMessage');
-    const currentImagePreview = document.getElementById('currentImagePreview');
+    const currentImagePreview = document.getElementById('currentImagePreview'); // This is the element for menu item image preview
     const menuCategoryFilterButtons = document.getElementById('menu-category-filter-buttons');
     const menuItemsList = document.getElementById('menuItemsList');
     const menuListMessage = document.getElementById('menuListMessage');
@@ -86,9 +82,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentStoreDetails = {};
     let currentOrdersForModal = [];
 
-    // REMOVED: Reset Password Modal Elements (all of them)
-
-
     let audioActivated = false;
     function activateAudio() {
         if (audioActivated) return;
@@ -117,9 +110,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
         // Hiding superadmin-specific tabs for regular admin
-        const superadminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders']; // All tabs for admin
+        const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders']; // All tabs for admin
         document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
-            if (!superadminTabs.includes(btn.dataset.tab)) {
+            if (!adminTabs.includes(btn.dataset.tab)) {
                 btn.style.display = 'none';
             }
         });
@@ -343,6 +336,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    /**
+     * Resets the menu item form to its initial state, clearing inputs and the image preview.
+     */
+    function resetMenuItemForm() {
+        menuItemForm.reset();
+        menuItemIdInput.value = '';
+        menuItemSubmitBtn.textContent = 'Add Menu Item';
+        menuItemMessage.textContent = '';
+        menuItemMessage.className = 'message';
+        // Clear and reset the image preview
+        currentImagePreview.innerHTML = '';
+        currentImagePreview.style.border = '2px dashed #bdc3c7'; // Restore dashed border
+    }
+
+    // Event listener for item image input to show a local preview
+    if (itemImageInput) {
+        itemImageInput.addEventListener('change', () => {
+            const file = itemImageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentImagePreview.innerHTML = ''; // Clear existing content
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = "Selected Image";
+                    img.classList.add('menu-item-preview-img');
+                    currentImagePreview.appendChild(img);
+                    currentImagePreview.style.border = 'none'; // Remove dashed border when image is present
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // If no file is selected (e.g., user clears selection)
+                resetMenuItemForm(); // This will clear the preview and reset the border
+            }
+        });
+    }
+
     async function handleMenuItemSubmit(e) {
         e.preventDefault();
         const itemId = menuItemIdInput.value;
@@ -372,11 +402,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 menuItemMessage.textContent = 'Menu item added successfully!';
             }
             menuItemMessage.className = 'success-message';
-            menuItemForm.reset();
-            menuItemIdInput.value = '';
-            currentImagePreview.innerHTML = '';
-            menuItemSubmitBtn.textContent = 'Add Menu Item';
-            await loadMenuItems();
+            
+            resetMenuItemForm(); // Reset the form after successful submission
+            await loadMenuItems(); // Reload menu items to reflect changes
         } catch (error) {
             console.error('Error saving menu item:', error);
             menuItemMessage.textContent = 'Failed to save menu item: ' + (error.message || 'Server error');
@@ -395,6 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Item not found for editing.');
                 return;
             }
+            // Populate form fields
             menuItemIdInput.value = item._id;
             itemNameInput.value = item.name;
             itemDescriptionInput.value = item.description;
@@ -403,14 +432,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             isBestSellerCheckbox.checked = item.isBestSeller;
             isAvailableCheckbox.checked = item.isAvailable;
 
-            currentImagePreview.innerHTML = '';
+            // Display current image in preview
+            currentImagePreview.innerHTML = ''; // Clear any previous content
             if (item.imageUrl) {
                 const img = document.createElement('img');
                 img.src = item.imageUrl;
                 img.alt = item.name;
                 img.classList.add('menu-item-preview-img');
                 currentImagePreview.appendChild(img);
+                currentImagePreview.style.border = 'none'; // Remove dashed border
+            } else {
+                currentImagePreview.style.border = '2px dashed #bdc3c7'; // Restore dashed border if no image
             }
+
             menuItemSubmitBtn.textContent = 'Update Menu Item';
             menuItemMessage.textContent = 'Editing: ' + item.name;
             menuItemMessage.className = 'message';
@@ -421,16 +455,97 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function deleteMenuItem(id) {
-        if (!confirm('Are you sure you want to delete this menu item?')) {
+        // Using a custom modal for confirmation instead of alert()
+        const confirmDelete = await new Promise(resolve => {
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
+            modal.innerHTML = `
+                <div class="modal-content product-quick-view-content">
+                    <div class="modal-header">
+                        <h2 class="section-title">Confirm Deletion</h2>
+                        <span class="close-button">&times;</span>
+                    </div>
+                    <div class="modal-body quick-view-body">
+                        <p>Are you sure you want to delete this menu item?</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                            <button class="primary-btn" id="confirmDeleteBtn">Delete</button>
+                            <button class="secondary-btn" id="cancelDeleteBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex'; // Show modal
+
+            const closeBtn = modal.querySelector('.close-button');
+            const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+            const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+
+            const closeModal = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+            };
+
+            closeBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            cancelBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            confirmBtn.addEventListener('click', () => { closeModal(); resolve(true); });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                    resolve(false);
+                }
+            });
+        });
+
+        if (!confirmDelete) {
             return;
         }
+
         try {
             await api.menu.deleteMenuItem(id);
-            alert('Menu item deleted successfully');
+            // Using a custom modal for success message instead of alert()
+            const successModal = document.createElement('div');
+            successModal.classList.add('modal');
+            successModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-check-circle confirmation-icon"></i>
+                    <h2 class="section-title">Success!</h2>
+                    <p>Menu item deleted successfully!</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+            successModal.style.display = 'flex';
+
+            const okBtn = successModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                successModal.style.display = 'none';
+                document.body.removeChild(successModal);
+            });
+
             await loadMenuItems();
         } catch (error) {
             console.error('Error deleting menu item:', error);
-            alert('Failed to delete menu item: ' + (error.message || 'Server error'));
+            // Using a custom modal for error message instead of alert()
+            const errorModal = document.createElement('div');
+            errorModal.classList.add('modal');
+            errorModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-times-circle confirmation-icon" style="color: #e74c3c;"></i>
+                    <h2 class="section-title">Error!</h2>
+                    <p>Failed to delete menu item: ${error.message || 'Server error'}</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(errorModal);
+            errorModal.style.display = 'flex';
+
+            const okBtn = errorModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                errorModal.style.display = 'none';
+                document.body.removeChild(errorModal);
+            });
         }
     }
 
@@ -472,29 +587,104 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function deleteCategory(id) {
-        if (!confirm('Are you sure you want to delete this category?')) {
+        // Using a custom modal for confirmation instead of alert()
+        const confirmDelete = await new Promise(resolve => {
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
+            modal.innerHTML = `
+                <div class="modal-content product-quick-view-content">
+                    <div class="modal-header">
+                        <h2 class="section-title">Confirm Deletion</h2>
+                        <span class="close-button">&times;</span>
+                    </div>
+                    <div class="modal-body quick-view-body">
+                        <p>Are you sure you want to delete this category?</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                            <button class="primary-btn" id="confirmDeleteBtn">Delete</button>
+                            <button class="secondary-btn" id="cancelDeleteBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex'; // Show modal
+
+            const closeBtn = modal.querySelector('.close-button');
+            const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+            const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+
+            const closeModal = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+            };
+
+            closeBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            cancelBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            confirmBtn.addEventListener('click', () => { closeModal(); resolve(true); });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                    resolve(false);
+                }
+            });
+        });
+
+        if (!confirmDelete) {
             return;
         }
         try {
             await api.categories.deleteCategory(id);
-            alert('Category deleted successfully');
+            // Using a custom modal for success message instead of alert()
+            const successModal = document.createElement('div');
+            successModal.classList.add('modal');
+            successModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-check-circle confirmation-icon"></i>
+                    <h2 class="section-title">Success!</h2>
+                    <p>Category deleted successfully!</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+            successModal.style.display = 'flex';
+
+            const okBtn = successModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                successModal.style.display = 'none';
+                document.body.removeChild(successModal);
+            });
             await loadCategories();
             await loadMenuItems();
         } catch (error) {
             console.error('Error deleting category:', error);
-            alert('Failed to delete category: ' + (error.message || 'Server error'));
+            // Using a custom modal for error message instead of alert()
+            const errorModal = document.createElement('div');
+            errorModal.classList.add('modal');
+            errorModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-times-circle confirmation-icon" style="color: #e74c3c;"></i>
+                    <h2 class="section-title">Error!</h2>
+                    <p>Failed to delete category: ${error.message || 'Server error'}</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(errorModal);
+            errorModal.style.display = 'flex';
+
+            const okBtn = errorModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                errorModal.style.display = 'none';
+                document.body.removeChild(errorModal);
+            });
         }
     }
 
     async function loadStores() {
-        // This function is not used in admin.js anymore for admin creation dropdown
-        // as admin.html does not have create store form.
-        // It remains here for context if needed for other admin functionalities.
         console.log("loadStores called in admin.js - this function is typically for superadmin.");
     }
 
     async function loadAdmins() {
-        // This function is not used in admin.js anymore as admin.html does not manage admins.
         console.log("loadAdmins called in admin.js - this function is typically for superadmin.");
     }
     
@@ -950,38 +1140,239 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Delete an admin user (Superadmin only)
     async function deleteAdmin(id) {
-        if (!confirm('Are you sure you want to delete this admin?')) {
+        // Using a custom modal for confirmation instead of alert()
+        const confirmDelete = await new Promise(resolve => {
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
+            modal.innerHTML = `
+                <div class="modal-content product-quick-view-content">
+                    <div class="modal-header">
+                        <h2 class="section-title">Confirm Deletion</h2>
+                        <span class="close-button">&times;</span>
+                    </div>
+                    <div class="modal-body quick-view-body">
+                        <p>Are you sure you want to delete this admin?</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                            <button class="primary-btn" id="confirmDeleteBtn">Delete</button>
+                            <button class="secondary-btn" id="cancelDeleteBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex'; // Show modal
+
+            const closeBtn = modal.querySelector('.close-button');
+            const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+            const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+
+            const closeModal = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+            };
+
+            closeBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            cancelBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            confirmBtn.addEventListener('click', () => { closeModal(); resolve(true); });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                    resolve(false);
+                }
+            });
+        });
+
+        if (!confirmDelete) {
             return;
         }
         try {
             await api.users.deleteAdmin(id);
-            alert('Admin deleted successfully');
+            // Using a custom modal for success message instead of alert()
+            const successModal = document.createElement('div');
+            successModal.classList.add('modal');
+            successModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-check-circle confirmation-icon"></i>
+                    <h2 class="section-title">Success!</h2>
+                    <p>Admin deleted successfully!</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+            successModal.style.display = 'flex';
+
+            const okBtn = successModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                successModal.style.display = 'none';
+                document.body.removeChild(successModal);
+            });
             loadAdmins(); // Reload admins list
         } catch (error) {
             console.error('Error deleting admin:', error);
-            alert('Failed to delete admin: ' + (error.message || 'Server error'));
+            // Using a custom modal for error message instead of alert()
+            const errorModal = document.createElement('div');
+            errorModal.classList.add('modal');
+            errorModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-times-circle confirmation-icon" style="color: #e74c3c;"></i>
+                    <h2 class="section-title">Error!</h2>
+                    <p>Failed to delete admin: ${error.message || 'Server error'}</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(errorModal);
+            errorModal.style.display = 'flex';
+
+            const okBtn = errorModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                errorModal.style.display = 'none';
+                document.body.removeChild(errorModal);
+            });
         }
     }
 
     // Delete a table
     async function deleteTable(id) {
-        if (!confirm('Are you sure you want to delete this table? This will also clear associated orders.')) {
+        // Using a custom modal for confirmation instead of alert()
+        const confirmDelete = await new Promise(resolve => {
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
+            modal.innerHTML = `
+                <div class="modal-content product-quick-view-content">
+                    <div class="modal-header">
+                        <h2 class="section-title">Confirm Deletion</h2>
+                        <span class="close-button">&times;</span>
+                    </div>
+                    <div class="modal-body quick-view-body">
+                        <p>Are you sure you want to delete this table? This will also clear associated orders.</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                            <button class="primary-btn" id="confirmDeleteBtn">Delete</button>
+                            <button class="secondary-btn" id="cancelDeleteBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex'; // Show modal
+
+            const closeBtn = modal.querySelector('.close-button');
+            const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+            const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+
+            const closeModal = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+            };
+
+            closeBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            cancelBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            confirmBtn.addEventListener('click', () => { closeModal(); resolve(true); });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                    resolve(false);
+                }
+            });
+        });
+
+        if (!confirmDelete) {
             return;
         }
         try {
             await api.tables.deleteTable(id);
-            alert('Table deleted successfully');
+            // Using a custom modal for success message instead of alert()
+            const successModal = document.createElement('div');
+            successModal.classList.add('modal');
+            successModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-check-circle confirmation-icon"></i>
+                    <h2 class="section-title">Success!</h2>
+                    <p>Table deleted successfully!</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(successModal);
+            successModal.style.display = 'flex';
+
+            const okBtn = successModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                successModal.style.display = 'none';
+                document.body.removeChild(successModal);
+            });
             loadTables(); // Reload tables list
             fetchAndDisplayOrders(); // Refresh orders dashboard
         } catch (error) {
             console.error('Error deleting table:', error);
-            alert('Failed to delete table: ' + (error.message || 'Server error'));
+            // Using a custom modal for error message instead of alert()
+            const errorModal = document.createElement('div');
+            errorModal.classList.add('modal');
+            errorModal.innerHTML = `
+                <div class="modal-content confirmation-content">
+                    <i class="fas fa-times-circle confirmation-icon" style="color: #e74c3c;"></i>
+                    <h2 class="section-title">Error!</h2>
+                    <p>Failed to delete table: ${error.message || 'Server error'}</p>
+                    <button class="primary-btn" id="okBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(errorModal);
+            errorModal.style.display = 'flex';
+
+            const okBtn = errorModal.querySelector('#okBtn');
+            okBtn.addEventListener('click', () => {
+                errorModal.style.display = 'none';
+                document.body.removeChild(errorModal);
+            });
         }
     }
 
     // Clear all active orders for a specific table
     async function clearTableOrders(tableId) {
-        if (!confirm(`Are you sure you want to clear all active orders for Table ${tableId}? This action cannot be undone.`)) {
+        // Using a custom modal for confirmation instead of alert()
+        const confirmClear = await new Promise(resolve => {
+            const modal = document.createElement('div');
+            modal.classList.add('modal');
+            modal.innerHTML = `
+                <div class="modal-content product-quick-view-content">
+                    <div class="modal-header">
+                        <h2 class="section-title">Confirm Clear Orders</h2>
+                        <span class="close-button">&times;</span>
+                    </div>
+                    <div class="modal-body quick-view-body">
+                        <p>Are you sure you want to clear all active orders for Table ${tableId}? This action cannot be undone.</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                            <button class="primary-btn" id="confirmClearBtn">Clear Orders</button>
+                            <button class="secondary-btn" id="cancelClearBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.style.display = 'flex'; // Show modal
+
+            const closeBtn = modal.querySelector('.close-button');
+            const confirmBtn = modal.querySelector('#confirmClearBtn');
+            const cancelBtn = modal.querySelector('#cancelClearBtn');
+
+            const closeModal = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+            };
+
+            closeBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            cancelBtn.addEventListener('click', () => { closeModal(); resolve(false); });
+            confirmBtn.addEventListener('click', () => { closeModal(); resolve(true); });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                    resolve(false);
+                }
+            });
+        });
+
+        if (!confirmClear) {
             return;
         }
 
