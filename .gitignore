@@ -3,3 +3,7 @@ node_modules/
 
 # Environment variables
 .env
+
+# Ignore temporary password hash generation script
+backend/resetSuperadminPw.js
+backend/generateHash.js
