@@ -260,6 +260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const menuItems = await api.menu.getMenu(storeId);
             allMenuItems = menuItems;
+            console.log('Fetched allMenuItems:', allMenuItems); // Log all menu items
             displayMenuItems(allMenuItems);
             menuListMessage.textContent = '';
         } catch (error) {
@@ -423,6 +424,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Item not found for editing.');
                 return;
             }
+            console.log('Editing item object:', item); // Log the full item object for debugging
+            console.log('Image URL for editing:', item.imageUrl); // Log the image URL specifically
+
             // Populate form fields
             menuItemIdInput.value = item._id;
             itemNameInput.value = item.name;
@@ -448,6 +452,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemSubmitBtn.textContent = 'Update Menu Item';
             menuItemMessage.textContent = 'Editing: ' + item.name;
             menuItemMessage.className = 'message';
+            
+            // Scroll to the form section
             menuItemForm.scrollIntoView({ behavior: 'smooth' });
         } catch (error) {
             console.error('Error fetching menu item for edit:', error);
