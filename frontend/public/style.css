@@ -86,9 +86,11 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 
 /* --- Order Page Header (Mobile App Style) --- */
 .order-app-header {
-    background-color: #fff; /* White background for header */
+    background-color: #fff;
     color: #333;
-    padding: 15px; /* Sets 15px padding on all four sides to move from edges */
+    padding: 15px 15px 15px 20px; /* Example: 15px top/right/bottom, 20px left */
+    /* Or, for more space: */
+    /* padding: 15px 15px 15px 25px; */ /* 25px left padding */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
