@@ -221,6 +221,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             itemCategorySelect.innerHTML = '';
+            // Add a default "Select Category" option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Category';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            itemCategorySelect.appendChild(defaultOption);
+
             categories.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat._id;
@@ -439,7 +447,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             itemNameInput.value = item.name;
             itemDescriptionInput.value = item.description;
             itemPriceInput.value = item.price;
-            itemCategorySelect.value = item.categoryId._id;
+            // FIX: Check if item.categoryId exists before accessing its _id
+            if (item.categoryId && item.categoryId._id) {
+                itemCategorySelect.value = item.categoryId._id;
+            } else {
+                // If categoryId is null or undefined, set to default or empty
+                itemCategorySelect.value = ''; // Or the value of your "Select Category" option
+            }
             isBestSellerCheckbox.checked = item.isBestSeller;
             isAvailableCheckbox.checked = item.isAvailable;
 

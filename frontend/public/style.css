@@ -1225,7 +1225,7 @@ input[type="file"] {
         padding: 0 10px;
     }
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 0.1em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
+        font-size: 1.1em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
     }
     .order-container .menu-grid { /* Targeting menu-grid specifically for this fix */
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Allow flexible columns, prevent single item from stretching */
