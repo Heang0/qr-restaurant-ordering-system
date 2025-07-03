@@ -104,7 +104,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     display: flex;
     align-items: center;
     justify-content: flex-start; /* Align content to the left */
-    gap: 10px; /* Space between logo and text */
+    gap: 15px; /* Space between logo and text */
 }
 
 .order-app-header .header-right {
@@ -112,6 +112,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     display: flex;
     align-items: center;
     justify-content: flex-end; /* Align content to the right */
+     padding-right: 5px; 
 }
 
 .order-app-header .header-text-container {
@@ -130,7 +131,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 }
 
 .order-app-header .table-info {
-    font-size: 1.1em; /* Increased font size */
+    font-size: 1.3em; /* Increased font size */
     font-weight: bold; /* Made font bold */
     color: #000000;
     margin: 0;
@@ -1252,7 +1253,7 @@ input[type="file"] {
     .order-app-header .header-left {
         flex-grow: 0; /* Allow it to shrink */
         flex-basis: auto; /* Content dictates width */
-        gap: 5px; /* Smaller gap */
+        gap: 10px; /* Smaller gap */
     }
     .order-app-header .header-right {
         flex-basis: auto;
