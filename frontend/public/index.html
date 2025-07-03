@@ -250,17 +250,18 @@
 
         /* --- Modal --- */
         .modal {
-            display: none;
             position: fixed;
             z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
+            overflow: auto;
             background-color: rgba(0, 0, 0, 0.7);
-            justify-content: center;
+            display: none; /* Set to none by default. JS will change this to 'flex' */
             align-items: center;
-            padding: 20px;
+            justify-content: center;
+            padding: 10px;
         }
 
         .modal-content {
@@ -330,6 +331,92 @@
             }
             .modal-content {
                 padding: 20px;
+            }
+        }
+
+        /* --- NEW: Specific styles for the password reset modal (modal-pw) --- */
+        .modal-pw {
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .modal-pw .modal-content {
+            max-width: 450px;
+            padding: 30px;
+        }
+
+        .modal-pw .modal-header {
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-pw .form-card {
+            gap: 15px;
+        }
+
+        .modal-pw label {
+            margin-bottom: 0;
+        }
+
+        .modal-pw input[type="password"] {
+            margin-bottom: 10px;
+        }
+
+        .modal-pw .message {
+            margin-top: 15px;
+        }
+        /* Specific styling for the Reset Password button in admin table */
+        .reset-password-btn {
+            background-color: #3498db; /* Blue color for reset password */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            margin-right: 5px; /* Space between reset and delete */
+        }
+
+        .reset-password-btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Ensure table actions have space for new button */
+        .styled-table .table-actions {
+            display: flex;
+            gap: 5px; /* Smaller gap between buttons */
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            justify-content: flex-end; /* Align buttons to the right */
+        }
+
+        /* Adjust column width for actions if needed */
+        .styled-table th:nth-child(3),
+        .styled-table td:nth-child(3) {
+            width: 200px; /* Adjust as needed to fit buttons */
+            min-width: 180px; /* Ensure minimum width */
+        }
+
+        /* Responsive adjustments for table actions on very small screens */
+        @media (max-width: 480px) {
+            .styled-table .table-actions {
+                flex-direction: column; /* Stack buttons vertically */
+                align-items: stretch; /* Make them full width */
+                gap: 8px;
+            }
+            .styled-table th:nth-child(3),
+            .styled-table td:nth-child(3) {
+                width: auto; /* Allow width to be flexible */
+                min-width: unset;
             }
         }
     </style>
@@ -405,6 +492,27 @@
                 <p id="editAdminMessage" class="message"></p>
                 <button type="submit" class="primary-btn">Update Admin</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Reset Admin Password Modal -->
+    <div id="resetPasswordModal" class="modal-pw"> <!-- CHANGED: class="modal-pw" -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="section-title">Reset Password for <span id="resetAdminEmail"></span></h2>
+                <span class="close-button" id="closeResetPasswordModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="resetPasswordForm" class="form-card">
+                    <input type="hidden" id="resetAdminId">
+                    <label for="newAdminPassword">New Password:</label>
+                    <input type="password" id="newAdminPassword" placeholder="Enter new password" required minlength="6">
+                    <label for="confirmAdminPassword">Confirm New Password:</label>
+                    <input type="password" id="confirmAdminPassword" placeholder="Confirm new password" required minlength="6">
+                    <button type="submit" class="primary-btn full-width" id="resetPasswordSubmitBtn">Reset Password</button>
+                    <p id="resetPasswordMessage" class="message"></p>
+                </form>
+            </div>
         </div>
     </div>
 

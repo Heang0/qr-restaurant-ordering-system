@@ -2090,3 +2090,52 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
         min-width: unset;
     }
 }
+
+
+
+
+
+
+/* ADDED: Specific styles for the password reset modal */
+.modal-pw {
+    /* Inherit common modal properties from .modal */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+/* Keep the existing #resetPasswordModal .modal-content rule, but change its selector */
+.modal-pw .modal-content { /* CHANGED: from #resetPasswordModal .modal-content */
+    max-width: 450px;
+    padding: 30px;
+}
+
+.modal-pw .modal-header { /* CHANGED: from #resetPasswordModal .modal-header */
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-pw .form-card { /* CHANGED: from #resetPasswordModal .form-card */
+    gap: 15px;
+}
+
+.modal-pw label { /* CHANGED: from #resetPasswordModal label */
+    margin-bottom: 0;
+}
+
+.modal-pw input[type="password"] { /* CHANGED: from #resetPasswordModal input[type="password"] */
+    margin-bottom: 10px;
+}
+
+.modal-pw .message { /* CHANGED: from #resetPasswordModal .message */
+    margin-top: 15px;
+}

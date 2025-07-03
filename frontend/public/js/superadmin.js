@@ -45,8 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const editAdminStoreSelect = document.getElementById('editAdminStore');
     const editAdminMessage = document.getElementById('editAdminMessage');
 
-    // ADDED: Reset Password Modal Elements (ensure these are correctly defined)
-    const resetPasswordModal = document.getElementById('resetPasswordModal');
+    // ADDED: Reset Password Modal Elements
+    // MODIFIED: Select by class 'modal-pw'
+    const resetPasswordModal = document.querySelector('.modal-pw'); // CHANGED: Select by class
     const closeResetPasswordModalBtn = document.getElementById('closeResetPasswordModal');
     const resetAdminEmailSpan = document.getElementById('resetAdminEmail');
     const resetAdminIdInput = document.getElementById('resetAdminId');
@@ -54,7 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmAdminPasswordInput = document.getElementById('confirmAdminPassword');
     const resetPasswordSubmitBtn = document.getElementById('resetPasswordSubmitBtn');
     const resetPasswordMessage = document.getElementById('resetPasswordMessage');
-    // FIX: Ensure resetPasswordForm is correctly referenced at the top
     const resetPasswordForm = document.getElementById('resetPasswordForm');
 
 
@@ -303,9 +303,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // FIX: Ensure resetPasswordForm is referenced correctly before its event listener
-    // This part is now handled by the const declaration at the top.
-    // The event listener itself is correct.
     if (resetPasswordForm) { // Check if the element exists
         resetPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
