@@ -86,11 +86,9 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 
 /* --- Order Page Header (Mobile App Style) --- */
 .order-app-header {
-    background-color: #fff;
-    color: #333;
-    padding: 15px 15px 15px 20px; /* Example: 15px top/right/bottom, 20px left */
-    /* Or, for more space: */
-    /* padding: 15px 15px 15px 25px; */ /* 25px left padding */
+    background-color: #e74c3c; /* CHANGED: Main red color for background */
+    color: white; /* CHANGED: All text in header to white by default */
+    padding: 15px 15px 15px 20px; /* Keep previous padding adjustment */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
@@ -98,7 +96,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #eee; /* You might want to change this border color too if it's visible */
 }
 
 .order-app-header .header-left {
@@ -126,18 +124,18 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 }
 
 .order-app-header h1 {
-    font-size: 1.4em; /* Smaller title for mobile app feel */
+    font-size: 1.4em;
     font-weight: 600;
     margin: 0;
-    color: #333;
+    color: white; /* CHANGED: Explicitly set to white */
 }
 
 .order-app-header .table-info {
-    font-size: 1.3em; /* Increased font size */
-    font-weight: bold; /* Made font bold */
-    color: #000000;
+    font-size: 1.5em; /* Will update this further below */
+    font-weight: bold;
+    color: white; /* CHANGED: Explicitly set to white */
     margin: 0;
-    white-space: nowrap; /* Prevent table info from wrapping */
+    white-space: nowrap;
 }
 
 /* Removed back button as requested */
