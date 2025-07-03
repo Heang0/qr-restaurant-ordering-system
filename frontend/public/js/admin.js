@@ -427,6 +427,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Editing item object:', item); // Log the full item object for debugging
             console.log('Image URL for editing:', item.imageUrl); // Log the image URL specifically
 
+            // 1. Activate the "Manage Menu" tab
+            const menuTabButton = document.querySelector('.tab-btn[data-tab="menu"]');
+            if (menuTabButton) {
+                // Simulate a click on the menu tab button
+                menuTabButton.click(); 
+            }
+
             // Populate form fields
             menuItemIdInput.value = item._id;
             itemNameInput.value = item.name;
@@ -454,7 +461,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemMessage.className = 'message';
             
             // Scroll to the form section
-            menuItemForm.scrollIntoView({ behavior: 'smooth' });
+            // Adding a small timeout to ensure the tab content has rendered after the click
+            setTimeout(() => {
+                menuItemForm.scrollIntoView({ behavior: 'smooth' });
+            }, 100); // 100ms delay, adjust if needed
+            
         } catch (error) {
             console.error('Error fetching menu item for edit:', error);
         }
