@@ -492,24 +492,28 @@ input[type="file"] {
 }
 
 .close-button {
-    color: #e74c3c; /* Changed to your primary red color */
-    /* Removed float: right; as flexbox/grid usually handles positioning */
-    font-size: 1.5em; /* Adjusted size for a clean icon feel */
-    font-weight: normal; /* Make it a simple 'x' without bolding */
+    color: #e74c3c; /* Your main red color */
+    font-size: 1.8em; /* Keep this size, or adjust if needed */
+    font-weight: 700; /* Changed to bold (700) for stronger presence */
     cursor: pointer;
-    transition: color 0.3s;
-    /* Added for better alignment in flex containers and touch target */
+    transition: color 0.2s, transform 0.1s;
     line-height: 1;
-    padding: 5px; /* Add a bit of padding for easier tapping */
-    background: none; /* Ensure no background if it's implicitly getting one */
-    border: none; /* Ensure no border */
+    padding: 5px;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
 }
 
 .close-button:hover,
 .close-button:focus {
-    color: #c0392b; /* Darker red on hover */
-    text-decoration: none;
-    outline: none; /* Remove outline on focus for cleaner look */
+    color: #c0392b; /* Darker red on hover/focus */
+    transform: scale(1.05);
+    outline: none;
 }
 .modal-body {
     flex-grow: 1;
