@@ -5,10 +5,14 @@ import api from './api.js';
         console.log("DOMContentLoaded fired. Starting customer.js execution.");
 
         const urlParams = new URLSearchParams(window.location.search);
-        const storeId = urlParams.get('storeId');
+        // MODIFIED: Get storeSlug instead of storeId from URL
+        const storeSlug = urlParams.get('storeSlug');
         const tableId = urlParams.get('table');
 
-        console.log(`URL Params - storeId: ${storeId}, tableId: ${tableId}`);
+        // MODIFIED: Declare storeId here, it will be resolved from slug
+        let storeId = null;
+
+        console.log(`URL Params - storeSlug: ${storeSlug}, tableId: ${tableId}`);
 
         const storeNameHeader = document.getElementById('storeNameHeader');
         const tableIdDisplay = document.getElementById('tableIdDisplay');
@@ -45,7 +49,6 @@ import api from './api.js';
         const categoryFilterWrapper = document.querySelector('.category-filter-wrapper');
         const scrollIndicatorRight = document.querySelector('.scroll-indicator.right');
 
-        // ADDED: Quick View Modal Elements
         const productQuickViewModal = document.getElementById('productQuickViewModal');
         const closeQuickViewModalBtn = document.getElementById('closeQuickViewModal');
         const quickViewItemName = document.getElementById('quickViewItemName');
@@ -60,9 +63,10 @@ import api from './api.js';
         let customerPlacedOrders = [];
 
 
-        if (!storeId || !tableId) {
-            console.error("Missing storeId or tableId in URL.");
-            if (menuErrorMessage) menuErrorMessage.textContent = 'Missing store ID or table ID in URL. Please scan a valid QR code.';
+        // MODIFIED: Initial check for storeSlug and tableId
+        if (!storeSlug || !tableId) {
+            console.error("Missing storeSlug or tableId in URL.");
+            if (menuErrorMessage) menuErrorMessage.textContent = 'Missing store slug or table ID in URL. Please scan a valid QR code.';
             if (submitOrderBtn) submitOrderBtn.disabled = true;
             if (floatingCartBtn) floatingCartBtn.style.display = 'none';
             if (bottomNavCartBtn) bottomNavCartBtn.style.display = 'none';
@@ -71,7 +75,43 @@ import api from './api.js';
         }
 
         if (tableIdDisplay) tableIdDisplay.textContent = tableId;
-        console.log("Store ID and Table ID found. Initializing event listeners and data fetches.");
+        console.log("Store Slug and Table ID found. Initializing event listeners and data fetches.");
+
+        // ADDED: Resolve storeSlug to storeId before proceeding
+        try {
+            const storeDetails = await api.stores.getStoreBySlug(storeSlug);
+            storeId = storeDetails._id; // Set the global storeId
+            console.log(`Resolved storeSlug '${storeSlug}' to storeId: ${storeId}`);
+
+            // Update store name and logo immediately after resolving slug
+            if (storeDetails) {
+                if (storeNameHeader) storeNameHeader.textContent = storeDetails.name;
+                if (storeDetails.logoUrl && storeLogoDisplay) {
+                    storeLogoDisplay.src = storeDetails.logoUrl;
+                    storeLogoDisplay.classList.remove('hidden');
+                } else if (storeLogoDisplay) {
+                    storeLogoDisplay.classList.add('hidden');
+                }
+            } else {
+                if (storeNameHeader) storeNameHeader.textContent = 'Restaurant Menu';
+                if (storeLogoDisplay) {
+                    storeLogoDisplay.classList.add('hidden');
+                }
+            }
+
+        } catch (error) {
+            console.error('Error resolving store slug:', error);
+            if (menuErrorMessage) {
+                menuErrorMessage.textContent = 'Failed to load store: ' + (error.message || 'Store not found or server error');
+                menuErrorMessage.className = 'error-message';
+            }
+            // Disable further functionality if store cannot be resolved
+            if (submitOrderBtn) submitOrderBtn.disabled = true;
+            if (floatingCartBtn) floatingCartBtn.style.display = 'none';
+            if (bottomNavCartBtn) bottomNavCartBtn.style.display = 'none';
+            if (bottomNavOrdersBtn) bottomNavOrdersBtn.style.display = 'none';
+            return; // Stop execution
+        }
 
 
         // --- Modal Functionality (Order Modal) ---
@@ -114,7 +154,6 @@ import api from './api.js';
         }
 
         if (bottomNavMenuBtn) {
-            
             bottomNavMenuBtn.addEventListener('click', (e) => {
                 if (menuSection) {
                     menuSection.scrollIntoView({ behavior: 'smooth' });
@@ -151,7 +190,6 @@ import api from './api.js';
             }
         });
 
-        // ADDED: Quick View Modal Close Functionality
         if (closeQuickViewModalBtn) {
             closeQuickViewModalBtn.addEventListener('click', () => {
                 if (productQuickViewModal) productQuickViewModal.style.display = 'none';
@@ -192,7 +230,6 @@ import api from './api.js';
             });
         }
 
-        // Check scrollability on load and resize
         window.addEventListener('load', checkScrollability);
         window.addEventListener('resize', checkScrollability);
         if (categoryFilterButtons) {
@@ -205,6 +242,7 @@ import api from './api.js';
         async function fetchMenuData() {
             console.log("Attempting to fetch menu data...");
             try {
+                // MODIFIED: Use the resolved storeId
                 const response = await api.menu.getPublicMenu(storeId);
                 allMenuItems = response;
                 console.log("Menu data fetched successfully:", allMenuItems);
@@ -219,28 +257,29 @@ import api from './api.js';
                     return 0;
                 });
 
-                if (allMenuItems.length > 0) {
-                    const storeDetails = allMenuItems[0].storeId;
-                    if (storeDetails) {
-                        if (storeNameHeader) storeNameHeader.textContent = storeDetails.name;
-                        if (storeDetails.logoUrl && storeLogoDisplay) {
-                            storeLogoDisplay.src = storeDetails.logoUrl;
-                            storeLogoDisplay.classList.remove('hidden');
-                        } else if (storeLogoDisplay) {
-                            storeLogoDisplay.classList.add('hidden');
-                        }
-                    } else {
-                        if (storeNameHeader) storeNameHeader.textContent = 'Restaurant Menu';
-                        if (storeLogoDisplay) {
-                            storeLogoDisplay.classList.add('hidden');
-                        }
-                    }
-                } else {
-                    if (storeNameHeader) storeNameHeader.textContent = 'Restaurant Menu';
-                    if (storeLogoDisplay) {
-                        storeLogoDisplay.classList.add('hidden');
-                    }
-                }
+                // Store details are already set after resolving slug, no need to re-set from menu items
+                // if (allMenuItems.length > 0) {
+                //     const storeDetails = allMenuItems[0].storeId;
+                //     if (storeDetails) {
+                //         if (storeNameHeader) storeNameHeader.textContent = storeDetails.name;
+                //         if (storeDetails.logoUrl && storeLogoDisplay) {
+                //             storeLogoDisplay.src = storeDetails.logoUrl;
+                //             storeLogoDisplay.classList.remove('hidden');
+                //         } else if (storeLogoDisplay) {
+                //             storeLogoDisplay.classList.add('hidden');
+                //         }
+                //     } else {
+                //         if (storeNameHeader) storeNameHeader.textContent = 'Restaurant Menu';
+                //         if (storeLogoDisplay) {
+                //             storeLogoDisplay.classList.add('hidden');
+                //         }
+                //     }
+                // } else {
+                //     if (storeNameHeader) storeNameHeader.textContent = 'Restaurant Menu';
+                //     if (storeLogoDisplay) {
+                //         storeLogoDisplay.classList.add('hidden');
+                //     }
+                // }
 
                 const categoriesMap = new Map();
                 allMenuItems.forEach(item => {
@@ -313,7 +352,6 @@ import api from './api.js';
             });
         }
 
-        // MODIFIED: Add click listener to image for quick view
         function displayMenuItems(items) {
             if (menuList) menuList.innerHTML = '';
             if (menuErrorMessage) {
@@ -331,7 +369,7 @@ import api from './api.js';
                 itemCard.classList.add('menu-card');
                 
                 itemCard.innerHTML = `
-                    <div class="menu-card-image-wrapper" data-id="${item._id}"> <!-- Added data-id for click -->
+                    <div class="menu-card-image-wrapper" data-id="${item._id}">
                         ${item.isBestSeller ? '<div class="best-seller-tag">Best Seller</div>' : ''}
                         ${!item.isAvailable ? '<div class="out-of-stock-overlay"><div class="out-of-stock-tag">Out of Stock</div></div>' : ''}
                         ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.name}" class="menu-card-image">` : ''}
@@ -356,7 +394,6 @@ import api from './api.js';
                 }
             });
 
-            // ADDED: Event listener for clicking menu item images to open quick view
             document.querySelectorAll('.menu-card-image-wrapper').forEach(wrapper => {
                 wrapper.addEventListener('click', (e) => {
                     const itemId = e.currentTarget.dataset.id;
@@ -523,35 +560,30 @@ import api from './api.js';
             });
         }
 
-        // ADDED: Function to display the Quick View Modal
         function displayQuickViewModal(item) {
             if (!productQuickViewModal) return;
 
             quickViewItemName.textContent = item.name;
-            quickViewItemImage.src = item.imageUrl || 'https://placehold.co/400x400/cccccc/333333?text=No+Image'; // Placeholder if no image
+            quickViewItemImage.src = item.imageUrl || 'https://placehold.co/400x400/cccccc/333333?text=No+Image';
             quickViewItemDescription.textContent = item.description || 'No description available.';
             quickViewItemPrice.textContent = `$${item.price.toFixed(2)}`;
             
-            // Set data-id on the add to cart button in quick view
             quickViewAddToCartBtn.dataset.id = item._id;
             quickViewAddToCartBtn.disabled = !item.isAvailable;
             quickViewAddToCartBtn.textContent = item.isAvailable ? 'Add to Cart' : 'Out of Stock';
 
-            // Remove existing listener to prevent multiple bindings
             quickViewAddToCartBtn.removeEventListener('click', handleQuickViewAddToCart);
-            // Add new listener
             quickViewAddToCartBtn.addEventListener('click', handleQuickViewAddToCart);
 
-            productQuickViewModal.style.display = 'flex'; // Show the modal
-            document.body.classList.add('modal-open'); // Prevent body scrolling
+            productQuickViewModal.style.display = 'flex';
+            document.body.classList.add('modal-open');
         }
 
-        // ADDED: Handler for Add to Cart button in Quick View Modal
         function handleQuickViewAddToCart(e) {
             const itemId = e.currentTarget.dataset.id;
-            addToOrder(itemId); // Use existing addToOrder function
-            if (productQuickViewModal) productQuickViewModal.style.display = 'none'; // Close quick view modal
-            document.body.classList.remove('modal-open'); // Re-enable body scrolling
+            addToOrder(itemId);
+            if (productQuickViewModal) productQuickViewModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
         }
 
 
@@ -574,7 +606,7 @@ import api from './api.js';
                 }
 
                 const orderData = {
-                    storeId: storeId,
+                    storeId: storeId, // Use the resolved storeId
                     tableId: tableId,
                     items: orderItems
                 };
@@ -628,6 +660,7 @@ import api from './api.js';
 
         async function fetchAndDisplayCustomerOrders() {
             try {
+                // MODIFIED: Use the resolved storeId
                 const response = await api.orders.getCustomerOrders(storeId, tableId);
                 customerPlacedOrders = response;
 
@@ -692,9 +725,10 @@ import api from './api.js';
 
 
         // Initial load
+        // MODIFIED: fetchMenuData and fetchAndDisplayCustomerOrders now rely on storeId being resolved
         fetchMenuData();
         updateCartSummary();
         fetchAndDisplayCustomerOrders();
-        setInterval(fetchAndDisplayCustomerOrders, 5000); // Changed to 5 seconds polling
+        setInterval(fetchAndDisplayCustomerOrders, 5000);
     });
 })();

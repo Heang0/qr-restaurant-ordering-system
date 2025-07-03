@@ -3,13 +3,11 @@ import { checkAuthAndRedirect, logout } from './auth.js';
 import { generateQrCode } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Attach logout button listener as early as possible within DOMContentLoaded
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logout);
     }
 
-    // Check authentication and redirect if necessary
     if (!checkAuthAndRedirect()) {
         console.log("Authentication check failed or redirected.");
         return;
@@ -19,13 +17,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const role = localStorage.getItem('role');
     const storeId = localStorage.getItem('storeId');
 
-    // Redirect non-superadmin/admin roles to login (redundant if checkAuthAndRedirect works, but safe)
     if (role !== 'superadmin' && role !== 'admin') {
         window.location.href = 'login.html';
         return;
     }
 
-    // --- Super Admin Elements (elements that only exist if role is superadmin) ---
     const createStoreForm = document.getElementById('createStoreForm');
     const storeNameInput = document.getElementById('storeName');
     const createStoreMessage = document.getElementById('createStoreMessage');
@@ -39,12 +35,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const adminsTableBody = document.querySelector('#adminsTable tbody');
     const adminListMessage = document.getElementById('adminListMessage');
 
-    // --- Admin/Store Specific Elements (elements that exist for admin or superadmin) ---
     const totalLiveOrdersEl = document.getElementById('totalLiveOrders');
     const pendingOrdersCountEl = document.getElementById('pendingOrdersCount');
     const readyOrdersCountEl = document.getElementById('readyOrdersCount');
     
-    // Store Branding Form Inputs
     const storeInfoForm = document.getElementById('storeInfoForm');
     const storeNameInputBranding = document.getElementById('storeNameInput');
     const storeAddressInput = document.getElementById('storeAddressInput');
@@ -61,7 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tablesListDiv = document.getElementById('tablesList');
     const tablesListMessage = document.getElementById('tablesListMessage');
     
-    // Elements for Manage Menu section
     const menuItemForm = document.getElementById('menuItemForm');
     const menuItemIdInput = document.getElementById('menuItemId');
     const itemNameInput = document.getElementById('itemName');
@@ -76,7 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const menuItemsList = document.getElementById('menuItemsList');
     const menuListMessage = document.getElementById('menuListMessage');
     const menuSearchInput = document.getElementById('menuSearchInput');
-    // Best Seller and Availability checkboxes
     const isBestSellerCheckbox = document.getElementById('isBestSellerCheckbox');
     const isAvailableCheckbox = document.getElementById('isAvailableCheckbox');
 
@@ -84,7 +76,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ordersDashboard = document.getElementById('ordersDashboard');
     const ordersMessage = document.getElementById('ordersMessage');
 
-    // --- Order Details Modal Elements ---
     const orderDetailsModal = document.getElementById('orderDetailsModal');
     const closeOrderDetailsModalBtn = document.getElementById('closeOrderDetailsModal');
     const modalTableIdSpan = document.getElementById('modalTableId');
@@ -93,50 +84,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     const clearTableHistoryBtn = document.getElementById('clearTableHistoryBtn');
     const modalTotalPrice = document.getElementById('modalTotalPrice');
 
-    // Receipt buttons
     const printReceiptBtn = document.getElementById('printReceiptBtn');
     const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
 
-    // Elements for sound and message notification
     const notificationSound = document.getElementById('notificationSound');
     const newOrderAlert = document.getElementById('newOrderAlert');
 
     let previousOrders = {};
     let allMenuItems = [];
-    let currentStoreDetails = {}; // To store current store info for receipts
-    let currentOrdersForModal = []; // To store the full orders object for receipt generation
+    let currentStoreDetails = {};
+    let currentOrdersForModal = [];
 
 
-    // Workaround for browser autoplay policy: activate audio on first user interaction
     let audioActivated = false;
     function activateAudio() {
         if (audioActivated) return;
-        // Attempt to play a silent sound to unlock audio context
         notificationSound.volume = 0;
         notificationSound.play().then(() => {
-            notificationSound.pause(); // Pause immediately
-            notificationSound.currentTime = 0; // Reset time
-            notificationSound.volume = 1; // Restore volume for future plays
+            notificationSound.pause();
+            notificationSound.currentTime = 0;
+            notificationSound.volume = 1;
             audioActivated = true;
             console.log("Audio playback enabled by user interaction.");
         }).catch(error => {
             console.error("Failed to activate audio (user not interacted enough):", error);
         });
-        // Remove listeners after the first interaction
         document.removeEventListener('click', activateAudio);
         document.removeEventListener('touchstart', activateAudio);
     }
-    // Listen for the first user interaction (click or touch) on the document
     document.addEventListener('click', activateAudio);
     document.addEventListener('touchstart', activateAudio);
 
 
-    // --- Conditional UI for Superadmin vs Admin ---
-    // Hide superadmin-specific sections if the user is an admin
     if (role === 'superadmin') {
         // Superadmin sections are visible by default
     } else if (role === 'admin') {
-        // Hide elements specific to superadmin if the current user is an admin
         if (createStoreForm) createStoreForm.closest('section').style.display = 'none';
         if (createAdminForm) createAdminForm.closest('section').style.display = 'none';
         const adminsTable = document.getElementById('adminsTable');
@@ -145,7 +127,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-    // --- Tab Navigation Logic ---
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
@@ -153,11 +134,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         button.addEventListener('click', () => {
             const tabId = button.dataset.tab;
             
-            // Remove 'active' class from all buttons and content
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
             
-            // Add 'active' class to the clicked button and its corresponding content
             button.classList.add('active');
             const targetContent = document.getElementById(`tab-${tabId}`);
             if (targetContent) {
@@ -166,44 +145,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Helper function for loading state for buttons
     function setLoading(button, isLoading) {
         if (isLoading) {
             button.innerHTML = '<i class="fas fa-spinner fa-spin loading-spinner"></i>';
             button.disabled = true;
             button.style.cursor = 'wait';
         } else {
-            // Restore button text/content. This relies on the calling function to restore
-            // the original text, as it's specific to each button.
             button.disabled = false;
             button.style.cursor = 'pointer';
         }
     }
 
 
-    // --- Core Functions ---
-
-    // Function to load current store details (for receipts and branding form)
     async function loadStoreDetails() {
         if (!storeId) return;
         try {
+            // MODIFIED: Fetch store details by ID, which now includes the slug
             currentStoreDetails = await api.stores.getStoreById(storeId);
             console.log('Fetched store details:', currentStoreDetails);
 
-            // Populate the store branding form with fetched data
             if (storeNameInputBranding) storeNameInputBranding.value = currentStoreDetails.name || '';
             if (storeAddressInput) storeAddressInput.value = currentStoreDetails.address || '';
             if (storePhoneInput) storePhoneInput.value = currentStoreDetails.phone || '';
             
-            // Handle logo preview
             if (currentStoreDetails.logoUrl) {
                 logoPreviewImg.src = currentStoreDetails.logoUrl;
                 logoPreviewImg.classList.remove('hidden');
                 logoPreviewContainer.style.border = 'none';
             } else {
-                logoPreviewImg.src = ''; // Clear image source if none
+                logoPreviewImg.src = '';
                 logoPreviewImg.classList.add('hidden');
-                logoPreviewContainer.style.border = '2px dashed #bdc3c7'; // Show dashed border
+                logoPreviewContainer.style.border = '2px dashed #bdc3c7';
             }
         } catch (error) {
             console.error('Error fetching store details:', error);
@@ -214,7 +186,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Load categories for the current store
     async function loadCategories() {
         if (!storeId) {
             console.error('Store ID not found. Cannot load categories.');
@@ -232,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             categories.forEach(category => {
                 const categoryCard = document.createElement('div');
-                categoryCard.classList.add('table-card'); // Reusing table-card style for categories
+                categoryCard.classList.add('table-card');
                 categoryCard.innerHTML = `
                     <p class="table-id-label">${category.name}</p>
                     <div class="table-card-actions">
@@ -243,13 +214,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if(categoriesListDiv) categoriesListDiv.appendChild(categoryCard);
             });
 
-            // Add event listeners for edit and delete category buttons
             if(categoriesListDiv) {
                 categoriesListDiv.querySelectorAll('.edit-category-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.target.dataset.id;
                         const name = e.target.dataset.name;
-                        // Populate form and change button text for editing
                         document.getElementById('categoryName').value = name;
                         document.getElementById('addCategoryForm').dataset.editingId = id;
                         document.querySelector('#addCategoryForm button[type="submit"]').textContent = 'Update Category';
@@ -260,7 +229,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // Populate category select for menu item form
             itemCategorySelect.innerHTML = '';
             categories.forEach(cat => {
                 const option = document.createElement('option');
@@ -268,7 +236,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 option.textContent = cat.name;
                 itemCategorySelect.appendChild(option);
             });
-            // Update filter buttons for menu
             if(menuCategoryFilterButtons){
                 menuCategoryFilterButtons.innerHTML = '';
                 const allBtn = document.createElement('button');
@@ -277,7 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 allBtn.dataset.categoryId = 'all';
                 allBtn.addEventListener('click', () => {
                     filterMenu('all');
-                    menuSearchInput.value = ''; // Clear search when filtering by category
+                    menuSearchInput.value = '';
                 });
                 menuCategoryFilterButtons.appendChild(allBtn);
                 categories.forEach(cat => {
@@ -287,7 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     btn.dataset.categoryId = cat._id;
                     btn.addEventListener('click', () => {
                         filterMenu(cat._id);
-                        menuSearchInput.value = ''; // Clear search when filtering by category
+                        menuSearchInput.value = '';
                     });
                     menuCategoryFilterButtons.appendChild(btn);
                 });
@@ -297,12 +264,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // Load menu items for the current store
     async function loadMenuItems() {
         if (!storeId) return;
         try {
             const menuItems = await api.menu.getMenu(storeId);
-            allMenuItems = menuItems; // Store all menu items for filtering/searching
+            allMenuItems = menuItems;
             displayMenuItems(allMenuItems);
             menuListMessage.textContent = '';
         } catch (error) {
@@ -312,7 +278,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // Display menu items in the grid
     function displayMenuItems(items) {
         menuItemsList.innerHTML = '';
         if (items.length === 0) {
@@ -323,7 +288,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         items.forEach(item => {
             const itemCard = document.createElement('div');
             itemCard.classList.add('menu-card');
-            // Conditionally add the out of stock overlay class
             if (!item.isAvailable) {
                 itemCard.classList.add('out-of-stock-card');
             }
@@ -344,7 +308,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemsList.appendChild(itemCard);
         });
         
-        // Add event listeners for dynamically created buttons
         menuItemsList.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', (e) => editMenuItem(e.target.dataset.id));
         });
@@ -353,7 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Filter menu items by category
     function filterMenu(categoryId) {
         const buttons = document.querySelectorAll('#menu-category-filter-buttons .category-btn');
         buttons.forEach(btn => btn.classList.remove('active'));
@@ -371,7 +333,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayMenuItems(filteredItems);
     }
 
-    // Menu item search logic
     if (menuSearchInput) {
         menuSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
@@ -380,12 +341,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (item.description && item.description.toLowerCase().includes(searchTerm))
             );
             displayMenuItems(filteredItems);
-            // Deactivate all category filter buttons when searching
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         });
     }
 
-    // Handle menu item form submission (add/update)
     async function handleMenuItemSubmit(e) {
         e.preventDefault();
         const itemId = menuItemIdInput.value;
@@ -395,7 +354,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('description', itemDescriptionInput.value.trim());
         formData.append('price', parseFloat(itemPriceInput.value));
         formData.append('categoryId', itemCategorySelect.value);
-        // Append the best seller and availability checkbox values
         formData.append('isBestSeller', isBestSellerCheckbox.checked);
         formData.append('isAvailable', isAvailableCheckbox.checked);
 
@@ -416,23 +374,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 menuItemMessage.textContent = 'Menu item added successfully!';
             }
             menuItemMessage.className = 'success-message';
-            menuItemForm.reset(); // Clear form fields
-            menuItemIdInput.value = ''; // Clear hidden ID
-            currentImagePreview.innerHTML = ''; // Clear image preview
-            menuItemSubmitBtn.textContent = 'Add Menu Item'; // Reset button text
-            await loadMenuItems(); // Reload menu items
+            menuItemForm.reset();
+            menuItemIdInput.value = '';
+            currentImagePreview.innerHTML = '';
+            menuItemSubmitBtn.textContent = 'Add Menu Item';
+            await loadMenuItems();
         } catch (error) {
             console.error('Error saving menu item:', error);
             menuItemMessage.textContent = 'Failed to save menu item: ' + (error.message || 'Server error');
             menuItemMessage.className = 'error-message';
         } finally {
             setLoading(menuItemSubmitBtn, false);
-            menuItemSubmitBtn.textContent = originalBtnText; // Ensure text is restored
+            menuItemSubmitBtn.textContent = originalBtnText;
         }
     }
     menuItemForm.addEventListener('submit', handleMenuItemSubmit);
 
-    // Populate form for editing a menu item
     async function editMenuItem(id) {
         try {
             const item = allMenuItems.find(i => i._id === id);
@@ -445,7 +402,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             itemDescriptionInput.value = item.description;
             itemPriceInput.value = item.price;
             itemCategorySelect.value = item.categoryId._id;
-            // Populate the best seller and availability checkboxes
             isBestSellerCheckbox.checked = item.isBestSeller;
             isAvailableCheckbox.checked = item.isAvailable;
 
@@ -460,13 +416,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemSubmitBtn.textContent = 'Update Menu Item';
             menuItemMessage.textContent = 'Editing: ' + item.name;
             menuItemMessage.className = 'message';
-            menuItemForm.scrollIntoView({ behavior: 'smooth' }); // Scroll to form
+            menuItemForm.scrollIntoView({ behavior: 'smooth' });
         } catch (error) {
             console.error('Error fetching menu item for edit:', error);
         }
     }
 
-    // Delete a menu item
     async function deleteMenuItem(id) {
         if (!confirm('Are you sure you want to delete this menu item?')) {
             return;
@@ -474,19 +429,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             await api.menu.deleteMenuItem(id);
             alert('Menu item deleted successfully');
-            await loadMenuItems(); // Reload menu items
+            await loadMenuItems();
         } catch (error) {
             console.error('Error deleting menu item:', error);
             alert('Failed to delete menu item: ' + (error.message || 'Server error'));
         }
     }
 
-    // Handle category form submission (add/update)
     const addCategoryForm = document.getElementById('addCategoryForm');
     addCategoryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const categoryName = document.getElementById('categoryName').value.trim();
-        const editingId = addCategoryForm.dataset.editingId; // Check if editing
+        const editingId = addCategoryForm.dataset.editingId;
 
         if (!categoryName) return;
 
@@ -497,31 +451,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             let response;
             if (editingId) {
-                // Update existing category
                 response = await api.categories.updateCategory(editingId, { name: categoryName });
                 document.getElementById('addCategoryMessage').textContent = 'Category updated successfully!';
             } else {
-                // Add new category
                 response = await api.categories.addCategory({ name: categoryName });
                 document.getElementById('addCategoryMessage').textContent = 'Category created successfully!';
             }
             document.getElementById('addCategoryMessage').className = 'success-message';
-            document.getElementById('categoryName').value = ''; // Clear input
-            delete addCategoryForm.dataset.editingId; // Clear editing ID
-            submitBtn.textContent = 'Add Category'; // Reset button text
-            await loadCategories(); // Reload categories
-            await loadMenuItems(); // Reload menu items (as categories might affect them)
+            document.getElementById('categoryName').value = '';
+            delete addCategoryForm.dataset.editingId;
+            submitBtn.textContent = 'Add Category';
+            await loadCategories();
+            await loadMenuItems();
         } catch (error) {
             console.error('Error saving category:', error);
             document.getElementById('addCategoryMessage').textContent = 'Failed to save category: ' + (error.message || 'Server error');
             document.getElementById('addCategoryMessage').className = 'error-message';
         } finally {
             setLoading(submitBtn, false);
-            submitBtn.textContent = originalBtnText; // Restore text
+            submitBtn.textContent = originalBtnText;
         }
     });
 
-    // Delete a category
     async function deleteCategory(id) {
         if (!confirm('Are you sure you want to delete this category?')) {
             return;
@@ -529,15 +480,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             await api.categories.deleteCategory(id);
             alert('Category deleted successfully');
-            await loadCategories(); // Reload categories
-            await loadMenuItems(); // Reload menu items (as category might be removed)
+            await loadCategories();
+            await loadMenuItems();
         } catch (error) {
             console.error('Error deleting category:', error);
             alert('Failed to delete category: ' + (error.message || 'Server error'));
         }
     }
 
-    // Load Stores for Admin Creation (Superadmin only)
     async function loadStores() {
         if (role !== 'superadmin') return;
         try {
@@ -556,7 +506,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Load Admins (Superadmin only)
     async function loadAdmins() {
         if (role !== 'superadmin') return;
         try {
@@ -585,7 +534,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // Load store logo for the branding section
     async function loadStoreLogo() {
         if (!storeId) {
             console.warn('Store ID not found in local storage for logo. Skipping logo load for admin page.');
@@ -641,6 +589,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tableCard = document.createElement('div');
                 tableCard.classList.add('table-card'); 
                 const qrCodeId = `qr-${table._id}`;
+                // MODIFIED: Use storeSlug in QR code URL
+                const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${currentStoreDetails.slug}&table=${table.tableId}`;
                 tableCard.innerHTML = `
                     <p class="table-id-label">Table: ${table.tableId}</p>
                     <div id="${qrCodeId}" class="qr-code-container"></div>
@@ -651,7 +601,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
                 if(tablesListDiv) tablesListDiv.appendChild(tableCard);
-                const orderPageUrl = `${window.location.origin}/order.html?storeId=${storeId}&table=${table.tableId}`;
                 generateQrCode(orderPageUrl, qrCodeId); // Assuming generateQrCode is available globally from utils.js
             });
 
@@ -659,7 +608,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             tablesListDiv.querySelectorAll('.order-link-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const tableId = e.target.dataset.tableId;
-                    const orderPageUrl = `${window.location.origin}/order.html?storeId=${storeId}&table=${tableId}`;
+                    // MODIFIED: Use storeSlug in order page URL
+                    const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${currentStoreDetails.slug}&table=${tableId}`;
                     window.open(orderPageUrl, '_blank'); // Open in new tab
                 });
             });
@@ -765,7 +715,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 const pendingItemsCount = tableOrders.filter(order => order.status === 'Pending').length;
                 const latestStatus = tableOrders[0] ? tableOrders[0].status : 'N/A'; // Assuming latest order is first
-
+                // MODIFIED: Pass store slug to view details button if needed for future
                 tableOrderCard.innerHTML = `
                     <div class="table-info-header">
                         <h3>Table: ${tableId}</h3>
@@ -773,7 +723,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <p>Total Orders: ${tableOrders.length}</p>
                     <p>Pending Items: ${pendingItemsCount}</p>
-                    <button class="view-table-orders-btn primary-btn" data-table-id="${tableId}">View Details</button>
+                    <button class="view-table-orders-btn primary-btn" data-table-id="${tableId}" data-store-slug="${currentStoreDetails.slug}">View Details</button>
                 `;
                 if(ordersDashboard) ordersDashboard.appendChild(tableOrderCard);
             }
@@ -890,7 +840,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             });
         }
-
         if(clearTableHistoryBtn) {
             clearTableHistoryBtn.dataset.tableId = tableId;
             clearTableHistoryBtn.disabled = false;

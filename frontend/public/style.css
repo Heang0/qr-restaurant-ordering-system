@@ -230,7 +230,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 }
 
 .section-title {
-    text-align: left; /* Aligned left as per sample */
+    text-align: center; /* Aligned left as per sample */
     font-size: 1.8em;
     font-weight: 700;
     color: #333; /* Darker color for titles */
@@ -691,7 +691,7 @@ input[type="file"] {
 }
 
 .order-container .menu-card .menu-card-content h3 {
-    font-size: 1.1em;
+    font-size: 1.2em;
     font-weight: bold;
     color: #000000;
     margin: 0;
@@ -1202,7 +1202,7 @@ input[type="file"] {
 
     /* Order page menu item name font size adjustment */
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 0.95em; /* Adjust this value as needed */
+        font-size: 1.2em; /* Adjust this value as needed */
     }
 }
 
@@ -1225,7 +1225,7 @@ input[type="file"] {
         padding: 0 10px;
     }
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 0.85em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
+        font-size: 0.1em; /* Adjust this value as needed, e.g., 0.9em or 0.85em */
     }
     .order-container .menu-grid { /* Targeting menu-grid specifically for this fix */
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Allow flexible columns, prevent single item from stretching */

@@ -53,6 +53,8 @@ const api = {
         getStores: () => request('/stores'),
         updateStore: (id, formData) => request(`/stores/${id}`, 'PUT', formData, true),
         getStoreById: (id) => request(`/stores/${id}`),
+        // ADDED THIS LINE: New API call to get store by slug
+        getStoreBySlug: (slug) => request(`/stores/public/${slug}`),
     },
     menu: {
         getMenu: (storeId) => request(`/menu?storeId=${storeId}`), // Admin access
