@@ -135,9 +135,14 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 .order-app-header .table-info {
     font-size: 1.6em; /* Increased font size */
     font-weight: bold; /* Made font bold */
-    color: #000000;
+    color: #e74c3c;
     margin: 0;
     white-space: nowrap; /* Prevent table info from wrapping */
+}
+/* Add this new rule */
+.order-app-header .table-info .fas {
+    margin-right: 5px; /* Adds space to the right of the icon */
+    font-size: 1.2em; /* Adjust icon size relative to text if needed */
 }
 
 /* Removed back button as requested */
@@ -155,7 +160,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     border-radius: 10px; /* Slightly rounded corners */
     overflow: hidden; /* Ensures logo respects container boundaries */
     flex-shrink: 0; /* Prevents logo from shrinking on smaller screens */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
 }
 
 .store-logo {
