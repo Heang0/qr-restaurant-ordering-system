@@ -116,10 +116,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
         if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
-        // Ensure only admin-relevant tabs are visible if the user is a regular admin
-        const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders'];
+        // Hiding superadmin-specific tabs for regular admin
+        const superadminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders']; // All tabs for admin
         document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
-            if (!adminTabs.includes(btn.dataset.tab)) {
+            if (!superadminTabs.includes(btn.dataset.tab)) {
                 btn.style.display = 'none';
             }
         });
@@ -699,6 +699,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if(ordersDashboard) ordersDashboard.appendChild(tableOrderCard);
             }
             previousOrders = ordersByTable; // Update previous orders for next poll
+
+            if(ordersDashboard) {
+                ordersDashboard.querySelectorAll('.view-table-orders-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const tableId = e.target.dataset.tableId;
+                        displayOrderDetailsModal(tableId, ordersByTable[tableId]);
+                    });
+                });
+            }
+
             if(ordersMessage) ordersMessage.textContent = '';
         } catch (error) {
             console.error('Error loading live orders:', error);
@@ -1095,28 +1105,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     }
-
-    // ADDED: Menu Item Image Preview Logic
-    if (itemImageInput) {
-        itemImageInput.addEventListener('change', () => {
-            const file = itemImageInput.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    currentImagePreview.innerHTML = ''; // Clear previous preview
-                    const img = document.createElement('img');
-                    img.src = e.target.result; // Set src to data URL
-                    img.alt = "Selected Image Preview";
-                    img.classList.add('menu-item-preview-img'); // Use the existing CSS class
-                    currentImagePreview.appendChild(img);
-                };
-                reader.readAsDataURL(file); // Read file as data URL
-            } else {
-                currentImagePreview.innerHTML = ''; // Clear preview if no file selected
-            }
-        });
-    }
-
 
     // Handle add table form submission
     if (addTableForm) {
