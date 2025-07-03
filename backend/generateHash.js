@@ -13,6 +13,9 @@ async function updateSuperadminCredentials(newEmail, newPassword) {
         await mongoose.connect(config.mongoURI);
         console.log('MongoDB connected successfully.');
 
+        // Find the Superadmin user
+        // We will find the Superadmin by their role, and then update their email and password.
+        // If you have multiple superadmins, this will update the first one found.
         const superadmin = await User.findOne({ role: 'superadmin' });
 
         if (!superadmin) {
@@ -42,8 +45,10 @@ async function updateSuperadminCredentials(newEmail, newPassword) {
                 return;
             }
             const salt = await bcrypt.genSalt(10);
-            superadmin.password = await bcrypt.hash(newPassword, salt);
+            const hashedPassword = await bcrypt.hash(newPassword, salt); // Generate hash
+            superadmin.password = hashedPassword; // Assign hash to user
             updatedFields.push('password');
+            console.log(`Generated Hashed Password: ${hashedPassword}`); // Log the generated hash
         }
 
         if (updatedFields.length === 0) {
@@ -64,8 +69,8 @@ async function updateSuperadminCredentials(newEmail, newPassword) {
 
 // --- CONFIGURE YOUR DESIRED NEW EMAIL AND/OR PASSWORD HERE ---
 // If you don't want to change a specific field, leave its placeholder value.
-const desiredNewEmail = 'hakchhaiheang0@gmail.com'; // <--- UPDATED EMAIL
-const desiredNewPassword = 'heang6232#$Q45'; // <--- UPDATED PASSWORD
+const desiredNewEmail = 'hakchhaiheang0@gmail.com'; // <--- SETTING TO THIS EMAIL
+const desiredNewPassword = 'heang6232#$Q45'; // <--- SETTING TO THIS PASSWORD
 
 // --- EXECUTE THE UPDATE ---
 // This warning helps prevent accidental execution with default placeholders.
