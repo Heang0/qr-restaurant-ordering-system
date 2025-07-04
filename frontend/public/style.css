@@ -784,8 +784,22 @@ input:focus, textarea:focus, select:focus {
     }
     
     /* Ensure main content has the correct margin when sidebar is collapsed */
-    .main-content.sidebar-collapsed-margin {
-        margin-left: 70px;
+    .main-content { /* Removed .sidebar-collapsed-margin from here */
+        margin-left: 70px; /* Always 70px margin for sidebar on tablets/small laptops */
+    }
+    /* Ensure sidebar is correctly positioned */
+    .sidebar {
+        transform: translateX(0);
+    }
+
+    /* Adjust form-card max-width for tablet/small laptop to prevent cutoff */
+    .form-card {
+        max-width: 95%; /* Allow it to take up more width */
+        margin: 0 auto; /* Center it */
+        padding: 15px; /* Adjust padding if needed */
+    }
+    .content-area {
+        padding: 15px; /* Ensure content area has sufficient padding */
     }
 }
 
