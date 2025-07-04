@@ -8,10 +8,16 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: "Battambang", cursive, sans-serif; /* Changed to Battambang for all text as requested */
+/* IMPORTANT: Ensure html and body are the main scrollable containers */
+html, body {
+    height: 100%; /* Full height */
+    overflow-y: auto; /* Enable vertical scrolling for the whole page */
     margin: 0;
     padding: 0;
+}
+
+body {
+    font-family: "Battambang", cursive, sans-serif; /* Changed to Battambang for all text as requested */
     background-color: #f0f2f5;
     color: #2c3e50;
     line-height: 1.6;
@@ -58,7 +64,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 /* --- Dashboard Wrapper (Flexbox for Sidebar Layout) --- */
 .dashboard-wrapper {
     display: flex;
-    min-height: 100vh; /* Ensure it takes full viewport height */
+    /* Removed min-height: 100vh; here, as html/body now control overall height and scroll */
     background-color: #f0f2f5; /* Consistent background */
     position: relative; /* Needed for mobile sidebar overlay */
     overflow-x: hidden; /* Prevent horizontal scroll when sidebar opens */
@@ -66,7 +72,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 
 /* --- Sidebar Styles --- */
 .sidebar {
-    width: 250px; /* Fixed width for sidebar */
+    width: 250px; /* Default full width for sidebar */
     background-color: #2c3e50; /* Dark background for sidebar */
     color: #ecf0f1; /* Light text */
     display: flex;
@@ -75,7 +81,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     transition: width 0.3s ease, transform 0.3s ease; /* Smooth transition for collapse and mobile slide */
     flex-shrink: 0; /* Prevent sidebar from shrinking */
     
-    /* ADDED: Sticky sidebar for larger screens */
+    /* Sticky sidebar for larger screens */
     position: sticky;
     top: 0; /* Sticks to the top of the viewport */
     height: 100vh; /* Takes full viewport height */
@@ -222,6 +228,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     display: flex;
     flex-direction: column;
     z-index: 1; /* Ensure it's below the sidebar on mobile overlay */
+    /* Removed overflow-y: auto; here, as html/body now control scrolling */
 }
 
 .main-header {
@@ -233,7 +240,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     justify-content: space-between;
     border-bottom: 1px solid #eee;
     
-    /* ADDED: Sticky header for general use */
+    /* Sticky header for general use */
     position: sticky;
     top: 0;
     z-index: 99; /* Below sidebar, above content */
@@ -253,7 +260,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
 .content-area {
     padding: 25px;
     flex-grow: 1;
-    overflow-y: auto; /* Enable scrolling for content if needed */
+    /* Removed overflow-y: auto; here */
 }
 
 /* --- Section Titles & Cards (Reused from previous styles, adjusted for new layout) --- */
@@ -656,7 +663,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* --- Responsive Design for Admin Dashboard --- */
-/* Desktop / Larger Tablet (>= 1024px) */
+/* Desktop (>= 1024px) */
 @media (min-width: 1024px) {
     .sidebar {
         width: 250px; /* Full width on large screens */
@@ -701,10 +708,10 @@ input:focus, textarea:focus, select:focus {
     }
 }
 
-/* Tablet (768px - 1023px) */
+/* Tablet / Small Laptop (768px - 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
     .sidebar {
-        width: 70px; /* Start collapsed on tablets by default */
+        width: 70px; /* Default collapsed on tablets/small laptops */
         position: sticky; /* Keep it sticky */
         top: 0;
         height: 100vh;
@@ -713,10 +720,10 @@ input:focus, textarea:focus, select:focus {
     .sidebar .sidebar-header h2,
     .sidebar .sidebar-nav .nav-item span,
     .sidebar .sidebar-logout-btn span {
-        display: none;
+        display: none; /* Hide text on collapsed sidebar */
     }
     .sidebar .sidebar-nav .nav-item {
-        justify-content: center;
+        justify-content: center; /* Center icons */
         padding: 12px;
     }
     .sidebar .sidebar-nav .nav-item i {
@@ -732,7 +739,7 @@ input:focus, textarea:focus, select:focus {
         margin-right: 0;
     }
 
-    #toggleSidebarBtn { /* Show desktop toggle button on tablets too */
+    #toggleSidebarBtn { /* Show desktop toggle button */
         display: block;
     }
     #toggleSidebarBtnMobile { /* Hide mobile toggle button */
@@ -740,6 +747,14 @@ input:focus, textarea:focus, select:focus {
     }
     .dashboard-wrapper.sidebar-open .main-content::before {
         display: none;
+    }
+
+    /* Adjust main content padding for collapsed sidebar */
+    .content-area {
+        padding: 20px; /* Slightly reduced padding for more space */
+    }
+    .dashboard-overview-grid, .menu-grid, .table-grid, .order-grid {
+        gap: 15px; /* Slightly smaller gaps */
     }
 }
 
@@ -2907,4 +2922,3 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
 .modal-pw .message { /* CHANGED: from #resetPasswordModal .message */
     margin-top: 15px;
 }
-
