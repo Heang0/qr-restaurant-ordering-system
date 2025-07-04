@@ -721,6 +721,15 @@ input:focus, textarea:focus, select:focus {
     .main-content.sidebar-collapsed-margin { /* New class for collapsed sidebar margin */
         margin-left: 70px;
     }
+
+    /* Force 4 columns on larger desktops for admin menu grid */
+    #tab-menu .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    /* Force 4 columns on larger desktops for customer order menu grid */
+    .order-container .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
 /* Tablet / Small Laptop (768px - 1023px) */
@@ -777,8 +786,48 @@ input:focus, textarea:focus, select:focus {
     .content-area {
         padding: 20px; /* Slightly reduced padding for more space */
     }
-    .dashboard-overview-grid, .menu-grid, .table-grid, .order-grid {
+    .dashboard-overview-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted min-width for overview cards */
         gap: 15px; /* Slightly smaller gaps */
+    }
+
+    /* Admin Dashboard Menu Grid specific (tab-menu) - Force 4 columns on iPad */
+    #tab-menu .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    /* Table Grid specific (tab-tables) */
+    #tab-tables .table-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Aim for 3-4 columns on iPad */
+        gap: 15px;
+    }
+
+    /* Order Grid specific (tab-orders) */
+    #tab-orders .order-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust for more suitable order card width */
+        gap: 15px;
+    }
+
+    /* CUSTOMER ORDER PAGE MENU GRID ON TABLETS - Force 4 columns */
+    .order-container .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        justify-content: unset; /* Ensure it takes full width */
+    }
+
+    /* Order page menu item name font size adjustment */
+    .order-container .menu-card .menu-card-content h3 {
+        font-size: 1.1em; /* Adjust this value as needed */
+    }
+
+    /* Modals adjustments for tablet */
+    .modal-content {
+        width: 80%; /* Slightly narrower for better centering */
+        max-width: 700px; /* Prevent it from getting too wide */
+    }
+    .modal-content.product-quick-view-content {
+        max-width: 400px;
     }
 }
 
@@ -902,8 +951,10 @@ input:focus, textarea:focus, select:focus {
     .overview-card .value {
         font-size: 1.8em;
     }
-    .menu-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Smaller menu cards */
+    /* ADMIN DASHBOARD MENU GRID ON MOBILE - Force 2 columns */
+    #tab-menu .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
     .menu-card-content h3 {
         font-size: 0.9em;
@@ -929,6 +980,12 @@ input:focus, textarea:focus, select:focus {
     }
     .order-grid {
         grid-template-columns: 1fr; /* Single column for orders on very small screens */
+    }
+
+    /* CUSTOMER ORDER PAGE MENU GRID ON MOBILE - Force 2 columns */
+    .order-container .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
 }
 
@@ -2117,11 +2174,17 @@ input[type="file"] {
 
 /* --- RESPONSIVE MEDIA QUERIES --- */
 
-/* Large Desktop (>= 1400px) - Show 6 cards per row */
+/* Large Desktop (>= 1400px) - Show 4 cards per row */
 @media (min-width: 1400px) {
-    .order-container .menu-grid { /* Target menu grid on order page specifically */
-        grid-template-columns: repeat(6, 1fr); /* Enforce 6 columns */
-        gap: 15px; /* Adjust gap as needed */
+    /* Force 4 columns on larger desktops for admin menu grid */
+    #tab-menu .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+    /* Force 4 columns on larger desktops for customer order menu grid */
+    .order-container .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
     }
     /* Keep other grids as they were or adjust as needed */
     .table-grid, .order-grid {
@@ -2129,24 +2192,37 @@ input[type="file"] {
     }
 }
 
-/* Tablet & Smaller Desktop (768px to 1399px) - Show 3-4 cards per row (unchanged, still good) */
+/* Tablet & Smaller Desktop (768px to 1399px) - Show 4 cards per row */
 @media (min-width: 768px) and (max-width: 1399px) {
     .container {
         padding: 20px;
     }
-    /* Keep .menu-grid for admin dashboard as it was */
-    .menu-grid { /* Target .menu-grid directly for admin dashboard */
-        grid-template-columns: repeat(4, 1fr); /* Enforce 4 columns for iPad/tablet */
-        gap: 15px; /* Adjust gap as needed */
+    /* Admin Dashboard Menu Grid specific (tab-menu) - Force 4 columns on iPad/tablet */
+    #tab-menu .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
     }
 
-    /* THIS IS THE CRUCIAL PART FOR THE ORDER PAGE MENU GRID ON TABLETS */
+    /* CUSTOMER ORDER PAGE MENU GRID ON TABLETS - Force 4 columns */
     .order-container .menu-grid {
-        grid-template-columns: repeat(auto-fit, minmax(200px, max-content)); /* Prevents single item stretching */
-        justify-content: center; /* Centers items if there are fewer than a full row */
-        gap: 15px; /* Adjust gap as needed for tablet */
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        justify-content: unset; /* Ensure it takes full width */
     }
-    /* --- END CRUCIAL PART --- */
+
+    /* Keep other grids as they were or adjust as needed */
+    .dashboard-overview-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted min-width for overview cards */
+        gap: 15px; /* Slightly smaller gaps */
+    }
+    #tab-tables .table-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Aim for 3-4 columns on iPad */
+        gap: 15px;
+    }
+    #tab-orders .order-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust for more suitable order card width */
+        gap: 15px;
+    }
 
     .section-title {
         font-size: 1.8em;
@@ -2155,14 +2231,1358 @@ input[type="file"] {
         font-size: 0.95em;
     }
     .modal-content {
-        width: 95%;
+        width: 80%; /* Slightly narrower for better centering */
+        max-width: 700px; /* Prevent it from getting too wide */
+    }
+    .modal-content.product-quick-view-content {
+        max-width: 400px;
     }
 
     /* Order page menu item name font size adjustment */
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 1.2em; /* Adjust this value as needed */
+        font-size: 1.1em; /* Adjust this value as needed */
     }
 }
+
+/* Mobile (<= 767px) - Show 2 cards per row */
+@media (max-width: 767px) {
+    .dashboard-wrapper {
+        flex-direction: column; /* Stack sidebar and content vertically */
+        position: relative;
+    }
+    .sidebar {
+        position: fixed; /* Position fixed for off-canvas */
+        top: 0;
+        left: 0;
+        width: 250px; /* Full width for the sidebar when open */
+        height: 100vh; /* Full viewport height */
+        transform: translateX(-100%); /* Start off-canvas (hidden) */
+        transition: transform 0.3s ease-in-out; /* Smooth slide effect */
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+        z-index: 200; /* Ensure it's above everything when open */
+        flex-direction: column; /* Ensure vertical layout for sidebar content */
+    }
+
+    /* NEW: Class to open sidebar */
+    .dashboard-wrapper.sidebar-open .sidebar {
+        transform: translateX(0); /* Slide into view */
+    }
+
+    /* Overlay for main content when sidebar is open */
+    .dashboard-wrapper.sidebar-open .main-content::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5); /* Dim the main content */
+        z-index: 150; /* Between sidebar and main content */
+        cursor: pointer;
+    }
+
+    .sidebar-header {
+        justify-content: space-between; /* Keep toggle button visible */
+    }
+    .sidebar-header h2 {
+        display: block; /* Show title on mobile sidebar */
+    }
+    .sidebar-nav .nav-item span {
+        display: inline-block; /* Show text on mobile sidebar */
+    }
+    .sidebar-logout-btn {
+        display: flex; /* Show logout button on mobile sidebar */
+        width: 100%;
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+    .sidebar-logout-btn span {
+        display: inline-block;
+    }
+
+    #toggleSidebarBtn { /* Hide desktop toggle on mobile */
+        display: none;
+    }
+    #toggleSidebarBtnMobile { /* Show mobile toggle */
+        display: block;
+        color: #34495e; /* Match header text color */
+        font-size: 1.8em; /* Larger for easy tapping */
+    }
+
+    .main-header {
+        position: sticky; /* Keep main header sticky */
+        top: 0;
+        z-index: 99; /* Ensure it's above main content */
+        justify-content: flex-start; /* Align header content to start */
+        gap: 15px;
+    }
+    .main-header h1 {
+        font-size: 1.5em;
+    }
+
+    /* Reset main content margin for mobile (no sidebar offset) */
+    .main-content {
+        margin-left: 0; 
+    }
+
+    .content-area {
+        padding: 15px;
+    }
+    .card-section {
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .section-title {
+        font-size: 1.6em;
+    }
+    .form-card {
+        padding: 15px;
+        gap: 10px;
+    }
+    .styled-table {
+        font-size: 0.8em;
+    }
+    .styled-table th, .styled-table td {
+        padding: 8px;
+    }
+    .table-actions button {
+        padding: 6px 10px;
+        font-size: 0.75em;
+    }
+    .dashboard-overview-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* More compact cards */
+        gap: 10px;
+    }
+    .overview-card {
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .overview-card h3 {
+        font-size: 0.9em;
+    }
+    .overview-card .value {
+        font-size: 1.8em;
+    }
+    /* ADMIN DASHBOARD MENU GRID ON MOBILE - Force 2 columns */
+    #tab-menu .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .menu-card-content h3 {
+        font-size: 0.9em;
+    }
+    .menu-card-content p {
+        font-size: 0.75em;
+    }
+    .menu-card-content .price {
+        font-size: 0.85em;
+    }
+    .menu-card-actions button {
+        font-size: 0.7em;
+        padding: 6px;
+    }
+    .table-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .table-id-label {
+        font-size: 1em;
+    }
+    .qr-code-container {
+        padding: 3px;
+    }
+    .order-grid {
+        grid-template-columns: 1fr; /* Single column for orders on very small screens */
+    }
+
+    /* CUSTOMER ORDER PAGE MENU GRID ON MOBILE - Force 2 columns */
+    .order-container .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+
+/* Specific styles for the product quick view modal */
+.product-quick-view-content {
+    /* Adjust as needed for admin dashboard modals */
+}
+
+/* Styles for the new remark display in admin modal */
+.admin-item-remark {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+    margin-bottom: 0;
+    font-style: italic;
+    padding-left: 4px;
+    border-left: 2px solid #ccc;
+}
+.modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    margin-top: 15px;
+}
+.modal-footer .primary-btn, .modal-footer .secondary-btn {
+    width: auto; /* Allow buttons to size based on content */
+    padding: 10px 20px;
+}
+/* Ensure they stack nicely on very small screens if needed */
+@media (max-width: 480px) {
+    .modal-footer {
+        flex-direction: column; /* Stack buttons vertically */
+        align-items: stretch; /* Make them full width */
+    }
+}
+
+/* OUT OF STOCK OVERLAY */
+.out-of-stock-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent dark overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5; /* Below the tag, above the image */
+    border-radius: 12px; /* Match card rounding */
+}
+
+.out-of-stock-tag {
+    background-color: #7f8c8d;
+    color: white;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    transform: rotate(5deg);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+/* Add this class to the menu-card when item is out of stock */
+.out-of-stock-card {
+    filter: grayscale(80%); /* Visually indicate out of stock */
+    opacity: 0.7;
+    pointer-events: none; /* Disable clicks on the card */
+}
+
+/* Hide the default app-header from admin.html as we have a new main-header */
+.app-header {
+    display: none;
+}
+
+
+/* .app-header {
+    background-color: #fff;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+} */
+.app-header h1 {
+    font-size: 1.8em;
+    margin: 0;
+    color: #34495e;
+}
+.header-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #e74c3c;
+    border-radius: 8px;
+    font-weight: 600;
+}
+.header-btn:hover {
+    background-color: #c0392b;
+}
+
+/* --- Order Page Header (Mobile App Style) --- */
+.order-app-header {
+    background-color: #fff;
+    color: #333;
+    padding: 15px 15px 15px 20px; /* Example: 15px top/right/bottom, 20px left */
+    /* Or, for more space: */
+    /* padding: 15px 15px 15px 25px; */ /* 25px left padding */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid #eee;
+}
+
+.order-app-header .header-left {
+    flex-grow: 1; /* Allows it to take available space */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Align content to the left */
+    gap: 15px; /* Space between logo and text */
+}
+
+.order-app-header .header-right {
+    flex-basis: auto; /* Allow content to dictate width */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Align content to the right */
+     padding-right: 5px; 
+}
+
+.order-app-header .header-text-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align text to the left */
+    justify-content: center;
+    gap: 2px;
+}
+
+.order-app-header h1 {
+    font-size: 1.4em; /* Smaller title for mobile app feel */
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+}
+
+.order-app-header .table-info {
+    font-size: 1.6em; /* Increased font size */
+    font-weight: bold; /* Made font bold */
+    color: #e74c3c;
+    margin: 0;
+    white-space: nowrap; /* Prevent table info from wrapping */
+}
+/* Add this new rule */
+.order-app-header .table-info .fas {
+    margin-right: 5px; /* Adds space to the right of the icon */
+    font-size: 1.2em; /* Adjust icon size relative to text if needed */
+}
+
+/* Removed back button as requested */
+.order-app-header .back-button {
+    display: none;
+}
+
+/* Store logo container in header */
+.store-logo-container {
+    height: 60px; /* Fixed height for consistency */
+    width: 60px; /* Fixed width for a square logo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px; /* Slightly rounded corners */
+    overflow: hidden; /* Ensures logo respects container boundaries */
+    flex-shrink: 0; /* Prevents logo from shrinking on smaller screens */
+    /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
+}
+
+.store-logo {
+    height: 100%;
+    width: 100%;
+    object-fit: contain; /* Scales logo to fit within its container */
+}
+
+
+/* Floating cart button */
+.floating-cart-btn {
+    position: fixed;
+    bottom: 80px; /* Adjusted to be above the new bottom nav */
+    right: 20px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background-color: #e74c3c; /* Red color from sample */
+    color: white;
+    font-size: 1.5em;
+    border: none;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.25);
+    display: flex; /* Ensure it's always flex for centering */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 100;
+}
+
+.floating-cart-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.cart-badge {
+    position: absolute;
+    top: 0px; /* Adjusted position */
+    right: 0px; /* Adjusted position */
+    background-color: #3498db; /* Blue for badge */
+    color: white;
+    font-size: 0.7em; /* Slightly larger for visibility */
+    font-weight: 700;
+    border-radius: 50%;
+    padding: 3px 7px;
+    min-width: 20px; /* Ensure it's circular */
+    text-align: center;
+    transform: translate(30%, -30%);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px; /* Reduced padding for mobile app feel */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Reduced gap */
+    position: relative;
+    z-index: 10;
+    padding-bottom: 90px; /* Space for fixed bottom navigation */
+}
+
+.card-section {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+.card-section.menu-section {
+    margin-top: 0; /* No negative margin needed with new header */
+    border-radius: 0; /* Remove border radius as it's not a separate card anymore */
+    box-shadow: none; /* Remove box shadow */
+    padding: 0; /* Remove padding */
+}
+
+.section-title {
+    text-align: center; /* Aligned left as per sample */
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #333; /* Darker color for titles */
+    margin-bottom: 20px;
+    padding-bottom: 0; /* No border bottom */
+    border-bottom: none;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1.4em;
+    font-weight: 600;
+    color: #34495e;
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+.section-description {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: -15px;
+    margin-bottom: 30px;
+}
+
+/* --- Forms & Inputs --- */
+.form-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+label {
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select,
+input[type="file"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
+
+.file-input-label {
+    background-color: #ecf0f1;
+    color: #34495e;
+    padding: 12px 15px;
+    border: 1px solid #bdc3c7;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.file-input-label:hover {
+    background-color: #e0e6ea;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.image-preview {
+    border: 2px dashed #bdc3c7;
+    border-radius: 10px;
+    padding: 10px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f9f9;
+}
+
+.current-logo-img, .menu-item-preview-img {
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+/* --- Buttons --- */
+.primary-btn {
+    background-color: #e74c3c; /* Red color for primary actions */
+    color: white;
+    padding: 14px 25px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 700;
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2); /* Red shadow */
+}
+
+.primary-btn:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+}
+
+.secondary-btn {
+    background-color: #95a5a6;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.secondary-btn:hover {
+    background-color: #7f8c8d;
+}
+
+.full-width {
+    width: 100%;
+}
+
+
+/* --- Grids (Menu, Tables, Orders) --- */
+.menu-grid, .table-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 0 10px;
+    display: grid;
+}
+
+.order-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.order-table-card {
+    background-color: #fff;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s;
+}
+.order-table-card.new-order-highlight {
+    background-color: #e6f7ff;
+    border: 2px solid #3498db;
+    animation: pulse-highlight 1.5s ease-out forwards;
+}
+
+@keyframes pulse-highlight {
+    0% { transform: scale(1); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); }
+    50% { transform: scale(1.02); box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4); }
+    100% { transform: scale(1); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); }
+}
+
+.order-table-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.table-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.table-info-header h3 {
+    margin: 0;
+    font-size: 1.4em;
+    color: #2980b9;
+}
+
+.pending-badge {
+    background-color: #e74c3c;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+}
+
+.view-table-orders-btn {
+    margin-top: 15px;
+    padding: 10px 15px;
+    font-size: 0.9em;
+}
+
+/* --- Modals --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center; /* Changed to center */
+    justify-content: center;
+    padding: 10px;
+}
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    margin-top: 80px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #e74c3c; /* Changed to your primary red color for "Your Order" title */
+}
+
+.close-button {
+    color: #e74c3c; /* Your main red color */
+    font-size: 1.8em; /* Keep this size, or adjust if needed */
+    font-weight: 700; /* Changed to bold (700) for stronger presence */
+    cursor: pointer;
+    transition: color 0.2s, transform 0.1s;
+    line-height: 1;
+    padding: 5px;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #c0392b; /* Darker red on hover/focus */
+    transform: scale(1.05);
+    outline: none;
+}
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+    margin-right: -5px;
+}
+
+.modal-order-item {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.modal-order-item h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #34495e;
+    font-size: 1em;
+    border-bottom: 1px dashed #e0e0e0;
+    padding-bottom: 5px;
+}
+
+.modal-order-item ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-order-item ul li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.modal-item-img {
+    width: 30px;
+    height: 30px;
+    object-fit: cover;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+.modal-order-actions {
+    margin-top: 10px;
+}
+
+.order-status-select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #bdc3c7;
+    background-color: #fff;
+    font-size: 0.9em;
+    box-sizing: border-box;
+}
+
+.modal-total-price {
+    font-size: 1.3em;
+    font-weight: 700;
+    text-align: center; /* Centered for column layout */
+    color: #28a745;
+    margin: 0;
+    padding-bottom: 0;
+}
+
+/* --- Menu Item Card (Admin Dashboard) --- */
+.menu-card {
+    background-color: #fff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative; 
+}
+.menu-card-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    object-fit: cover;
+}
+.menu-card-content {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-grow: 1;
+}
+
+/* menu admin scroll bar */
+
+.menu-card-content h3 {
+    text-align: left;
+    margin: 0;
+    font-size: 1.1em;
+    color: #2c3e50;
+    font-weight: 700;
+}
+.menu-card-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.85em;
+}
+.menu-card-content .price {
+    font-weight: 700;
+    color: #2980b9;
+    font-size: 1em;
+}
+.menu-card-actions {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+    padding: 10px;
+    border-top: 1px solid #f0f2f5;
+}
+.menu-card-actions button {
+    flex: 1;
+    padding: 6px;
+    font-size: 0.9em;
+}
+
+
+/* --- Redesigned Menu Cards for the ORDER PAGE ONLY (Grid Layout) --- */
+.order-container .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Two columns on mobile, adapts */
+    gap: 15px; /* Spacing between cards */
+    padding: 0;
+}
+
+.order-container .menu-card {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    padding: 0; /* Remove padding from card itself */
+    gap: 0;
+    border-radius: 12px; /* Rounded corners for cards */
+    overflow: hidden; /* Ensures image corners are rounded */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Soft shadow */
+    background-color: #fff;
+    position: relative;
+}
+
+.order-container .menu-card .menu-card-image-wrapper {
+    width: 100%;
+    /* Enforce 1:1 aspect ratio for images */
+    aspect-ratio: 1 / 1; 
+    height: auto; /* Let height be determined by aspect-ratio */
+    overflow: hidden;
+    position: relative; /* For best seller/out of stock tags */
+    border-radius: 12px 12px 0 0; /* Rounded top corners */
+}
+
+.order-container .menu-card .menu-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the area */
+    border-radius: 12px 12px 0 0; /* Rounded top corners */
+}
+
+.order-container .menu-card .menu-card-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 12px; /* Padding inside content area */
+    gap: 5px;
+}
+
+.order-container .menu-card .menu-card-content h3 {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #000000;
+    margin: 0;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.order-container .menu-card .description {
+    font-size: 0.85em;
+    color: #777;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Limit description to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.order-container .menu-card .price-and-add-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px; /* Space between description and price/button */
+}
+
+.order-container .menu-card .price {
+    font-size: 1.2em; /* Larger price */
+    font-weight: 700;
+    color: #e74c3c; /* Red price from sample */
+    margin: 0;
+}
+
+.order-container .menu-card .add-to-order-btn {
+    background-color: #e74c3c; /* Red add button */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Circular button */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1; /* Ensures it's always a perfect square */
+    font-size: 1.2em; /* Plus icon size */
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.order-container .menu-card .add-to-order-btn:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+}
+
+/* --- Table QR Code Card --- */
+.table-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.table-id-label {
+    font-size: 1.2em;
+    color: #34495e;
+    font-weight: 700;
+    margin: 0;
+}
+
+.qr-code-container {
+    padding: 8px;
+    background-color: #fff;
+    border: 1px solid #bdc3c7;
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+    display: inline-block;
+}
+
+.table-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 0 10px 10px;
+}
+
+.order-link-btn {
+    background-color: #4caf50;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9em;
+}
+
+.order-link-btn:hover {
+    background-color: #45a049;
+}
+
+.delete-table-btn {
+    background-color: #dc3545;
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9em;
+}
+
+.delete-table-btn:hover {
+    background-color: #c82333;
+}
+
+.clear-table-btn {
+    background-color: #f39c12;
+    color: white;
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9em;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.clear-table-btn:hover {
+    background-color: #e67e22;
+}
+
+
+/* --- Orders Card (Admin) --- */
+.order-card {
+    background-color: #ecf0f1;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.order-card h3 {
+    margin: 0;
+    font-size: 1.6em;
+    color: #2980b9;
+    text-align: left;
+}
+
+.order-card p {
+    margin: 0;
+    color: #666;
+}
+
+.order-card ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.order-card ul li {
+    background-color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 5px solid #3498db;
+    font-size: 0.95em;
+    font-weight: 600;
+}
+
+.order-card select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #bdc3c7;
+    background-color: #fff;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+/* --- Category Buttons (Mobile App Look) --- */
+.category-buttons {
+    display: flex;
+    flex-wrap: nowrap; /* Prevent wrapping */
+    gap: 10px;
+    justify-content: flex-start; /* Align to start */
+    margin-bottom: 20px;
+    padding: 0 5px 10px; /* Add some padding for scrollable area */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+}
+
+.category-buttons::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari, Opera */
+}
+
+.category-btn {
+    background-color: #f0f0f0; /* Light grey background */
+    color: #000000;
+    border: 1px solid #ddd;
+    padding: 8px 18px; /* Adjusted padding */
+    border-radius: 20px; /* Pill-shaped buttons */
+    font-weight: 500; /* Medium weight */
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* Prevents buttons from shrinking */
+    font-size: 1.2em;
+}
+
+.category-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.category-btn.active {
+    background-color: #e74c3c; /* Red active state */
+    color: white;
+    border-color: #e74c3c;
+}
+
+/* --- Order Page Specific Styles --- */
+.order-container {
+    padding-bottom: 100px; /* Increased padding to accommodate bottom nav and ensure content is visible */
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+}
+
+.modal-open {
+    overflow: hidden; /* Prevents body scroll when modal is open */
+}
+
+.modal-drawer {
+    padding-top: 0;
+    align-items: center; /* Changed to center */
+}
+
+.modal-content-drawer {
+    margin: 0;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 85%;
+    max-height: 90vh;
+    background-color: #ffffff;
+    border-radius: 25px 25px 0 0;
+    animation-name: slideInUp;
+    animation-duration: 0.4s;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes slideInUp {
+    from {bottom: -100%;}
+    to {bottom: 0;}
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.modal-header .section-title {
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+    font-size: 1.8em;
+    color: #e74c3c; /* Change to your primary red color */
+}
+
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px 20px;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #f0f2f5;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column; /* Keep column for mobile by default */
+    gap: 10px;
+    align-items: center;
+}
+
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #555;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.order-total-summary { /* Changed from .modal-total-price */
+    font-size: 1.3em;
+    font-weight: 700;
+    text-align: center; /* Centered for column layout */
+    color: #e74c3c; /* Changed to your primary red color */
+    margin: 0;
+    padding-bottom: 0;
+    width: 100%; /* Ensure it takes full width to center text */
+}
+
+.order-summary-list {
+    list-style: none;
+    padding: 0;
+}
+
+.order-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px dashed #eee;
+    gap: 15px;
+}
+
+.order-summary-item:last-child {
+    border-bottom: none;
+}
+
+.order-summary-item .item-image-wrapper {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.order-summary-item .item-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.order-summary-item .item-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column; /* Stack item name, subtotal, and remark */
+    align-items: flex-start;
+}
+.order-summary-item .item-name {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 1.1em;
+}
+
+.order-summary-item .item-subtotal {
+    font-weight: bold;
+    color: #3498db; /* Changed to blue */
+    font-size: 1em;
+}
+
+.item-price-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ecf0f1;
+    border-radius: 20px;
+    padding: 5px;
+    flex-shrink: 0;
+}
+
+.item-control-btn {
+    background-color: white;
+    color: #3498db;
+    border: 1px solid #3498db;
+    padding: 5px 10px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.item-control-btn.primary-btn {
+    background-color: #e74c3c; /* Changed to your primary red color */
+    color: white;
+}
+
+.item-control-btn.primary-btn:hover {
+    background-color: #c0392b; /* Darker red on hover */
+}
+.item-control-btn.secondary-btn {
+    background-color: white;
+    color: #e74c3c; /* Changed to your primary red color */
+    border: 1px solid #e74c3c; /* Changed to your primary red color */
+}
+
+.item-control-btn.secondary-btn:hover {
+    background-color: #fcebeb; /* A very light red tint on hover */
+}
+
+.item-quantity {
+    font-weight: 700;
+    color: #2c3e50;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* ADDED: Style for the remark input textarea in the order modal */
+.item-remark-input {
+    width: calc(100% - 10px); /* Adjust width to fit */
+    margin-top: 8px; /* Space from price/name */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9em;
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 40px; /* Minimum height */
+    max-height: 100px; /* Maximum height */
+    box-sizing: border-box; /* Include padding/border in width */
+    font-family: "Battambang", cursive, sans-serif; /* Ensure font consistency */
+}
+
+.item-remark-input::placeholder {
+    color: #999;
+}
+
+.item-remark-input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
 
 /* Ensure images within cards are responsive */
 img {

@@ -25,16 +25,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // --- NEW: Sidebar Toggle Elements and Logic ---
+    // --- Sidebar Toggle Elements and Logic ---
     const sidebar = document.querySelector('.sidebar');
     const dashboardWrapper = document.querySelector('.dashboard-wrapper'); // Get the main wrapper
+    const mainContent = document.querySelector('.main-content'); // Get the main content area
     const toggleSidebarBtn = document.getElementById('toggleSidebarBtn'); // Desktop toggle
     const toggleSidebarBtnMobile = document.getElementById('toggleSidebarBtnMobile'); // Mobile toggle
+
+    /**
+     * Function to update the main content's margin based on sidebar state.
+     * This is crucial for fixed sidebar to not overlap content.
+     */
+    function updateMainContentMargin() {
+        if (!mainContent || !sidebar) return;
+
+        // Only apply margin adjustments on screens larger than mobile
+        if (window.innerWidth > 767) {
+            if (sidebar.classList.contains('collapsed')) {
+                mainContent.classList.add('sidebar-collapsed-margin');
+            } else {
+                mainContent.classList.remove('sidebar-collapsed-margin');
+            }
+        } else {
+            // On mobile, ensure no margin is applied as sidebar is off-canvas
+            mainContent.classList.remove('sidebar-collapsed-margin');
+        }
+    }
 
     // Event listener for desktop sidebar toggle (collapse/expand)
     if (toggleSidebarBtn) {
         toggleSidebarBtn.addEventListener('click', () => {
-            if (sidebar) sidebar.classList.toggle('collapsed');
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                updateMainContentMargin(); // Update margin immediately
+            }
         });
     }
 
@@ -51,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Check if the dashboardWrapper has 'sidebar-open' class (mobile sidebar is active)
             // AND if the click target is NOT inside the sidebar itself
             // AND if the click target is NOT the mobile toggle button
-            if (dashboardWrapper.classList.contains('sidebar-open') &&
+            if (window.innerWidth <= 767 && dashboardWrapper.classList.contains('sidebar-open') &&
                 !sidebar.contains(event.target) &&
                 event.target !== toggleSidebarBtnMobile &&
                 !toggleSidebarBtnMobile.contains(event.target)) { // Also check if click is on icon inside button
@@ -59,6 +83,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+
+    // NEW: Listen for window resize to adjust sidebar state and margin
+    window.addEventListener('resize', () => {
+        // If resizing from mobile to desktop/tablet, ensure sidebar is not 'sidebar-open'
+        if (window.innerWidth > 767 && dashboardWrapper.classList.contains('sidebar-open')) {
+            dashboardWrapper.classList.remove('sidebar-open');
+        }
+        // Apply initial collapsed state and margin for tablets/small laptops on resize
+        if (window.innerWidth >= 768 && window.innerWidth <= 1023) {
+            if (sidebar) sidebar.classList.add('collapsed');
+        } else if (window.innerWidth > 1023) {
+            // On larger screens, ensure it's not forced collapsed unless toggled
+            // We don't remove 'collapsed' here, as user might have collapsed it manually
+        }
+        updateMainContentMargin(); // Always update margin on resize
+    });
 
 
     // --- Existing Elements (ensure they are correctly selected) ---
@@ -176,7 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 targetContent.classList.add('active');
             }
 
-            // NEW: Close sidebar on mobile after clicking a tab
+            // Close sidebar on mobile after clicking a tab
             if (window.innerWidth <= 767 && dashboardWrapper && dashboardWrapper.classList.contains('sidebar-open')) {
                 dashboardWrapper.classList.remove('sidebar-open');
             }
@@ -1633,4 +1673,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             setInterval(fetchAndDisplayOrders, 5000); // Poll every 5 seconds
         }
     }
+
+    // Initial call to set correct margin and sidebar state based on current window size
+    // This runs once when the page loads
+    if (window.innerWidth >= 768 && window.innerWidth <= 1023) {
+        if (sidebar) sidebar.classList.add('collapsed');
+    }
+    updateMainContentMargin(); // Call this once on load to set initial margin
 });
