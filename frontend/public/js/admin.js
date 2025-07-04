@@ -25,19 +25,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // --- NEW: Sidebar Toggle Elements ---
+    // --- NEW: Sidebar Toggle Elements and Logic ---
     const sidebar = document.querySelector('.sidebar');
-    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-    const toggleSidebarBtnMobile = document.getElementById('toggleSidebarBtnMobile'); // For mobile header
+    const dashboardWrapper = document.querySelector('.dashboard-wrapper'); // Get the main wrapper
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn'); // Desktop toggle
+    const toggleSidebarBtnMobile = document.getElementById('toggleSidebarBtnMobile'); // Mobile toggle
 
+    // Event listener for desktop sidebar toggle (collapse/expand)
     if (toggleSidebarBtn) {
         toggleSidebarBtn.addEventListener('click', () => {
             if (sidebar) sidebar.classList.toggle('collapsed');
         });
     }
+
+    // Event listener for mobile sidebar toggle (slide in/out)
     if (toggleSidebarBtnMobile) {
         toggleSidebarBtnMobile.addEventListener('click', () => {
-            if (sidebar) sidebar.classList.toggle('collapsed');
+            if (dashboardWrapper) dashboardWrapper.classList.toggle('sidebar-open');
+        });
+    }
+
+    // Close sidebar when clicking outside (on the overlay) on mobile
+    if (dashboardWrapper) {
+        dashboardWrapper.addEventListener('click', (event) => {
+            // Check if the dashboardWrapper has 'sidebar-open' class (mobile sidebar is active)
+            // AND if the click target is NOT inside the sidebar itself
+            // AND if the click target is NOT the mobile toggle button
+            if (dashboardWrapper.classList.contains('sidebar-open') &&
+                !sidebar.contains(event.target) &&
+                event.target !== toggleSidebarBtnMobile &&
+                !toggleSidebarBtnMobile.contains(event.target)) { // Also check if click is on icon inside button
+                dashboardWrapper.classList.remove('sidebar-open');
+            }
         });
     }
 
@@ -126,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Conditional UI for Superadmin vs Admin ---
     if (role === 'superadmin') {
         // Hiding these sections as they are only relevant for superadmin.
+        // These elements are not present in admin.html, so this check prevents errors.
         if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
         if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
@@ -156,9 +176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 targetContent.classList.add('active');
             }
 
-            // Collapse sidebar on mobile after clicking a tab
-            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('collapsed')) {
-                sidebar.classList.remove('collapsed');
+            // NEW: Close sidebar on mobile after clicking a tab
+            if (window.innerWidth <= 767 && dashboardWrapper && dashboardWrapper.classList.contains('sidebar-open')) {
+                dashboardWrapper.classList.remove('sidebar-open');
             }
         });
     });
@@ -366,6 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (item.description && item.description.toLowerCase().includes(searchTerm))
             );
             displayMenuItems(filteredItems);
+            // Remove active class from category filter buttons when searching
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         });
     }
@@ -378,6 +399,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         menuItemMessage.className = 'message';
         currentImagePreview.innerHTML = '';
         currentImagePreview.style.border = '2px dashed #bdc3c7';
+        isBestSellerCheckbox.checked = false; // Reset checkboxes
+        isAvailableCheckbox.checked = false; // Reset checkboxes
     }
 
     if (itemImageInput) {
@@ -396,7 +419,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 };
                 reader.readAsDataURL(file);
             } else {
-                resetMenuItemForm();
+                // If no file is selected (e.g., user cancels), reset preview
+                currentImagePreview.innerHTML = '';
+                currentImagePreview.style.border = '2px dashed #bdc3c7';
             }
         });
     }
@@ -488,7 +513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemMessage.className = 'message';
             
             setTimeout(() => {
-                if (menuItemForm.offsetParent !== null) {
+                if (menuItemForm.offsetParent !== null) { // Check if form is visible
                     menuItemForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
                     console.warn("menuItemForm is not visible, cannot scroll.");
@@ -615,10 +640,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             document.getElementById('addCategoryMessage').className = 'success-message';
             document.getElementById('categoryName').value = '';
-            delete addCategoryForm.dataset.editingId;
+            delete addCategoryForm.dataset.editingId; // Clear editing ID
             submitBtn.textContent = 'Add Category';
             await loadCategories();
-            await loadMenuItems();
+            await loadMenuItems(); // Reload menu items as categories might have changed
         } catch (error) {
             console.error('Error saving category:', error);
             document.getElementById('addCategoryMessage').textContent = 'Failed to save category: ' + (error.message || 'Server error');
@@ -696,7 +721,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.body.removeChild(successModal);
             });
             await loadCategories();
-            await loadMenuItems();
+            await loadMenuItems(); // Reload menu items as categories might have changed
         } catch (error) {
             console.error('Error deleting category:', error);
             const errorModal = document.createElement('div');
@@ -720,6 +745,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // These functions are typically for superadmin, but are kept here as stubs
+    // to avoid reference errors if they are called conditionally in other parts of the code.
     async function loadStores() {
         console.log("loadStores called in admin.js - this function is typically for superadmin.");
     }
@@ -932,9 +959,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if(ordersDashboard) {
                 ordersDashboard.querySelectorAll('.view-table-orders-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
+                    button.addEventListener('click', async (e) => { // Made async to await API call
                         const tableId = e.target.dataset.tableId;
-                        displayOrderDetailsModal(tableId, ordersByTable[tableId]);
+                        // Fetch the latest orders for this specific table when opening the modal
+                        const latestOrdersForTable = await api.orders.getStoreOrders()
+                            .then(orders => orders.filter(o => o.tableId === tableId));
+                        displayOrderDetailsModal(tableId, latestOrdersForTable);
                     });
                 });
             }
@@ -1030,7 +1060,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         // Re-fetch and display orders to reflect status change
                         fetchAndDisplayOrders();
                         // Also update the modal itself to show the new status
-                        displayOrderDetailsModal(tableId, await api.orders.getStoreOrders().then(orders => orders.filter(o => o.tableId === tableId)));
+                        // Fetch latest orders for the specific table again
+                        const updatedOrdersForModal = await api.orders.getStoreOrders().then(orders => orders.filter(o => o.tableId === tableId));
+                        displayOrderDetailsModal(tableId, updatedOrdersForModal);
                     } catch (error) {
                         console.error('Error updating order status:', error);
                         if(modalOrdersMessage) {
@@ -1047,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if(orderDetailsModal) {
-            orderDetailsModal.style.display = 'block'; // Show the modal
+            orderDetailsModal.style.display = 'flex'; // Show the modal as flex to center content
             document.body.classList.add('modal-open'); // Prevent body scrolling
         }
     }
