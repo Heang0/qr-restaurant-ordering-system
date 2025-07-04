@@ -3,11 +3,13 @@ import { checkAuthAndRedirect, logout } from './auth.js';
 import { generateQrCode } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Attach logout button listener as early as possible within DOMContentLoaded
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logout);
     }
 
+    // Check authentication and redirect if necessary
     if (!checkAuthAndRedirect()) {
         console.log("Authentication check failed or redirected.");
         return;
@@ -17,11 +19,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const role = localStorage.getItem('role');
     const storeId = localStorage.getItem('storeId');
 
+    // Redirect non-superadmin/admin roles to login
     if (role !== 'superadmin' && role !== 'admin') {
         window.location.href = 'login.html';
         return;
     }
 
+    // --- NEW: Sidebar Toggle Elements ---
+    const sidebar = document.querySelector('.sidebar');
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+    const toggleSidebarBtnMobile = document.getElementById('toggleSidebarBtnMobile'); // For mobile header
+
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            if (sidebar) sidebar.classList.toggle('collapsed');
+        });
+    }
+    if (toggleSidebarBtnMobile) {
+        toggleSidebarBtnMobile.addEventListener('click', () => {
+            if (sidebar) sidebar.classList.toggle('collapsed');
+        });
+    }
+
+
+    // --- Existing Elements (ensure they are correctly selected) ---
     const totalLiveOrdersEl = document.getElementById('totalLiveOrders');
     const pendingOrdersCountEl = document.getElementById('pendingOrdersCount');
     const readyOrdersCountEl = document.getElementById('readyOrdersCount');
@@ -51,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const itemImageInput = document.getElementById('itemImage');
     const menuItemSubmitBtn = document.getElementById('menuItemSubmitBtn');
     const menuItemMessage = document.getElementById('menuItemMessage');
-    const currentImagePreview = document.getElementById('currentImagePreview'); // This is the element for menu item image preview
+    const currentImagePreview = document.getElementById('currentImagePreview');
     const menuCategoryFilterButtons = document.getElementById('menu-category-filter-buttons');
     const menuItemsList = document.getElementById('menuItemsList');
     const menuListMessage = document.getElementById('menuListMessage');
@@ -102,16 +123,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('touchstart', activateAudio);
 
 
+    // --- Conditional UI for Superadmin vs Admin ---
     if (role === 'superadmin') {
-        // Superadmin sections are visible by default
         // Hiding these sections as they are only relevant for superadmin.
-        // This prevents errors if elements are not found in admin.html
         if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
         if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
-        // Hiding superadmin-specific tabs for regular admin
-        const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders']; // All tabs for admin
-        document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
+        // Ensure only admin-relevant tabs are visible if the user is a regular admin
+        const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders'];
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => { // Changed selector to target sidebar nav items
             if (!adminTabs.includes(btn.dataset.tab)) {
                 btn.style.display = 'none';
             }
@@ -119,7 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-    const tabButtons = document.querySelectorAll('.tab-btn');
+    // --- Tab Navigation Logic (Adjusted for Sidebar) ---
+    const tabButtons = document.querySelectorAll('.tab-btn'); // Selects all nav-item buttons
     const tabContents = document.querySelectorAll('.tab-content');
 
     tabButtons.forEach(button => {
@@ -133,6 +154,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const targetContent = document.getElementById(`tab-${tabId}`);
             if (targetContent) {
                 targetContent.classList.add('active');
+            }
+
+            // Collapse sidebar on mobile after clicking a tab
+            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
             }
         });
     });
@@ -221,7 +247,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             itemCategorySelect.innerHTML = '';
-            // Add a default "Select Category" option
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.textContent = 'Select Category';
@@ -268,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const menuItems = await api.menu.getMenu(storeId);
             allMenuItems = menuItems;
-            console.log('Fetched allMenuItems:', allMenuItems); // Log all menu items to verify content
+            console.log('Fetched allMenuItems:', allMenuItems);
             displayMenuItems(allMenuItems);
             menuListMessage.textContent = '';
         } catch (error) {
@@ -345,39 +370,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    /**
-     * Resets the menu item form to its initial state, clearing inputs and the image preview.
-     */
     function resetMenuItemForm() {
         menuItemForm.reset();
         menuItemIdInput.value = '';
         menuItemSubmitBtn.textContent = 'Add Menu Item';
         menuItemMessage.textContent = '';
         menuItemMessage.className = 'message';
-        // Clear and reset the image preview
         currentImagePreview.innerHTML = '';
-        currentImagePreview.style.border = '2px dashed #bdc3c7'; // Restore dashed border
+        currentImagePreview.style.border = '2px dashed #bdc3c7';
     }
 
-    // Event listener for item image input to show a local preview
     if (itemImageInput) {
         itemImageInput.addEventListener('change', () => {
             const file = itemImageInput.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    currentImagePreview.innerHTML = ''; // Clear existing content
+                    currentImagePreview.innerHTML = '';
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.alt = "Selected Image";
                     img.classList.add('menu-item-preview-img');
                     currentImagePreview.appendChild(img);
-                    currentImagePreview.style.border = 'none'; // Remove dashed border when image is present
+                    currentImagePreview.style.border = 'none';
                 };
                 reader.readAsDataURL(file);
             } else {
-                // If no file is selected (e.g., user clears selection)
-                resetMenuItemForm(); // This will clear the preview and reset the border
+                resetMenuItemForm();
             }
         });
     }
@@ -412,8 +431,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             menuItemMessage.className = 'success-message';
             
-            resetMenuItemForm(); // Reset the form after successful submission
-            await loadMenuItems(); // Reload menu items to reflect changes
+            resetMenuItemForm();
+            await loadMenuItems();
         } catch (error) {
             console.error('Error saving menu item:', error);
             menuItemMessage.textContent = 'Failed to save menu item: ' + (error.message || 'Server error');
@@ -429,61 +448,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const item = allMenuItems.find(i => i._id === id);
             if (!item) {
-                console.error('Item not found for editing:', id); // Log the ID that wasn't found
+                console.error('Item not found for editing:', id);
                 return;
             }
-            console.log('Editing item object:', item); // Log the full item object for debugging
-            console.log('Image URL for editing:', item.imageUrl); // Log the image URL specifically
+            console.log('Editing item object:', item);
+            console.log('Image URL for editing:', item.imageUrl);
 
-            // 1. Activate the "Manage Menu" tab
             const menuTabButton = document.querySelector('.tab-btn[data-tab="menu"]');
             if (menuTabButton) {
-                // Simulate a click on the menu tab button
                 menuTabButton.click(); 
             }
 
-            // Populate form fields
             menuItemIdInput.value = item._id;
             itemNameInput.value = item.name;
             itemDescriptionInput.value = item.description;
             itemPriceInput.value = item.price;
-            // FIX: Check if item.categoryId exists before accessing its _id
             if (item.categoryId && item.categoryId._id) {
                 itemCategorySelect.value = item.categoryId._id;
             } else {
-                // If categoryId is null or undefined, set to default or empty
-                itemCategorySelect.value = ''; // Or the value of your "Select Category" option
+                itemCategorySelect.value = '';
             }
             isBestSellerCheckbox.checked = item.isBestSeller;
             isAvailableCheckbox.checked = item.isAvailable;
 
-            // Display current image in preview
-            currentImagePreview.innerHTML = ''; // Clear any previous content
+            currentImagePreview.innerHTML = '';
             if (item.imageUrl) {
                 const img = document.createElement('img');
                 img.src = item.imageUrl;
                 img.alt = item.name;
                 img.classList.add('menu-item-preview-img');
                 currentImagePreview.appendChild(img);
-                currentImagePreview.style.border = 'none'; // Remove dashed border
+                currentImagePreview.style.border = 'none';
             } else {
-                currentImagePreview.style.border = '2px dashed #bdc3c7'; // Restore dashed border if no image
+                currentImagePreview.style.border = '2px dashed #bdc3c7';
             }
 
             menuItemSubmitBtn.textContent = 'Update Menu Item';
             menuItemMessage.textContent = 'Editing: ' + item.name;
             menuItemMessage.className = 'message';
             
-            // Scroll to the form section
-            // Increased timeout to ensure the tab content has fully rendered and is scrollable
-            // Also, added a check if the form is actually visible before scrolling
             setTimeout(() => {
-                if (menuItemForm.offsetParent !== null) { // Check if the element is visible
-                    menuItemForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); // Added block: 'start' for better positioning
+                if (menuItemForm.offsetParent !== null) {
+                    menuItemForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
                     console.warn("menuItemForm is not visible, cannot scroll.");
                 }
-            }, 300); // Increased delay to 300ms
+            }, 300);
             
         } catch (error) {
             console.error('Error fetching menu item for edit:', error);
@@ -491,7 +501,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function deleteMenuItem(id) {
-        // Using a custom modal for confirmation instead of alert()
         const confirmDelete = await new Promise(resolve => {
             const modal = document.createElement('div');
             modal.classList.add('modal');
@@ -511,7 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.style.display = 'flex'; // Show modal
+            modal.style.display = 'flex';
 
             const closeBtn = modal.querySelector('.close-button');
             const confirmBtn = modal.querySelector('#confirmDeleteBtn');
@@ -540,7 +549,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             await api.menu.deleteMenuItem(id);
-            // Using a custom modal for success message instead of alert()
             const successModal = document.createElement('div');
             successModal.classList.add('modal');
             successModal.innerHTML = `
@@ -563,7 +571,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadMenuItems();
         } catch (error) {
             console.error('Error deleting menu item:', error);
-            // Using a custom modal for error message instead of alert()
             const errorModal = document.createElement('div');
             errorModal.classList.add('modal');
             errorModal.innerHTML = `
@@ -623,7 +630,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function deleteCategory(id) {
-        // Using a custom modal for confirmation instead of alert()
         const confirmDelete = await new Promise(resolve => {
             const modal = document.createElement('div');
             modal.classList.add('modal');
@@ -643,7 +649,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.style.display = 'flex'; // Show modal
+            modal.style.display = 'flex';
 
             const closeBtn = modal.querySelector('.close-button');
             const confirmBtn = modal.querySelector('#confirmDeleteBtn');
@@ -671,7 +677,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         try {
             await api.categories.deleteCategory(id);
-            // Using a custom modal for success message instead of alert()
             const successModal = document.createElement('div');
             successModal.classList.add('modal');
             successModal.innerHTML = `
@@ -694,7 +699,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadMenuItems();
         } catch (error) {
             console.error('Error deleting category:', error);
-            // Using a custom modal for error message instead of alert()
             const errorModal = document.createElement('div');
             errorModal.classList.add('modal');
             errorModal.innerHTML = `
@@ -762,7 +766,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!storeId) {
             if(tablesListMessage) {
                 tablesListMessage.textContent = 'Store ID not found. Cannot load tables.';
-                tablesListMessage.className = 'error-message';
+                tablesListMessage.className = 'error-error-message';
             }
             return;
         }
@@ -824,7 +828,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error loading tables:', error);
             if (tablesListMessage) {
                 tablesListMessage.textContent = 'Failed to load tables: ' + (error.message || 'Server error');
-                tablesListMessage.className = 'error-message';
+                tablesListMessage.className = 'error-error-message';
             }
         }
     }
@@ -834,7 +838,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!storeId) {
             if(ordersMessage) {
                 ordersMessage.textContent = 'Store ID not found. Cannot load orders.';
-                ordersMessage.className = 'error-message';
+                ordersMessage.className = 'error-error-message';
             }
             return;
         }
@@ -940,7 +944,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error loading live orders:', error);
             if(ordersMessage) {
                 ordersMessage.textContent = 'Failed to load live orders: ' + (error.message || 'Server error');
-                ordersMessage.className = 'error-message';
+                ordersMessage.className = 'error-error-message';
             }
         }
     }
@@ -1031,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         console.error('Error updating order status:', error);
                         if(modalOrdersMessage) {
                             modalOrdersMessage.textContent = 'Failed to update status: ' + (error.message || 'Server error');
-                            modalOrdersMessage.className = 'error-message';
+                            modalOrdersMessage.className = 'error-error-message';
                         }
                     }
                 });
@@ -1140,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function printReceipt() {
         if (!currentOrdersForModal || currentOrdersForModal.length === 0 || !currentStoreDetails) {
             modalOrdersMessage.textContent = 'No order data available for printing.';
-            modalOrdersMessage.className = 'message error-message';
+            modalOrdersMessage.className = 'message error-error-message';
             return;
         }
 
@@ -1156,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function downloadReceipt() {
         if (!currentOrdersForModal || currentOrdersForModal.length === 0 || !currentStoreDetails) {
             modalOrdersMessage.textContent = 'No order data available for download.';
-            modalOrdersMessage.className = 'message error-message';
+            modalOrdersMessage.className = 'message error-error-message';
             return;
         }
 
@@ -1430,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Error clearing table orders:', error);
             if(modalOrdersMessage) {
                 modalOrdersMessage.textContent = 'Failed to clear orders: ' + (error.message || 'Server error');
-                modalOrdersMessage.className = 'error-message'; // Corrected class name
+                modalOrdersMessage.className = 'error-error-message';
             }
         }
     }
@@ -1505,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 console.error('Error updating store info:', error);
                 storeLogoMessage.textContent = 'Failed to update store info: ' + (error.message || 'Server error');
-                storeLogoMessage.className = 'error-message';
+                storeLogoMessage.className = 'error-error-message';
             } finally {
                 setLoading(updateStoreInfoBtn, false);
                 updateStoreInfoBtn.textContent = originalBtnText;
@@ -1540,7 +1544,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newTableId = newTableIdInput.value.trim();
             if (!newTableId) {
                 addTableMessage.textContent = 'Table ID cannot be empty.';
-                addTableMessage.className = 'error-message';
+                addTableMessage.className = 'error-error-message';
                 return;
             }
 
@@ -1558,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 console.error('Error adding table:', error);
                 addTableMessage.textContent = 'Failed to add table: ' + (error.message || 'Server error');
-                addTableMessage.className = 'error-message';
+                addTableMessage.className = 'error-error-message';
             } finally {
                 setLoading(submitBtn, false);
                 submitBtn.textContent = originalBtnText;
@@ -1576,7 +1580,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (role === 'admin') {
         // Ensure only admin-relevant tabs are visible if the user is a regular admin
         const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders'];
-        document.querySelectorAll('.tab-navigation .tab-btn').forEach(btn => {
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => { // Changed selector to target sidebar nav items
             if (!adminTabs.includes(btn.dataset.tab)) {
                 btn.style.display = 'none';
             }

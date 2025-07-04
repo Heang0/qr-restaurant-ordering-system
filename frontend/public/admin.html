@@ -5,195 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - QR Restaurant</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Load qrcode.min.js as a REGULAR script, BEFORE any modules that use it -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <header class="app-header">
-        <h1>Admin Dashboard</h1>
-        <button id="logoutBtn" class="header-btn">Logout</button>
-    </header>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Admin Panel</h2>
+                <button class="toggle-sidebar-btn" id="toggleSidebarBtn"><i class="fas fa-bars"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item tab-btn active" data-tab="overview">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item tab-btn" data-tab="categories">
+                    <i class="fas fa-tags"></i>
+                    <span>Manage Categories</span>
+                </button>
+                <button class="nav-item tab-btn" data-tab="menu">
+                    <i class="fas fa-utensils"></i>
+                    <span>Manage Menu</span>
+                </button>
+                <button class="nav-item tab-btn" data-tab="branding">
+                    <i class="fas fa-paint-brush"></i>
+                    <span>Store Branding</span>
+                </button>
+                <button class="nav-item tab-btn" data-tab="tables">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Manage Tables & QR Codes</span>
+                </button>
+                <button class="nav-item tab-btn" data-tab="orders">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Live Orders</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="sidebar-logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
 
-    <main class="container">
-        <nav class="tab-navigation">
-            <button class="tab-btn active" data-tab="overview">Dashboard</button>
-            <button class="tab-btn" data-tab="categories">Manage Categories</button>
-            <button class="tab-btn" data-tab="menu">Manage Menu</button>
-            <button class="tab-btn" data-tab="branding">Store Branding</button>
-            <button class="tab-btn" data-tab="tables">Manage Tables & QR Codes</button>
-            <button class="tab-btn" data-tab="orders">Live Orders</button>
-        </nav>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="main-header">
+                <button class="toggle-sidebar-btn" id="toggleSidebarBtnMobile"><i class="fas fa-bars"></i></button>
+                <h1>Admin Dashboard</h1>
+                <!-- Optional: Add search or user profile icon here -->
+            </header>
 
-        <div id="tab-overview" class="tab-content active">
-            <section class="card-section">
-                <h2 class="section-title">Store Overview</h2>
-                <p class="section-description">A quick glance at your store's performance and orders.</p>
-                <div class="dashboard-overview-grid">
-                    <div class="overview-card">
-                        <h3>Total Live Orders</h3>
-                        <p class="value" id="totalLiveOrders">0</p>
-                    </div>
-                    <div class="overview-card">
-                        <h3>Pending Orders</h3>
-                        <p class="value" id="pendingOrdersCount">0</p>
-                    </div>
-                    <div class="overview-card">
-                        <h3>Ready Orders</h3>
-                        <p class="value" id="readyOrdersCount">0</p>
-                    </div>
+            <div class="content-area">
+                <div id="tab-overview" class="tab-content active">
+                    <section class="card-section">
+                        <h2 class="section-title">Store Overview</h2>
+                        <p class="section-description">A quick glance at your store's performance and orders.</p>
+                        <div class="dashboard-overview-grid">
+                            <div class="overview-card">
+                                <h3>Total Live Orders</h3>
+                                <p class="value" id="totalLiveOrders">0</p>
+                            </div>
+                            <div class="overview-card">
+                                <h3>Pending Orders</h3>
+                                <p class="value" id="pendingOrdersCount">0</p>
+                            </div>
+                            <div class="overview-card">
+                                <h3>Ready Orders</h3>
+                                <p class="value" id="readyOrdersCount">0</p>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </section>
-        </div>
 
-        <div id="tab-categories" class="tab-content">
-            <section class="card-section">
-                <h2 class="section-title">Manage Categories</h2>
-                <p class="section-description">Create and manage menu categories like 'Appetizers' or 'Drinks'.</p>
-                <form id="addCategoryForm" class="form-card">
-                    <label for="categoryName">Category Name:</label>
-                    <input type="text" id="categoryName" placeholder="e.g., Appetizers" required>
-                    <button type="submit" class="primary-btn">Add Category</button>
-                    <p id="addCategoryMessage" class="message"></p>
-                </form>
-                <h3 class="section-subtitle">Existing Categories</h3>
-                <div id="categoriesList" class="table-grid">
+                <div id="tab-categories" class="tab-content">
+                    <section class="card-section">
+                        <h2 class="section-title">Manage Categories</h2>
+                        <p class="section-description">Create and manage menu categories like 'Appetizers' or 'Drinks'.</p>
+                        <form id="addCategoryForm" class="form-card">
+                            <label for="categoryName">Category Name:</label>
+                            <input type="text" id="categoryName" placeholder="e.g., Appetizers" required>
+                            <button type="submit" class="primary-btn">Add Category</button>
+                            <p id="addCategoryMessage" class="message"></p>
+                        </form>
+                        <h3 class="section-subtitle">Existing Categories</h3>
+                        <div id="categoriesList" class="table-grid">
+                        </div>
+                        <p id="categoryListMessage" class="message"></p>
+                    </section>
                 </div>
-                <p id="categoryListMessage" class="message"></p>
-            </section>
-        </div>
 
-        <div id="tab-menu" class="tab-content">
-            <section class="card-section">
-                <h2 class="section-title">Manage Menu</h2>
-                <p class="section-description">Add, edit, and delete your store's menu items.</p>
-                <form id="menuItemForm" class="form-card">
-                    <input type="hidden" id="menuItemId">
-                    <label for="itemName">Item Name:</label>
-                    <input type="text" id="itemName" placeholder="e.g., Spicy Noodles" required>
+                <div id="tab-menu" class="tab-content">
+                    <section class="card-section">
+                        <h2 class="section-title">Manage Menu</h2>
+                        <p class="section-description">Add, edit, and delete your store's menu items.</p>
+                        <form id="menuItemForm" class="form-card">
+                            <input type="hidden" id="menuItemId">
+                            <label for="itemName">Item Name:</label>
+                            <input type="text" id="itemName" placeholder="e.g., Spicy Noodles" required>
 
-                    <label for="itemCategory">Category:</label>
-                    <select id="itemCategory" required></select>
+                            <label for="itemCategory">Category:</label>
+                            <select id="itemCategory" required></select>
 
-                    <label for="itemDescription">Description:</label>
-                    <textarea id="itemDescription" rows="3" placeholder="A brief description of the item"></textarea>
+                            <label for="itemDescription">Description:</label>
+                            <textarea id="itemDescription" rows="3" placeholder="A brief description of the item"></textarea>
 
-                    <label for="itemPrice">Price ($):</label>
-                    <input type="number" id="itemPrice" step="0.01" min="0" placeholder="e.g., 9.99" required>
+                            <label for="itemPrice">Price ($):</label>
+                            <input type="number" id="itemPrice" step="0.01" min="0" placeholder="e.g., 9.99" required>
 
-                    <label for="itemImage" class="file-input-label">Item Image:</label>
-                    <input type="file" id="itemImage" accept="image/*">
-                    <div id="currentImagePreview" class="image-preview"></div>
+                            <label for="itemImage" class="file-input-label">Item Image:</label>
+                            <input type="file" id="itemImage" accept="image/*">
+                            <div id="currentImagePreview" class="image-preview"></div>
 
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="isBestSellerCheckbox" name="isBestSeller">
-                        <label for="isBestSellerCheckbox">Mark as Best Seller</label>
-                    </div>
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="isAvailableCheckbox" name="isAvailable">
-                        <label for="isAvailableCheckbox">Available for Order</label>
-                    </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="isBestSellerCheckbox" name="isBestSeller">
+                                <label for="isBestSellerCheckbox">Mark as Best Seller</label>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="isAvailableCheckbox" name="isAvailable">
+                                <label for="isAvailableCheckbox">Available for Order</label>
+                            </div>
 
-                    <button type="submit" id="menuItemSubmitBtn" class="primary-btn">Add Menu Item</button>
-                    <p id="menuItemMessage" class="message"></p>
-                </form>
+                            <button type="submit" id="menuItemSubmitBtn" class="primary-btn">Add Menu Item</button>
+                            <p id="menuItemMessage" class="message"></p>
+                        </form>
 
-                <h3 class="section-subtitle">Current Menu Items</h3>
-                <div class="search-container">
-                    <input type="search" id="menuSearchInput" class="search-input" placeholder="Search menu items...">
+                        <h3 class="section-subtitle">Current Menu Items</h3>
+                        <div class="search-container">
+                            <input type="search" id="menuSearchInput" class="search-input" placeholder="Search menu items...">
+                        </div>
+                        <div id="menu-category-filter-buttons" class="category-buttons">
+                        </div>
+                        <div id="menuItemsList" class="menu-grid">
+                        </div>
+                        <p id="menuListMessage" class="message"></p>
+                    </section>
                 </div>
-                <div id="menu-category-filter-buttons" class="category-buttons">
+                
+               <div id="tab-branding" class="tab-content">
+                    <section class="card-section">
+                        <h2 class="section-title">Store Branding</h2>
+                        <p class="section-description">Upload your store logo and update store information for the customer ordering page header and receipts.</p>
+                        <form id="storeInfoForm" class="form-card">
+                            <input type="hidden" id="storeIdInput">
+                            <label for="storeNameInput">Store Name:</label>
+                            <input type="text" id="storeNameInput" placeholder="e.g., My Cafe" required>
+                            
+                            <label for="storeAddressInput">Store Address:</label>
+                            <input type="text" id="storeAddressInput" placeholder="e.g., #23, St. 123, Phnom Penh">
+                            
+                            <label for="storePhoneInput">Store Telephone:</label>
+                            <input type="text" id="storePhoneInput" placeholder="e.g., 012 345 678">
+                            
+                            <label for="storeLogo" class="file-input-label">Upload Store Logo:</label>
+                            <input type="file" id="storeLogo" accept="image/*">
+                            <div id="currentStoreLogoPreview" class="image-preview">
+                                <img id="logoPreviewImg" src="" alt="Current Store Logo" class="current-logo-img hidden">
+                            </div>
+                            
+                            <button type="submit" class="primary-btn" id="updateStoreInfoBtn">Update Store Info</button>
+                            <p id="storeLogoMessage" class="message"></p>
+                        </form>
+                    </section>
                 </div>
-                <div id="menuItemsList" class="menu-grid">
-                </div>
-                <p id="menuListMessage" class="message"></p>
-            </section>
-        </div>
-        
-       <div id="tab-branding" class="tab-content">
-            <section class="card-section">
-                <h2 class="section-title">Store Branding</h2>
-                <p class="section-description">Upload your store logo and update store information for the customer ordering page header and receipts.</p>
-                <form id="storeInfoForm" class="form-card">
-                    <input type="hidden" id="storeIdInput">
-                    <label for="storeNameInput">Store Name:</label>
-                    <input type="text" id="storeNameInput" placeholder="e.g., My Cafe" required>
-                    
-                    <label for="storeAddressInput">Store Address:</label>
-                    <input type="text" id="storeAddressInput" placeholder="e.g., #23, St. 123, Phnom Penh">
-                    
-                    <label for="storePhoneInput">Store Telephone:</label>
-                    <input type="text" id="storePhoneInput" placeholder="e.g., 012 345 678">
-                    
-                    <label for="storeLogo" class="file-input-label">Upload Store Logo:</label>
-                    <input type="file" id="storeLogo" accept="image/*">
-                    <div id="currentStoreLogoPreview" class="image-preview">
-                        <img id="logoPreviewImg" src="" alt="Current Store Logo" class="current-logo-img hidden">
-                    </div>
-                    
-                    <button type="submit" class="primary-btn" id="updateStoreInfoBtn">Update Store Info</button>
-                    <p id="storeLogoMessage" class="message"></p>
-                </form>
-            </section>
-        </div>
 
-        <div id="tab-tables" class="tab-content">
-            <section class="card-section">
-                <h2 class="section-title">Manage Tables & QR Codes</h2>
-                <p class="section-description">Generate QR codes for each table. Your customers will scan these to order.</p>
-                <form id="addTableForm" class="form-card">
-                    <label for="newTableId">Table ID:</label>
-                    <input type="text" id="newTableId" placeholder="e.g., A1, B2" required>
-                    <button type="submit" class="primary-btn">Add Table</button>
-                    <p id="addTableMessage" class="message"></p>
-                </form>
+                <div id="tab-tables" class="tab-content">
+                    <section class="card-section">
+                        <h2 class="section-title">Manage Tables & QR Codes</h2>
+                        <p class="section-description">Generate QR codes for each table. Your customers will scan these to order.</p>
+                        <form id="addTableForm" class="form-card">
+                            <label for="newTableId">Table ID:</label>
+                            <input type="text" id="newTableId" placeholder="e.g., A1, B2" required>
+                            <button type="submit" class="primary-btn">Add Table</button>
+                            <p id="addTableMessage" class="message"></p>
+                        </form>
 
-                <h3 class="section-subtitle">Existing Tables</h3>
-                <div id="tablesList" class="table-grid">
+                        <h3 class="section-subtitle">Existing Tables</h3>
+                        <div id="tablesList" class="table-grid">
+                        </div>
+                        <p id="tablesListMessage" class="message"></p>
+                    </section>
                 </div>
-                <p id="tablesListMessage" class="message"></p>
-            </section>
-        </div>
 
-        <div id="tab-orders" class="tab-content">
-            <section class="card-section">
-                <h2 class="section-title">Live Orders</h2>
-                <p class="section-description">View and update customer orders in real-time.</p>
-                <div id="ordersDashboard" class="order-grid">
-                </div>
-                <p id="ordersMessage" class="message"></p>
-            </section>
-        </div>
-        
-      <div id="orderDetailsModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="section-title">Orders for Table <span id="modalTableId"></span></h2>
-                    <span class="close-button" id="closeOrderDetailsModal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <div id="modalOrderList">
-                    </div>
-                    <p id="modalOrdersMessage" class="message"></p>
-                </div>
-                <div class="modal-footer">
-                    <p id="modalTotalPrice" class="modal-total-price"></p>
-                    <button id="clearTableHistoryBtn" class="primary-btn">Clear Table History</button>
-                    <button id="printReceiptBtn" class="secondary-btn">Print Receipt</button>
-                    <button id="downloadReceiptBtn" class="secondary-btn">Download Receipt</button>
+                <div id="tab-orders" class="tab-content">
+                    <section class="card-section">
+                        <h2 class="section-title">Live Orders</h2>
+                        <p class="section-description">View and update customer orders in real-time.</p>
+                        <div id="ordersDashboard" class="order-grid">
+                        </div>
+                        <p id="ordersMessage" class="message"></p>
+                    </section>
                 </div>
             </div>
+        </main>
+    </div> <!-- End dashboard-wrapper -->
+
+    <div id="orderDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="section-title">Orders for Table <span id="modalTableId"></span></h2>
+                <span class="close-button" id="closeOrderDetailsModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="modalOrderList">
+                </div>
+                <p id="modalOrdersMessage" class="message"></p>
+            </div>
+            <div class="modal-footer">
+                <p id="modalTotalPrice" class="modal-total-price"></p>
+                <button id="clearTableHistoryBtn" class="primary-btn">Clear Table History</button>
+                <button id="printReceiptBtn" class="secondary-btn">Print Receipt</button>
+                <button id="downloadReceiptBtn" class="secondary-btn">Download Receipt</button>
+            </div>
         </div>
-    </main>
+    </div>
     <div id="newOrderAlert" class="new-order-alert hidden">
         <p>🔔 New order received!</p>
     </div>
     <audio id="notificationSound" src="/sounds/notification.mp3" preload="auto"></audio>
 
-    <!-- Load api.js, auth.js, utils.js, and admin.js as modules -->
-    <script src="../js/api.js?v=20250702110000" type="module"></script>
-    <script src="../js/auth.js?v=20250702110000" type="module"></script>
-    <script src="../js/utils.js?v=20250702110000" type="module"></script>
-    <script src="../js/admin.js?v=20250702110000" type="module"></script>
+    <!-- Load scripts as modules -->
+    <script src="../js/api.js?v=<%= Date.now() %>" type="module"></script>
+    <script src="../js/auth.js?v=<%= Date.now() %>" type="module"></script>
+    <script src="../js/utils.js?v=<%= Date.now() %>" type="module"></script>
+    <script src="../js/admin.js?v=<%= Date.now() %>" type="module"></script>
 </body>
 </html>
