@@ -630,7 +630,7 @@ input:focus, textarea:focus, select:focus {
 
     /* Adjusted form-card max-width for tablet/small laptop to prevent cutoff */
     #tab-menu .form-card { /* Target form-card specifically within tab-menu */
-        max-width: 95%; /* Allow it to take full width */
+        max-width: 70%; /* Further reduced max-width to give more space */
         margin: 0 auto; /* Center it */
         padding: 15px; /* Adjust padding if needed */
     }
