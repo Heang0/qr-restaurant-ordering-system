@@ -11,7 +11,7 @@
 /* IMPORTANT: Ensure html and body are the main scrollable containers */
 html, body {
     height: 100%; /* Full height */
-    overflow-y: auto; /* Enable vertical scrolling for the whole page */
+    /* Removed overflow-y: auto; here to rely on browser's default scrolling for the main document */
     margin: 0;
     padding: 0;
 }
@@ -68,6 +68,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     background-color: #f0f2f5; /* Consistent background */
     position: relative; /* Needed for mobile sidebar overlay */
     overflow-x: hidden; /* Prevent horizontal scroll when sidebar opens */
+    min-height: 100vh; /* Ensure wrapper pushes footer down if content is short */
 }
 
 /* --- Sidebar Styles --- */
@@ -81,9 +82,10 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     transition: width 0.3s ease, transform 0.3s ease; /* Smooth transition for collapse and mobile slide */
     flex-shrink: 0; /* Prevent sidebar from shrinking */
     
-    /* Sticky sidebar for larger screens */
-    position: sticky;
-    top: 0; /* Sticks to the top of the viewport */
+    /* Changed to fixed for true stickiness on larger screens */
+    position: fixed; 
+    top: 0; 
+    left: 0; /* Position from left */
     height: 100vh; /* Takes full viewport height */
     overflow-y: auto; /* Enable scrolling if sidebar content overflows */
     z-index: 100; /* Ensure it's above other content */
@@ -229,6 +231,10 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     flex-direction: column;
     z-index: 1; /* Ensure it's below the sidebar on mobile overlay */
     /* Removed overflow-y: auto; here, as html/body now control scrolling */
+    
+    /* Initial margin for desktop/tablet */
+    margin-left: 250px; /* Default margin for full sidebar */
+    transition: margin-left 0.3s ease; /* Smooth transition for margin change */
 }
 
 .main-header {
@@ -667,8 +673,9 @@ input:focus, textarea:focus, select:focus {
 @media (min-width: 1024px) {
     .sidebar {
         width: 250px; /* Full width on large screens */
-        position: sticky; /* Keep it sticky */
+        position: fixed; /* Changed to fixed for true stickiness */
         top: 0;
+        left: 0;
         height: 100vh;
         transform: translateX(0); /* Ensure it's not translated */
     }
@@ -706,14 +713,23 @@ input:focus, textarea:focus, select:focus {
     .dashboard-wrapper.sidebar-open .main-content::before { /* Hide overlay on desktop */
         display: none;
     }
+
+    /* Adjust main content margin for fixed sidebar */
+    .main-content {
+        margin-left: 250px; /* Default margin for full sidebar */
+    }
+    .main-content.sidebar-collapsed-margin { /* New class for collapsed sidebar margin */
+        margin-left: 70px;
+    }
 }
 
 /* Tablet / Small Laptop (768px - 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
     .sidebar {
         width: 70px; /* Default collapsed on tablets/small laptops */
-        position: sticky; /* Keep it sticky */
+        position: fixed; /* Changed to fixed for true stickiness */
         top: 0;
+        left: 0;
         height: 100vh;
         transform: translateX(0);
     }
@@ -747,6 +763,14 @@ input:focus, textarea:focus, select:focus {
     }
     .dashboard-wrapper.sidebar-open .main-content::before {
         display: none;
+    }
+
+    /* Adjust main content margin for fixed collapsed sidebar */
+    .main-content {
+        margin-left: 70px; /* Margin for collapsed sidebar */
+    }
+    .main-content.sidebar-collapsed-margin { /* Ensure this class is not needed here if it's always collapsed */
+        margin-left: 70px; /* Redundant, but for clarity */
     }
 
     /* Adjust main content padding for collapsed sidebar */
@@ -833,6 +857,11 @@ input:focus, textarea:focus, select:focus {
     }
     .main-header h1 {
         font-size: 1.5em;
+    }
+
+    /* Reset main content margin for mobile (no sidebar offset) */
+    .main-content {
+        margin-left: 0; 
     }
 
     .content-area {
