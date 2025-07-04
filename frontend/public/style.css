@@ -798,8 +798,14 @@ input:focus, textarea:focus, select:focus {
 
     /* CUSTOMER ORDER PAGE MENU GRID ON MOBILE - Force 2 columns */
     .order-container .menu-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjusted for better fit */
         gap: 10px;
+        justify-content: center; /* Center items when there's only one or odd number */
+    }
+    /* ADDED: Max width to menu cards to prevent excessive stretching when alone */
+    .order-container .menu-card {
+        max-width: 250px; /* Limit the max width of individual menu cards */
+        width: 100%; /* Ensure it respects its container */
     }
 }
 
@@ -1479,6 +1485,7 @@ input[type="file"] {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Two columns on mobile, adapts */
     gap: 15px; /* Spacing between cards */
     padding: 0;
+    justify-content: center; /* Center items in the grid */
 }
 
 .order-container .menu-card {
@@ -1491,6 +1498,8 @@ input[type="file"] {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Soft shadow */
     background-color: #fff;
     position: relative;
+    max-width: 250px; /* Limit max width for individual cards */
+    width: 100%; /* Ensure it takes full width within its max-width */
 }
 
 .order-container .menu-card .menu-card-image-wrapper {
