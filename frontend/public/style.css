@@ -549,20 +549,22 @@ input:focus, textarea:focus, select:focus {
     }
 }
 
-/* Tablet & Smaller Desktop (768px to 1399px) - Show 4 cards per row */
+/* Tablet & Smaller Desktop (768px to 1399px) - Show 2 or 3 cards per row */
 @media (min-width: 768px) and (max-width: 1399px) {
     .container {
         padding: 20px;
     }
-    /* Admin Dashboard Menu Grid specific (tab-menu) - Force 4 columns on iPad/tablet */
+    /* Admin Dashboard Menu Grid specific (tab-menu) */
     #tab-menu .menu-grid {
-        grid-template-columns: repeat(4, 1fr);
+        /* Adjusted minmax to ensure 2 or 3 columns fit without cutoff */
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
         gap: 15px;
     }
 
-    /* CUSTOMER ORDER PAGE MENU GRID ON TABLETS - Force 4 columns */
+    /* CUSTOMER ORDER PAGE MENU GRID ON TABLETS */
     .order-container .menu-grid {
-        grid-template-columns: repeat(4, 1fr);
+        /* Adjusted minmax to ensure 2 or 3 columns fit without cutoff */
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
         gap: 15px;
         justify-content: unset; /* Ensure it takes full width */
     }
@@ -617,7 +619,6 @@ input:focus, textarea:focus, select:focus {
         transform: translateX(0); /* Ensure it's in view by default */
     }
 
-    /* When sidebar is collapsed, apply the smaller width */
     .sidebar.collapsed {
         width: 70px; /* Collapsed width */
     }
