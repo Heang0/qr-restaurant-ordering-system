@@ -600,14 +600,15 @@ input:focus, textarea:focus, select:focus {
         font-size: 1.1em; /* Adjust this value as needed */
     }
     
-    /* Ensure main content has the correct margin when sidebar is collapsed */
-    /* This rule will make the main content shift when the sidebar is collapsed or expanded */
+    /* Ensure main content has the correct margin based on sidebar collapsed state */
+    /* This rule ensures the main content shifts correctly */
     .main-content { 
         margin-left: 250px; /* Default margin for full sidebar */
     }
 
+    /* When sidebar is collapsed, apply the smaller margin */
     .main-content.sidebar-collapsed-margin {
-        margin-left: 70px; /* Margin when sidebar is collapsed */
+        margin-left: 70px;
     }
 
     /* Ensure sidebar is correctly positioned and transitions its width */
@@ -616,6 +617,7 @@ input:focus, textarea:focus, select:focus {
         transform: translateX(0); /* Ensure it's in view by default */
     }
 
+    /* When sidebar is collapsed, apply the smaller width */
     .sidebar.collapsed {
         width: 70px; /* Collapsed width */
     }
@@ -762,7 +764,9 @@ input:focus, textarea:focus, select:focus {
         font-size: 0.75em;
     }
     .menu-card-content .price {
-        font-size: 0.85em;
+        font-weight: 700;
+        color: #2980b9;
+        font-size: 1em;
     }
     .menu-card-actions button {
         font-size: 0.7em;
@@ -1790,6 +1794,7 @@ input[type="file"] {
     align-items: center;
     padding: 15px 20px;
     border-bottom: 1px solid #f0f2f5;
+    margin-bottom: 15px;
 }
 
 .modal-header .section-title {
