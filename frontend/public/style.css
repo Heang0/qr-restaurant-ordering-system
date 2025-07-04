@@ -601,12 +601,23 @@ input:focus, textarea:focus, select:focus {
     }
     
     /* Ensure main content has the correct margin when sidebar is collapsed */
-    .main-content { /* Removed .sidebar-collapsed-margin from here */
-        margin-left: 70px; /* Always 70px margin for sidebar on tablets/small laptops */
+    /* This rule will make the main content shift when the sidebar is collapsed or expanded */
+    .main-content { 
+        margin-left: 250px; /* Default margin for full sidebar */
     }
-    /* Ensure sidebar is correctly positioned */
+
+    .main-content.sidebar-collapsed-margin {
+        margin-left: 70px; /* Margin when sidebar is collapsed */
+    }
+
+    /* Ensure sidebar is correctly positioned and transitions its width */
     .sidebar {
-        transform: translateX(0);
+        width: 250px; /* Default full width */
+        transform: translateX(0); /* Ensure it's in view by default */
+    }
+
+    .sidebar.collapsed {
+        width: 70px; /* Collapsed width */
     }
 
     /* Adjust form-card max-width for tablet/small laptop to prevent cutoff */
@@ -1284,7 +1295,7 @@ input[type="file"] {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f0f2f5;
     margin-bottom: 15px;
 }
 
