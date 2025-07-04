@@ -557,14 +557,14 @@ input:focus, textarea:focus, select:focus {
     /* Admin Dashboard Menu Grid specific (tab-menu) */
     #tab-menu .menu-grid {
         /* Adjusted minmax to ensure 2 or 3 columns fit without cutoff */
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted for better fit on tablets */
         gap: 15px;
     }
 
     /* CUSTOMER ORDER PAGE MENU GRID ON TABLETS */
     .order-container .menu-grid {
         /* Adjusted minmax to ensure 2 or 3 columns fit without cutoff */
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjusted for better fit on tablets */
         gap: 15px;
         justify-content: unset; /* Ensure it takes full width */
     }
@@ -577,6 +577,11 @@ input:focus, textarea:focus, select:focus {
     #tab-tables .table-grid {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Aim for 3-4 columns on iPad */
         gap: 15px;
+    }
+    /* ADDED: Max width to table cards to prevent excessive stretching when alone */
+    #tab-tables .table-card {
+        max-width: 250px; /* Limit the max width of individual table cards */
+        margin: 0 auto; /* Center individual cards if they don't fill the row */
     }
     #tab-orders .order-grid {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust for more suitable order card width */
@@ -776,6 +781,11 @@ input:focus, textarea:focus, select:focus {
     .table-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
+    /* ADDED: Max width to table cards to prevent excessive stretching when alone on mobile */
+    #tab-tables .table-card {
+        max-width: 200px; /* Limit the max width of individual table cards on mobile */
+        margin: 0 auto; /* Center individual cards if they don't fill the row */
+    }
     .table-id-label {
         font-size: 1em;
     }
@@ -944,7 +954,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .order-app-header .table-info {
-    font-size: 1.6em; /* Increased font size */
+    font-size: 1.3em; /* Reduced font size for table number */
     font-weight: bold; /* Made font bold */
     color: #e74c3c;
     margin: 0;
@@ -1496,7 +1506,7 @@ input[type="file"] {
 .order-container .menu-card .menu-card-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Cover the area */
+    object-fit: cover;
     border-radius: 12px 12px 0 0; /* Rounded top corners */
 }
 
