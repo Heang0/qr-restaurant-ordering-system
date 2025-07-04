@@ -303,7 +303,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     display: flex;
     flex-direction: column;
     gap: 15px; /* Slightly smaller gap */
-    max-width: 500px; /* Slightly narrower forms */
+    max-width: 500px; /* Default max-width for forms */
     margin: 0 auto;
     padding: 20px; /* Add padding to form card itself */
     border: 1px solid #f0f0f0; /* Light border */
@@ -628,10 +628,10 @@ input:focus, textarea:focus, select:focus {
         width: 70px; /* Collapsed width */
     }
 
-    /* Adjust form-card max-width for tablet/small laptop to prevent cutoff */
-    .form-card {
-        max-width: 95%; /* Allow it to take up more width */
-        margin: 0 auto; /* Center it */
+    /* Adjusted form-card max-width for tablet/small laptop to prevent cutoff */
+    #tab-menu .form-card { /* Target form-card specifically within tab-menu */
+        max-width: 100%; /* Allow it to take full width */
+        margin: 0; /* Remove auto margin to align left */
         padding: 15px; /* Adjust padding if needed */
     }
     .content-area {
