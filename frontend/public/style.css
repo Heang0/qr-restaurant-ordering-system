@@ -83,8 +83,6 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     z-index: 100; /* Ensure it's above other content */
 }
 
-/* REMOVED: .sidebar.collapsed styles from here, moved to media queries */
-
 .sidebar-header {
     padding: 20px;
     display: flex;
@@ -235,7 +233,7 @@ body, h1, h2, h3, h4, input, textarea, select, button, span, p, a, li {
     justify-content: space-between;
     border-bottom: 1px solid #eee;
     
-    /* ADDED: Sticky header for larger screens (if sidebar not sticky) or for general use */
+    /* ADDED: Sticky header for general use */
     position: sticky;
     top: 0;
     z-index: 99; /* Below sidebar, above content */
@@ -625,6 +623,8 @@ input:focus, textarea:focus, select:focus {
     gap: 10px;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s;
 }
 .order-table-card:hover {
     transform: none; /* No hover effect on these cards to avoid distraction */
@@ -633,6 +633,26 @@ input:focus, textarea:focus, select:focus {
 .table-info-header h3 {
     font-size: 1.3em;
     color: #34495e;
+}
+
+/* --- Modals (Consistent Styling) --- */
+.modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 15px; /* Consistent rounding */
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2); /* Stronger shadow for modals */
+}
+
+.modal-header h2 {
+    color: #34495e; /* Dark grey for modal titles */
+}
+
+.close-button {
+    color: #7f8c8d;
+    font-size: 1.8em;
+}
+.close-button:hover {
+    color: #555;
 }
 
 /* --- Responsive Design for Admin Dashboard --- */
@@ -685,7 +705,7 @@ input:focus, textarea:focus, select:focus {
 @media (min-width: 768px) and (max-width: 1023px) {
     .sidebar {
         width: 70px; /* Start collapsed on tablets by default */
-        position: sticky;
+        position: sticky; /* Keep it sticky */
         top: 0;
         height: 100vh;
         transform: translateX(0);
@@ -1000,7 +1020,7 @@ input:focus, textarea:focus, select:focus {
     display: flex;
     align-items: center;
     justify-content: flex-end; /* Align content to the right */
-     padding-right: 5px;
+     padding-right: 5px; 
 }
 
 .order-app-header .header-text-container {
@@ -1489,7 +1509,7 @@ input[type="file"] {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
-    position: relative;
+    position: relative; 
 }
 .menu-card-image {
     width: 100%;
@@ -1561,7 +1581,7 @@ input[type="file"] {
 .order-container .menu-card .menu-card-image-wrapper {
     width: 100%;
     /* Enforce 1:1 aspect ratio for images */
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 1; 
     height: auto; /* Let height be determined by aspect-ratio */
     overflow: hidden;
     position: relative; /* For best seller/out of stock tags */
@@ -2177,7 +2197,7 @@ li {
 }
 
 .tab-btn {
-    background-color: #ecf0f1;
+    background-color: #ecf0f0; /* Light grey background */
     color: #34495e;
     border: 1px solid #bdc3c7;
     border-bottom: none;
@@ -2887,3 +2907,4 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
 .modal-pw .message { /* CHANGED: from #resetPasswordModal .message */
     margin-top: 15px;
 }
+
