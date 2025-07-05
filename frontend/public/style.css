@@ -708,6 +708,10 @@ input:focus, textarea:focus, select:focus {
     .sidebar-logout-btn span {
         display: inline-block;
     }
+    .order-app-header .table-info {
+    font-size: 0.9em; /* Reduced font size for table number */
+    white-space: nowrap; /* Prevent table info from wrapping */
+}
 
     #toggleSidebarBtn { /* Hide desktop toggle on mobile */
         display: none;
@@ -974,7 +978,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 .order-app-header .table-info {
-    font-size: 1.3em; /* Reduced font size for table number */
+    font-size: 1.1em; /* Reduced font size for table number */
     font-weight: bold; /* Made font bold */
     color: #e74c3c;
     margin: 0;

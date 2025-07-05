@@ -4,24 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - QR Restaurant</title>
-    <!-- Link to your existing stylesheet -->
     <link rel="stylesheet" href="style.css">
-    <!-- QR Code library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="dashboard-wrapper">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+    <div class="dashboard-wrapper content-hidden"> <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Admin Panel</h2>
-                <!-- Toggle button for desktop sidebar collapse -->
                 <button class="toggle-sidebar-btn" id="toggleSidebarBtn"><i class="fas fa-bars"></i></button>
             </div>
             <nav class="sidebar-nav">
-                <!-- Navigation items, 'active' class handled by JS -->
                 <button class="nav-item tab-btn active" data-tab="overview">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
@@ -55,17 +48,13 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="main-content">
             <header class="main-header">
-                <!-- Toggle button for mobile sidebar -->
                 <button class="toggle-sidebar-btn" id="toggleSidebarBtnMobile"><i class="fas fa-bars"></i></button>
                 <h1>Admin Dashboard</h1>
-                <!-- You can add more header elements here, like a user profile dropdown or notifications -->
-            </header>
+                </header>
 
             <div class="content-area">
-                <!-- Overview Tab Content -->
                 <div id="tab-overview" class="tab-content active">
                     <section class="card-section">
                         <h2 class="section-title">Store Overview</h2>
@@ -87,7 +76,6 @@
                     </section>
                 </div>
 
-                <!-- Categories Tab Content -->
                 <div id="tab-categories" class="tab-content">
                     <section class="card-section">
                         <h2 class="section-title">Manage Categories</h2>
@@ -100,13 +88,11 @@
                         </form>
                         <h3 class="section-subtitle">Existing Categories</h3>
                         <div id="categoriesList" class="table-grid">
-                            <!-- Categories will be loaded here by JavaScript -->
-                        </div>
+                            </div>
                         <p id="categoryListMessage" class="message"></p>
                     </section>
                 </div>
 
-                <!-- Menu Tab Content -->
                 <div id="tab-menu" class="tab-content">
                     <section class="card-section">
                         <h2 class="section-title">Manage Menu</h2>
@@ -128,8 +114,7 @@
                             <label for="itemImage" class="file-input-label">Item Image:</label>
                             <input type="file" id="itemImage" accept="image/*">
                             <div id="currentImagePreview" class="image-preview">
-                                <!-- Image preview will be displayed here -->
-                            </div>
+                                </div>
 
                             <div class="checkbox-container">
                                 <input type="checkbox" id="isBestSellerCheckbox" name="isBestSeller">
@@ -150,16 +135,13 @@
                             <i class="fas fa-search search-icon"></i>
                         </div>
                         <div id="menu-category-filter-buttons" class="category-buttons">
-                            <!-- Category filter buttons will be loaded here by JavaScript -->
-                        </div>
+                            </div>
                         <div id="menuItemsList" class="menu-grid">
-                            <!-- Menu items will be loaded here by JavaScript -->
-                        </div>
+                            </div>
                         <p id="menuListMessage" class="message"></p>
                     </section>
                 </div>
                 
-                <!-- Branding Tab Content -->
                 <div id="tab-branding" class="tab-content">
                     <section class="card-section">
                         <h2 class="section-title">Store Branding</h2>
@@ -187,7 +169,6 @@
                     </section>
                 </div>
 
-                <!-- Tables & QR Codes Tab Content -->
                 <div id="tab-tables" class="tab-content">
                     <section class="card-section">
                         <h2 class="section-title">Manage Tables & QR Codes</h2>
@@ -201,29 +182,23 @@
 
                         <h3 class="section-subtitle">Existing Tables</h3>
                         <div id="tablesList" class="table-grid">
-                            <!-- Tables will be loaded here by JavaScript -->
-                        </div>
+                            </div>
                         <p id="tablesListMessage" class="message"></p>
                     </section>
                 </div>
 
-                <!-- Live Orders Tab Content -->
                 <div id="tab-orders" class="tab-content">
                     <section class="card-section">
                         <h2 class="section-title">Live Orders</h2>
                         <p class="section-description">View and update customer orders in real-time.</p>
                         <div id="ordersDashboard" class="order-grid">
-                            <!-- Live orders will be loaded here by JavaScript -->
-                        </div>
+                            </div>
                         <p id="ordersMessage" class="message"></p>
                     </section>
                 </div>
             </div>
         </main>
-    </div> <!-- End dashboard-wrapper -->
-
-    <!-- Order Details Modal -->
-    <div id="orderDetailsModal" class="modal">
+    </div> <div id="orderDetailsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="section-title">Orders for Table <span id="modalTableId"></span></h2>
@@ -231,8 +206,7 @@
             </div>
             <div class="modal-body">
                 <div id="modalOrderList">
-                    <!-- Order details will be loaded here by JavaScript -->
-                </div>
+                    </div>
                 <p id="modalOrdersMessage" class="message"></p>
             </div>
             <div class="modal-footer">
@@ -244,17 +218,11 @@
         </div>
     </div>
 
-    <!-- New Order Alert Notification -->
     <div id="newOrderAlert" class="new-order-alert hidden">
         <p>🔔 New order received!</p>
     </div>
-    <!-- Notification sound (ensure the path is correct) -->
     <audio id="notificationSound" src="/sounds/notification.mp3" preload="auto"></audio>
 
-    <!-- Confirmation/Success/Error Modals (reused for various actions) -->
-    <!-- These modals are dynamically created by admin.js, so no static HTML here -->
-
-    <!-- Load scripts as modules -->
     <script src="../js/api.js?v=<%= Date.now() %>" type="module"></script>
     <script src="../js/auth.js?v=<%= Date.now() %>" type="module"></script>
     <script src="../js/utils.js?v=<%= Date.now() %>" type="module"></script>
