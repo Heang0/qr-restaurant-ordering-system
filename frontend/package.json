@@ -2,7 +2,7 @@
   "name": "qr-frontend",
   "version": "1.0.0",
   "description": "Frontend for QR Restaurant Ordering System",
-  "main": "public/index.html",
+  "main": "public/index.html", 
   "scripts": {
     "start": "echo 'Serving static frontend files'"
   },
