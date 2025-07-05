@@ -9,41 +9,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutBtn.addEventListener('click', logout);
     }
 
-    const dashboardWrapper = document.querySelector('.dashboard-wrapper'); // Get the main wrapper
-
     // Check authentication and redirect if necessary
-    // If checkAuthAndRedirect returns false, a redirect has happened or is pending.
     if (!checkAuthAndRedirect()) {
         console.log("Authentication check failed or redirected.");
-        // The page will now be redirecting. No need to show content.
         return;
     }
     console.log("Authentication successful. Loading admin dashboard.");
 
-    // If authentication is successful, remove the 'content-hidden' class
-    // This will make the dashboard visible.
-    if (dashboardWrapper) {
-        dashboardWrapper.classList.remove('content-hidden');
-    }
-
     const role = localStorage.getItem('role');
     const storeId = localStorage.getItem('storeId');
 
-    // REMOVE THIS REDUNDANT REDIRECT. auth.js already handles this.
-    // if (role !== 'superadmin' && role !== 'admin') {
-    //     window.location.href = 'login.html'; // THIS LINE IS REDUNDANT AND SHOULD BE REMOVED/COMMENTED OUT
-    //     return; // THIS LINE IS REDUNDANT AND SHOULD BE REMOVED/COMMENTED OUT
-    // }
+    // Redirect non-superadmin/admin roles to login
+    if (role !== 'superadmin' && role !== 'admin') {
+        window.location.href = 'login.html';
+        return;
+    }
 
     // --- Sidebar Toggle Elements and Logic ---
     const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-    const toggleSidebarBtnMobile = document.getElementById('toggleSidebarBtnMobile');
+    const dashboardWrapper = document.querySelector('.dashboard-wrapper'); // Get the main wrapper
+    const mainContent = document.querySelector('.main-content'); // Get the main content area
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn'); // Desktop toggle
+    const toggleSidebarBtnMobile = document.getElementById('toggleSidebarBtnMobile'); // Mobile toggle
 
+    /**
+     * Function to update the main content's margin based on sidebar state.
+     * This is crucial for fixed sidebar to not overlap content.
+     */
     function updateMainContentMargin() {
         if (!mainContent || !sidebar) return;
 
+        // Only apply margin adjustments on screens larger than mobile
         if (window.innerWidth > 767) {
             if (sidebar.classList.contains('collapsed')) {
                 mainContent.classList.add('sidebar-collapsed-margin');
@@ -51,44 +47,57 @@ document.addEventListener('DOMContentLoaded', async () => {
                 mainContent.classList.remove('sidebar-collapsed-margin');
             }
         } else {
+            // On mobile, ensure no margin is applied as sidebar is off-canvas
             mainContent.classList.remove('sidebar-collapsed-margin');
         }
     }
 
+    // Event listener for desktop sidebar toggle (collapse/expand)
     if (toggleSidebarBtn) {
         toggleSidebarBtn.addEventListener('click', () => {
             if (sidebar) {
                 sidebar.classList.toggle('collapsed');
-                updateMainContentMargin();
+                updateMainContentMargin(); // Update margin immediately
             }
         });
     }
 
+    // Event listener for mobile sidebar toggle (slide in/out)
     if (toggleSidebarBtnMobile) {
         toggleSidebarBtnMobile.addEventListener('click', () => {
             if (dashboardWrapper) dashboardWrapper.classList.toggle('sidebar-open');
         });
     }
 
+    // Close sidebar when clicking outside (on the overlay) on mobile
     if (dashboardWrapper) {
         dashboardWrapper.addEventListener('click', (event) => {
+            // Check if the dashboardWrapper has 'sidebar-open' class (mobile sidebar is active)
+            // AND if the click target is NOT inside the sidebar itself
+            // AND if the click target is NOT the mobile toggle button
             if (window.innerWidth <= 767 && dashboardWrapper.classList.contains('sidebar-open') &&
                 !sidebar.contains(event.target) &&
                 event.target !== toggleSidebarBtnMobile &&
-                !toggleSidebarBtnMobile.contains(event.target)) {
+                !toggleSidebarBtnMobile.contains(event.target)) { // Also check if click is on icon inside button
                 dashboardWrapper.classList.remove('sidebar-open');
             }
         });
     }
 
+    // NEW: Listen for window resize to adjust sidebar state and margin
     window.addEventListener('resize', () => {
+        // If resizing from mobile to desktop/tablet, ensure sidebar is not 'sidebar-open'
         if (window.innerWidth > 767 && dashboardWrapper.classList.contains('sidebar-open')) {
             dashboardWrapper.classList.remove('sidebar-open');
         }
+        // Apply initial collapsed state and margin for tablets/small laptops on resize
         if (window.innerWidth >= 768 && window.innerWidth <= 1023) {
             if (sidebar) sidebar.classList.add('collapsed');
+        } else if (window.innerWidth > 1023) {
+            // On larger screens, ensure it's not forced collapsed unless toggled
+            // We don't remove 'collapsed' here, as user might have collapsed it manually
         }
-        updateMainContentMargin();
+        updateMainContentMargin(); // Always update margin on resize
     });
 
 
@@ -175,11 +184,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Conditional UI for Superadmin vs Admin ---
     if (role === 'superadmin') {
+        // Hiding these sections as they are only relevant for superadmin.
+        // These elements are not present in admin.html, so this check prevents errors.
         if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
         if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
+        // Ensure only admin-relevant tabs are visible if the user is a regular admin
         const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders'];
-        document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => { // Changed selector to target sidebar nav items
             if (!adminTabs.includes(btn.dataset.tab)) {
                 btn.style.display = 'none';
             }
@@ -188,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // --- Tab Navigation Logic (Adjusted for Sidebar) ---
-    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabButtons = document.querySelectorAll('.tab-btn'); // Selects all nav-item buttons
     const tabContents = document.querySelectorAll('.tab-content');
 
     tabButtons.forEach(button => {
@@ -204,6 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 targetContent.classList.add('active');
             }
 
+            // Close sidebar on mobile after clicking a tab
             if (window.innerWidth <= 767 && dashboardWrapper && dashboardWrapper.classList.contains('sidebar-open')) {
                 dashboardWrapper.classList.remove('sidebar-open');
             }
@@ -426,8 +439,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         menuItemMessage.className = 'message';
         currentImagePreview.innerHTML = '';
         currentImagePreview.style.border = '2px dashed #bdc3c7';
-        isBestSellerCheckbox.checked = false;
-        isAvailableCheckbox.checked = false;
+        isBestSellerCheckbox.checked = false; // Reset checkboxes
+        isAvailableCheckbox.checked = false; // Reset checkboxes
     }
 
     if (itemImageInput) {
@@ -446,6 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 };
                 reader.readAsDataURL(file);
             } else {
+                // If no file is selected (e.g., user cancels), reset preview
                 currentImagePreview.innerHTML = '';
                 currentImagePreview.style.border = '2px dashed #bdc3c7';
             }
@@ -539,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             menuItemMessage.className = 'message';
             
             setTimeout(() => {
-                if (menuItemForm.offsetParent !== null) {
+                if (menuItemForm.offsetParent !== null) { // Check if form is visible
                     menuItemForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
                     console.warn("menuItemForm is not visible, cannot scroll.");
@@ -666,10 +680,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             document.getElementById('addCategoryMessage').className = 'success-message';
             document.getElementById('categoryName').value = '';
-            delete addCategoryForm.dataset.editingId;
+            delete addCategoryForm.dataset.editingId; // Clear editing ID
             submitBtn.textContent = 'Add Category';
             await loadCategories();
-            await loadMenuItems();
+            await loadMenuItems(); // Reload menu items as categories might have changed
         } catch (error) {
             console.error('Error saving category:', error);
             document.getElementById('addCategoryMessage').textContent = 'Failed to save category: ' + (error.message || 'Server error');
@@ -747,7 +761,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.body.removeChild(successModal);
             });
             await loadCategories();
-            await loadMenuItems();
+            await loadMenuItems(); // Reload menu items as categories might have changed
         } catch (error) {
             console.error('Error deleting category:', error);
             const errorModal = document.createElement('div');
@@ -771,6 +785,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // These functions are typically for superadmin, but are kept here as stubs
+    // to avoid reference errors if they are called conditionally in other parts of the code.
     async function loadStores() {
         console.log("loadStores called in admin.js - this function is typically for superadmin.");
     }
@@ -812,6 +828,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Load tables for the current store
     async function loadTables() {
         if (!storeId) {
             if(tablesListMessage) {
@@ -829,13 +846,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            await loadStoreDetails();
+            // Fetch store details to get the slug *before* generating QR codes
+            // This is crucial to ensure currentStoreDetails.slug is populated
+            await loadStoreDetails(); // Ensure currentStoreDetails is loaded
 
             tables.forEach(table => {
                 const tableCard = document.createElement('div');
                 tableCard.classList.add('table-card'); 
                 const qrCodeId = `qr-${table._id}`;
-                const storeSlug = currentStoreDetails && currentStoreDetails.slug ? currentStoreDetails.slug : 'default-store';
+                // MODIFIED: Use storeSlug in QR code URL
+                // Check if currentStoreDetails and slug exist before using
+                const storeSlug = currentStoreDetails && currentStoreDetails.slug ? currentStoreDetails.slug : 'default-store'; // Fallback
                 const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${storeSlug}&table=${table.tableId}`;
                 tableCard.innerHTML = `
                     <p class="table-id-label">Table: ${table.tableId}</p>
@@ -847,15 +868,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
                 if(tablesListDiv) tablesListDiv.appendChild(tableCard);
-                generateQrCode(orderPageUrl, qrCodeId);
+                generateQrCode(orderPageUrl, qrCodeId); // Assuming generateQrCode is available globally from utils.js
             });
 
+            // Add event listeners for table action buttons
             tablesListDiv.querySelectorAll('.order-link-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     const tableId = e.target.dataset.tableId;
-                    const storeSlug = currentStoreDetails && currentStoreDetails.slug ? currentStoreDetails.slug : 'default-store';
+                    // MODIFIED: Use storeSlug in order page URL
+                    const storeSlug = currentStoreDetails && currentStoreDetails.slug ? currentStoreDetails.slug : 'default-store'; // Fallback
                     const orderPageUrl = `${window.location.origin}/order.html?storeSlug=${storeSlug}&table=${tableId}`;
-                    window.open(orderPageUrl, '_blank');
+                    window.open(orderPageUrl, '_blank'); // Open in new tab
                 });
             });
 
@@ -877,6 +900,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Fetch and display live orders
     async function fetchAndDisplayOrders() {
         if (!storeId) {
             if(ordersMessage) {
@@ -889,6 +913,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const currentOrders = await api.orders.getStoreOrders();
             
+            // Group orders by table ID
             const ordersByTable = currentOrders.reduce((acc, order) => {
                 if (!acc[order.tableId]) {
                     acc[order.tableId] = [];
@@ -900,6 +925,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const previousOrderCount = Object.values(previousOrders).flat().length;
             const currentOrderCount = Object.values(ordersByTable).flat().length;
             
+            // Play sound and show alert for new orders
             if (currentOrderCount > previousOrderCount) {
                 if (notificationSound) {
                     notificationSound.play().catch(error => {
@@ -910,17 +936,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     newOrderAlert.classList.add('show');
                     setTimeout(() => {
                         newOrderAlert.classList.remove('show');
-                    }, 3000);
+                    }, 3000); // Hide after 3 seconds
                 }
             }
             
+            // Update dashboard overview counts
             const pendingOrders = currentOrders.filter(o => o.status === 'Pending').length;
             const readyOrders = currentOrders.filter(o => o.status === 'Ready').length;
             if (totalLiveOrdersEl) totalLiveOrdersEl.textContent = currentOrders.length;
             if (pendingOrdersCountEl) pendingOrdersCountEl.textContent = pendingOrders;
             if (readyOrdersCountEl) readyOrdersCountEl.textContent = readyOrders;
 
-            if (ordersDashboard) ordersDashboard.innerHTML = '';
+            if (ordersDashboard) ordersDashboard.innerHTML = ''; // Clear previous display
 
             if (Object.keys(ordersByTable).length === 0) {
                 if (ordersDashboard) ordersDashboard.innerHTML = '<p class="empty-state">No live orders at the moment.</p>';
@@ -932,6 +959,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const tableOrders = ordersByTable[tableId];
                 const prevTableOrders = previousOrders[tableId] || [];
 
+                // Check for new orders or status changes for highlighting
                 if (tableOrders.length > prevTableOrders.length) {
                     newOrderTables.add(tableId);
                 } else {
@@ -950,11 +978,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tableOrderCard.classList.add('new-order-highlight');
                     setTimeout(() => {
                         tableOrderCard.classList.remove('new-order-highlight');
-                    }, 3000);
+                    }, 3000); // Remove highlight after 3 seconds
                 }
                 
-                const pendingItemsCount = tableOrders.filter(o => o.status === 'Pending').length;
-                const latestStatus = tableOrders[0] ? tableOrders[0].status : 'N/A';
+                const pendingItemsCount = tableOrders.filter(order => order.status === 'Pending').length;
+                const latestStatus = tableOrders[0] ? tableOrders[0].status : 'N/A'; // Assuming latest order is first
+                // MODIFIED: Pass store slug to view details button if needed for future
                 tableOrderCard.innerHTML = `
                     <div class="table-info-header">
                         <h3>Table: ${tableId}</h3>
@@ -966,12 +995,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
                 if(ordersDashboard) ordersDashboard.appendChild(tableOrderCard);
             }
-            previousOrders = ordersByTable;
+            previousOrders = ordersByTable; // Update previous orders for next poll
 
             if(ordersDashboard) {
                 ordersDashboard.querySelectorAll('.view-table-orders-btn').forEach(button => {
-                    button.addEventListener('click', async (e) => {
+                    button.addEventListener('click', async (e) => { // Made async to await API call
                         const tableId = e.target.dataset.tableId;
+                        // Fetch the latest orders for this specific table when opening the modal
                         const latestOrdersForTable = await api.orders.getStoreOrders()
                             .then(orders => orders.filter(o => o.tableId === tableId));
                         displayOrderDetailsModal(tableId, latestOrdersForTable);
@@ -989,12 +1019,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // MODIFIED: Display order details in a modal to show remarks
     function displayOrderDetailsModal(tableId, orders) {
-        currentOrdersForModal = orders;
+        currentOrdersForModal = orders; // Store the orders for receipt functions
         
         if(modalTableIdSpan) modalTableIdSpan.textContent = tableId;
-        if(modalOrderListDiv) modalOrderListDiv.innerHTML = '';
-        if(modalOrdersMessage) modalOrdersMessage.textContent = '';
+        if(modalOrderListDiv) modalOrderListDiv.innerHTML = ''; // Clear previous content
+        if(modalOrdersMessage) modalOrdersMessage.textContent = ''; // Clear previous messages
 
         let totalAllOrdersPrice = 0;
         if (orders && orders.length > 0) {
@@ -1015,11 +1046,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 modalOrdersMessage.className = 'empty-state';
             }
             if(clearTableHistoryBtn) clearTableHistoryBtn.disabled = true;
+            // Disable print/download buttons if no orders
             if(printReceiptBtn) printReceiptBtn.disabled = true;
             if(downloadReceiptBtn) downloadReceiptBtn.disabled = true;
             return;
         }
 
+        // Enable print/download buttons if orders exist
         if(clearTableHistoryBtn) clearTableHistoryBtn.disabled = false;
         if(printReceiptBtn) printReceiptBtn.disabled = false;
         if(downloadReceiptBtn) downloadReceiptBtn.disabled = false;
@@ -1034,7 +1067,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <li>
                             ${item.menuItemId.imageUrl ? `<img src="${item.menuItemId.imageUrl}" class="modal-item-img" alt="${item.menuItemId.name}">` : ''}
                             <span>${item.menuItemId.name} x ${item.quantity} ($${item.menuItemId.price.toFixed(2)})</span>
-                            ${item.remark ? `<p class="admin-item-remark">Note: ${item.remark}</p>` : ''}
+                            ${item.remark ? `<p class="admin-item-remark">Note: ${item.remark}</p>` : ''} <!-- ADDED: Display remark -->
                         </li>
                     `).join('')}
                 </ul>
@@ -1052,6 +1085,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(modalOrderListDiv) modalOrderListDiv.appendChild(orderDiv);
         });
 
+        // Add event listeners for status change selects
         if(modalOrderListDiv) {
             modalOrderListDiv.querySelectorAll('.order-status-select').forEach(select => {
                 select.addEventListener('change', async (e) => {
@@ -1063,7 +1097,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             modalOrdersMessage.textContent = `Order ${orderId.substring(0, 8)}... status updated to ${newStatus}.`;
                             modalOrdersMessage.className = 'message success-message';
                         }
+                        // Re-fetch and display orders to reflect status change
                         fetchAndDisplayOrders();
+                        // Also update the modal itself to show the new status
+                        // Fetch latest orders for the specific table again
                         const updatedOrdersForModal = await api.orders.getStoreOrders().then(orders => orders.filter(o => o.tableId === tableId));
                         displayOrderDetailsModal(tableId, updatedOrdersForModal);
                     } catch (error) {
@@ -1082,15 +1119,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if(orderDetailsModal) {
-            orderDetailsModal.style.display = 'flex';
-            document.body.classList.add('modal-open');
+            orderDetailsModal.style.display = 'flex'; // Show the modal as flex to center content
+            document.body.classList.add('modal-open'); // Prevent body scrolling
         }
     }
 
+    // MODIFIED: Generate Receipt HTML to include remarks
     function generateReceiptHtml(orders, storeInfo) {
         let itemsHtml = '';
         let subtotal = 0;
         
+        // Flatten all items from all orders for the receipt
         const allItems = orders.flatMap(order => order.items);
         
         allItems.forEach(item => {
@@ -1100,13 +1139,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <tr>
                     <td>
                         ${item.menuItemId.name} x ${item.quantity}
-                        ${item.remark ? `<br><small>(${item.remark})</small>` : ''}
+                        ${item.remark ? `<br><small>(${item.remark})</small>` : ''} <!-- ADDED: Remark on receipt -->
                     </td>
                     <td>$${itemPrice.toFixed(2)}</td>
                 </tr>
             `;
         });
         
+        // Use storeInfo from the fetched details
         const storeName = storeInfo.name || "SHOP NAME";
         const storeAddress = storeInfo.address || "No Address Provided";
         const storePhone = storeInfo.phone || "No Phone Provided";
@@ -1172,6 +1212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }
 
+    // Function to handle printing the receipt
     function printReceipt() {
         if (!currentOrdersForModal || currentOrdersForModal.length === 0 || !currentStoreDetails) {
             modalOrdersMessage.textContent = 'No order data available for printing.';
@@ -1187,6 +1228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         printWindow.print();
     }
 
+    // Function to handle downloading the receipt as HTML
     function downloadReceipt() {
         if (!currentOrdersForModal || currentOrdersForModal.length === 0 || !currentStoreDetails) {
             modalOrdersMessage.textContent = 'No order data available for download.';
@@ -1204,10 +1246,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url); // Clean up
     }
 
+
+    // Delete an admin user (Superadmin only)
     async function deleteAdmin(id) {
+        // Using a custom modal for confirmation instead of alert()
         const confirmDelete = await new Promise(resolve => {
             const modal = document.createElement('div');
             modal.classList.add('modal');
@@ -1227,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Show modal
 
             const closeBtn = modal.querySelector('.close-button');
             const confirmBtn = modal.querySelector('#confirmDeleteBtn');
@@ -1255,6 +1300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         try {
             await api.users.deleteAdmin(id);
+            // Using a custom modal for success message instead of alert()
             const successModal = document.createElement('div');
             successModal.classList.add('modal');
             successModal.innerHTML = `
@@ -1273,9 +1319,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 successModal.style.display = 'none';
                 document.body.removeChild(successModal);
             });
-            loadAdmins();
+            loadAdmins(); // Reload admins list
         } catch (error) {
             console.error('Error deleting admin:', error);
+            // Using a custom modal for error message instead of alert()
             const errorModal = document.createElement('div');
             errorModal.classList.add('modal');
             errorModal.innerHTML = `
@@ -1297,7 +1344,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Delete a table
     async function deleteTable(id) {
+        // Using a custom modal for confirmation instead of alert()
         const confirmDelete = await new Promise(resolve => {
             const modal = document.createElement('div');
             modal.classList.add('modal');
@@ -1317,7 +1366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Show modal
 
             const closeBtn = modal.querySelector('.close-button');
             const confirmBtn = modal.querySelector('#confirmDeleteBtn');
@@ -1345,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         try {
             await api.tables.deleteTable(id);
+            // Using a custom modal for success message instead of alert()
             const successModal = document.createElement('div');
             successModal.classList.add('modal');
             successModal.innerHTML = `
@@ -1363,10 +1413,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 successModal.style.display = 'none';
                 document.body.removeChild(successModal);
             });
-            loadTables();
-            fetchAndDisplayOrders();
+            loadTables(); // Reload tables list
+            fetchAndDisplayOrders(); // Refresh orders dashboard
         } catch (error) {
             console.error('Error deleting table:', error);
+            // Using a custom modal for error message instead of alert()
             const errorModal = document.createElement('div');
             errorModal.classList.add('modal');
             errorModal.innerHTML = `
@@ -1388,7 +1439,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Clear all active orders for a specific table
     async function clearTableOrders(tableId) {
+        // Using a custom modal for confirmation instead of alert()
         const confirmClear = await new Promise(resolve => {
             const modal = document.createElement('div');
             modal.classList.add('modal');
@@ -1408,7 +1461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             document.body.appendChild(modal);
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Show modal
 
             const closeBtn = modal.querySelector('.close-button');
             const confirmBtn = modal.querySelector('#confirmClearBtn');
@@ -1441,13 +1494,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 modalOrdersMessage.textContent = response.message;
                 modalOrdersMessage.className = 'message success-message';
             }
+            // Close modal after a short delay
             setTimeout(() => {
                 if(orderDetailsModal) orderDetailsModal.style.display = 'none';
                 document.body.classList.remove('modal-open');
-                if(modalOrdersMessage) modalOrdersMessage.textContent = '';
+                if(modalOrdersMessage) modalOrdersMessage.textContent = ''; // Clear message
             }, 2000);
             
-            fetchAndDisplayOrders();
+            fetchAndDisplayOrders(); // Refresh orders dashboard
         } catch (error) {
             console.error('Error clearing table orders:', error);
             if(modalOrdersMessage) {
@@ -1457,10 +1511,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Event Listeners for Modals
     if (closeOrderDetailsModalBtn) {
         closeOrderDetailsModalBtn.addEventListener('click', () => {
             if(orderDetailsModal) orderDetailsModal.style.display = 'none';
-            document.body.classList.remove('modal-open');
+            document.body.classList.remove('modal-open'); // Re-enable body scrolling
         });
     }
 
@@ -1468,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.addEventListener('click', (event) => {
             if (event.target == orderDetailsModal) {
                 orderDetailsModal.style.display = 'none';
-                document.body.classList.remove('modal-open');
+                document.body.classList.remove('modal-open'); // Re-enable body scrolling
             }
         });
     }
@@ -1482,6 +1537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
+    // Event listeners for receipt buttons
     if (printReceiptBtn) {
         printReceiptBtn.addEventListener('click', printReceipt);
     }
@@ -1489,33 +1545,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         downloadReceiptBtn.addEventListener('click', downloadReceipt);
     }
 
+    // Store Branding Form Submission
     if (storeInfoForm) {
         storeInfoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData();
             
+            // Append all store info fields
             formData.append('name', storeNameInputBranding.value.trim());
             formData.append('address', storeAddressInput.value.trim());
             formData.append('phone', storePhoneInput.value.trim());
 
+            // Append logo file if selected
             if (storeLogoInput.files[0]) {
                 formData.append('logo', storeLogoInput.files[0]);
             }
 
+            // Log the FormData content before sending it
             console.log('FormData being sent:');
             for (const pair of formData.entries()) {
                 console.log(pair[0] + ', ' + pair[1]);
             }
 
+            // Add loading state to the button
             const originalBtnText = updateStoreInfoBtn.textContent;
             setLoading(updateStoreInfoBtn, true);
 
             try {
+                // Use the storeId from local storage
                 await api.stores.updateStore(storeId, formData);
                 storeLogoMessage.textContent = 'Store information and logo updated successfully!';
                 storeLogoMessage.className = 'success-message';
-                storeLogoInput.value = null;
-                await loadStoreDetails();
+                storeLogoInput.value = null; // Clear file input
+                await loadStoreDetails(); // Reload to show updated info
             } catch (error) {
                 console.error('Error updating store info:', error);
                 storeLogoMessage.textContent = 'Failed to update store info: ' + (error.message || 'Server error');
@@ -1526,6 +1588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         
+        // Add image preview logic for the logo input
         if (storeLogoInput) {
             storeLogoInput.addEventListener('change', () => {
                 const file = storeLogoInput.files[0];
@@ -1546,6 +1609,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Handle add table form submission
     if (addTableForm) {
         addTableForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1561,11 +1625,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             setLoading(submitBtn, true);
 
             try {
+                // FIX: Ensure an object with 'tableId' property is sent
                 const data = await api.tables.addTable({ tableId: newTableId }); 
                 addTableMessage.textContent = data.message;
                 addTableMessage.className = 'success-message';
-                newTableIdInput.value = '';
-                await loadTables();
+                newTableIdInput.value = ''; // Clear input field
+                await loadTables(); // Reload tables to show the new one
             } catch (error) {
                 console.error('Error adding table:', error);
                 addTableMessage.textContent = 'Failed to add table: ' + (error.message || 'Server error');
@@ -1577,33 +1642,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+
+    // Initial loads
+    // Load superadmin-specific data only if the role is superadmin
     if (role === 'superadmin') {
+        // These sections are not present in admin.html, so hide them to prevent errors
         if (document.getElementById('tab-stores')) document.getElementById('tab-stores').style.display = 'none';
         if (document.getElementById('tab-users')) document.getElementById('tab-users').style.display = 'none';
     } else if (role === 'admin') {
+        // Ensure only admin-relevant tabs are visible if the user is a regular admin
         const adminTabs = ['overview', 'categories', 'menu', 'branding', 'tables', 'orders'];
-        document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => { // Changed selector to target sidebar nav items
             if (!adminTabs.includes(btn.dataset.tab)) {
                 btn.style.display = 'none';
             }
         });
     }
     
+    // Load admin-specific data (also relevant for superadmin if they manage a store)
     if (role === 'admin' || role === 'superadmin') {
-        await loadStoreDetails();
-        await loadStoreLogo();
+        await loadStoreDetails(); // Load store details for branding tab
+        await loadStoreLogo(); // Load store logo for branding tab
         await loadTables();
         await loadCategories();
         await loadMenuItems();
         
+        // Start polling for live orders if admin
         if (role === 'admin') {
             fetchAndDisplayOrders();
-            setInterval(fetchAndDisplayOrders, 5000);
+            setInterval(fetchAndDisplayOrders, 5000); // Poll every 5 seconds
         }
     }
 
+    // Initial call to set correct margin and sidebar state based on current window size
+    // This runs once when the page loads
     if (window.innerWidth >= 768 && window.innerWidth <= 1023) {
         if (sidebar) sidebar.classList.add('collapsed');
     }
-    updateMainContentMargin();
+    updateMainContentMargin(); // Call this once on load to set initial margin
 });
