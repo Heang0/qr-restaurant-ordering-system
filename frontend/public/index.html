@@ -3,521 +3,725 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Dashboard - QR Restaurant</title>
-    <link rel="stylesheet" href="style.css">
+    <title>OrderHey! - Elevate Your Restaurant Experience with QR Menus</title> <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
     <style>
-        /* --- General Styles --- */
-        @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap');
-        
-        * {
-            box-sizing: border-box;
-        }
-
+        /* This internal style block is for specific overrides or new rules unique to this page if needed,
+           but most styles will go into style.css to keep it clean. */
         body {
-            font-family: "Battambang", cursive, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5;
-            color: #2c3e50;
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Inter', sans-serif; /* Using Inter for a modern landing page look */
+            color: #333;
+            background-color: #f8f9fa;
         }
-
-        .message {
-            font-weight: bold;
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .success-message {
-            color: #28a745;
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error-message {
-            color: #dc3545;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-
-        /* --- Main Layout --- */
-        .app-header {
-            background-color: #fff;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        .main-header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 15px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
         }
-        .app-header h1 {
+        .main-header .logo-text {
             font-size: 1.8em;
-            margin: 0;
-            color: #34495e;
+            font-weight: 800;
+            color: #e74c3c; /* Your main color */
         }
-
-        .header-btn {
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: #e74c3c; /* Red for logout */
-            color: white;
-            border: none;
-            border-radius: 8px;
+        .main-header .nav-links a {
+            margin-left: 30px;
+            text-decoration: none;
+            color: #000; /* CHANGED: Black color for navbar text */
             font-weight: 600;
+            text-transform: uppercase; /* CHANGED: Uppercase text */
+            transition: color 0.2s;
+            font-size: 0.95em; /* Slightly smaller for compactness */
+            letter-spacing: 0.5px; /* Added for professional look */
+        }
+        .main-header .nav-links a:hover {
+            color: #e74c3c; /* Your main color */
+        }
+        /* Hamburger menu icon */
+        .hamburger-menu {
+            display: none; /* Hidden by default on desktop */
+            font-size: 1.8em;
+            color: #333;
             cursor: pointer;
-            transition: background-color 0.3s;
+            z-index: 1001; /* Above mobile menu */
         }
-        .header-btn:hover {
-            background-color: #c0392b;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 25px;
-            display: flex;
+        /* Mobile navigation links */
+        .mobile-nav-links {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0; /* Starts off-screen */
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
             flex-direction: column;
-            gap: 25px;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            z-index: 1000;
+            transform: translateX(-100%); /* Start off-screen to the left */
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
-
-        .card-section {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        .mobile-nav-links.active {
+            transform: translateX(0); /* Slide in */
+            display: flex; /* Show when active */
         }
-
-        .section-title {
-            text-align: center;
-            font-size: 2em;
+        .mobile-nav-links a {
+            font-size: 1.8em;
+            color: #333;
+            text-decoration: none;
             font-weight: 700;
-            color: #2980b9; /* Blue for titles */
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #f0f2f5;
+            text-transform: uppercase; /* CHANGED: Uppercase text */
+            transition: color 0.2s;
+        }
+        .mobile-nav-links a:hover {
+            color: #e74c3c;
         }
 
-        .section-subtitle {
-            font-size: 1.4em;
-            font-weight: 600;
-            color: #34495e; /* Darker grey */
-            margin-top: 20px;
-            margin-bottom: 15px;
-        }
 
-        /* --- Forms --- */
-        .form-card {
+        .hero-section {
             display: flex;
-            flex-direction: column;
-            gap: 18px;
-            max-width: 600px;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 40px;
+            max-width: 1200px;
             margin: 0 auto;
+            gap: 50px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            min-height: 80vh; /* Ensure hero section takes up most of the viewport height */
         }
-
-        label {
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #bdc3c7;
-            border-radius: 10px; /* Rounded corners */
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
-            outline: none;
-        }
-
-        /* --- Buttons --- */
-        .primary-btn {
-            background-color: #e74c3c; /* Red color for primary actions */
-            color: white;
-            padding: 14px 25px;
-            border: none;
-            border-radius: 10px; /* Rounded corners */
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 700;
-            transition: background-color 0.3s, transform 0.1s;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2); /* Red shadow */
-            width: 100%;
-        }
-
-        .primary-btn:hover {
-            background-color: #c0392b;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
-        }
-        
-        .secondary-btn {
-            background-color: #95a5a6; /* Grey for secondary actions */
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s;
-        }
-        .secondary-btn:hover {
-            background-color: #7f8c8d;
-        }
-
-        .delete-btn {
-            background-color: #e74c3c; /* Red for delete */
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s;
-        }
-
-        .delete-btn:hover {
-            background-color: #c0392b;
-        }
-        
-        /* --- Table --- */
-        .styled-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 25px 0;
-            font-size: 0.9em;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            border-radius: 15px; /* Rounded corners for the table container */
-            overflow: hidden; /* Ensures the rounded corners are visible */
-        }
-
-        .styled-table thead tr {
-            background-color: #2980b9; /* Blue header */
-            color: #ffffff;
+        .hero-content {
+            flex: 1;
+            min-width: 300px; /* Minimum width for content block */
+            max-width: 550px;
             text-align: left;
         }
-
-        .styled-table th,
-        .styled-table td {
-            padding: 12px 15px;
-            border: none;
+        .hero-content h1 {
+            font-size: 3.5em;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: #333;
         }
-
-        .styled-table tbody tr {
-            border-bottom: 1px solid #dddddd;
-            transition: background-color 0.3s;
+        .hero-content p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 30px;
         }
-
-        .styled-table tbody tr:nth-of-type(even) {
-            background-color: #f3f3f3; /* Light grey for even rows */
-        }
-
-        .styled-table tbody tr:last-of-type {
-            border-bottom: 2px solid #2980b9;
-        }
-        
-        .styled-table tbody tr:hover {
-            background-color: #ecf0f1;
-        }
-
-        .table-actions {
+        .hero-buttons {
             display: flex;
-            gap: 8px;
+            gap: 20px;
+            flex-wrap: wrap;
         }
-
-        /* --- Modal --- */
-        .modal {
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none; /* Set to none by default. JS will change this to 'flex' */
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
+        .hero-buttons .btn-primary {
+            background-color: #e74c3c; /* Your main color */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.2s;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
         }
-
-        .modal-content {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 95%;
-            position: relative;
+        .hero-buttons .btn-primary:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
         }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+        .hero-buttons .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            border: 1px solid #ddd;
+            transition: background-color 0.2s, transform 0.2s;
         }
-
-        .modal-header h2 {
-            margin: 0;
-            color: #2980b9;
+        .hero-buttons .btn-secondary:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
         }
-
-        .close-button {
-            color: #aaa;
-            font-size: 2em;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-        .close-button:hover {
-            color: #555;
-        }
-
-        /* --- Responsive Design --- */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                margin: 15px auto;
-            }
-            .app-header {
-                padding: 10px 15px;
-            }
-            .app-header h1 {
-                font-size: 1.5em;
-            }
-            .card-section {
-                padding: 20px;
-            }
-            .section-title {
-                font-size: 1.6em;
-            }
-            .styled-table {
-                font-size: 0.8em;
-            }
-            .styled-table th, .styled-table td {
-                padding: 10px;
-            }
-            .delete-btn, .secondary-btn {
-                padding: 6px 10px;
-                font-size: 0.75em;
-            }
-            .form-card {
-                gap: 15px;
-            }
-            .modal-content {
-                padding: 20px;
-            }
-        }
-
-        /* --- NEW: Specific styles for the password reset modal (modal-pw) --- */
-        .modal-pw {
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-        }
-
-        .modal-pw .modal-content {
+        .hero-image-container {
+            flex: 1;
+            min-width: 300px; /* Minimum width for image block */
             max-width: 450px;
-            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative; /* For positioning the frame elements */
+            padding: 20px; /* Give space for the frame outside the iframe */
+            /* REMOVED: perspective for 3D effect */
+        }
+        /* Phone frame styling (iPhone 13 Pro Max - flat) */
+        .phone-frame {
+            position: relative;
+            width: 390px; /* iPhone 13 Pro Max width (approx) */
+            height: 844px; /* iPhone 13 Pro Max height (approx) */
+            background-color: #333; /* Bezel color */
+            border-radius: 40px; /* Outer frame rounded corners */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25); /* Shadow */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Keep content inside frame */
+            /* REMOVED: transform-style and transform for 3D effect */
+        }
+        /* Screen inside the frame */
+        .phone-frame iframe {
+            width: calc(100% - 20px); /* Screen width (10px bezel on each side) */
+            height: calc(100% - 20px); /* Screen height (10px bezel on top/bottom) */
+            border: none; /* No border on iframe itself */
+            border-radius: 30px; /* Inner screen rounded corners */
+            background-color: #fff; /* Fallback for iframe background */
+            z-index: 1; /* Ensure iframe is behind notch */
+        }
+        /* Notch simulation for iPhone 13 Pro Max */
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 15px; /* Position from top of the phone frame */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px; /* Width of the notch */
+            height: 30px; /* Height of the notch */
+            background-color: #000; /* Color of the notch */
+            border-radius: 15px; /* Rounded corners for the notch */
+            z-index: 2; /* Above the iframe */
+        }
+        /* Side buttons simulation (for realism) */
+        .phone-frame .volume-up::before,
+        .phone-frame .volume-down::before,
+        .phone-frame .silent-switch::before {
+            content: '';
+            position: absolute;
+            left: -3px; /* Position slightly outside the frame */
+            width: 6px;
+            background-color: #555;
+            border-radius: 3px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+        .phone-frame .silent-switch::before {
+            top: 110px; /* Silent switch position */
+            height: 20px;
+        }
+        .phone-frame .volume-up::before {
+            top: 160px; /* Volume up position */
+            height: 50px;
+        }
+        .phone-frame .volume-down::before {
+            top: 230px; /* Volume down position */
+            height: 50px;
+        }
+        /* Power button on the right */
+        .phone-frame .power-button::before {
+            content: '';
+            position: absolute;
+            right: -3px; /* Position slightly outside the frame */
+            top: 120px; /* Power button position */
+            width: 6px; /* Thickness of button */
+            height: 70px; /* Length of power button */
+            background-color: #555; /* Button color */
+            border-radius: 3px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5); /* Inner shadow for depth */
         }
 
-        .modal-pw .modal-header {
-            padding-bottom: 15px;
+
+        /* Benefits Section */
+        .benefits-section {
+            background-color: #ffffff;
+            padding: 80px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .benefits-section h2 {
+            font-size: 2.8em;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 50px;
+        }
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .benefit-card {
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #eee;
+        }
+        .benefit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        .benefit-card .icon {
+            font-size: 3em;
+            color: #e74c3c; /* Your main color */
             margin-bottom: 20px;
         }
-
-        .modal-pw .form-card {
-            gap: 15px;
+        .benefit-card h3 {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .benefit-card p {
+            font-size: 1em;
+            color: #666;
+            line-height: 1.6;
         }
 
-        .modal-pw label {
-            margin-bottom: 0;
-        }
 
-        .modal-pw input[type="password"] {
+        /* Admin Control Section */
+        .admin-control-section {
+            background-color: #f8f9fa; /* Changed background for contrast */
+            padding: 80px 40px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .admin-control-section h2 {
+            font-size: 2.8em;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 20px; /* Reduced margin for description */
+        }
+        .admin-control-section .section-description { /* Added specific style for description */
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 50px; /* More space below description */
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .admin-control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        .admin-feature-card {
+            background-color: #ffffff; /* White background for admin cards */
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .admin-feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        .admin-feature-card .icon {
+            font-size: 2.5em;
+            color: #e74c3c; /* Your main color */
+            margin-bottom: 20px;
+            background-color: rgba(231, 76, 60, 0.1); /* Light background for icon */
+            padding: 15px;
+            border-radius: 50%;
+        }
+        .admin-feature-card h3 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #333;
             margin-bottom: 10px;
         }
-
-        .modal-pw .message {
-            margin-top: 15px;
+        .admin-feature-card p {
+            font-size: 1em;
+            color: #666;
+            line-height: 1.6;
         }
-        /* Specific styling for the Reset Password button in admin table */
-        .reset-password-btn {
-            background-color: #3498db; /* Blue color for reset password */
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-size: 0.9em;
+
+
+        /* Pricing Section */
+        .pricing-section {
+            background-color: #ffffff; /* Changed background for contrast */
+            padding: 80px 40px;
+            text-align: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+        }
+        .pricing-section h2 {
+            font-size: 2.8em;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 50px;
+        }
+        .pricing-card {
+            background-color: #f8f9fa; /* Changed background for contrast */
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            margin: 0 auto; /* Center single card */
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s; /* Added transition for hover */
+        }
+        .pricing-card:hover { /* Added hover effect for pricing card */
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        .pricing-card h3 {
+            font-size: 2em;
+            font-weight: 700;
+            color: #e74c3c; /* Your main color */
+            margin-bottom: 10px;
+        }
+        .pricing-card .price {
+            font-size: 3em;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .pricing-card .price span {
+            font-size: 0.5em;
             font-weight: 600;
-            transition: background-color 0.2s;
-            margin-right: 5px; /* Space between reset and delete */
+            color: #777;
+        }
+        .pricing-card ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .pricing-card ul li {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .pricing-card ul li i {
+            color: #2ecc71; /* Green checkmark */
+            margin-right: 10px;
+        }
+        .pricing-card .btn-primary {
+            width: 100%;
+            display: block; /* ENSURED: Make it a block-level button */
         }
 
-        .reset-password-btn:hover {
-            background-color: #2980b9;
+        /* Footer */
+        .main-footer {
+            background-color: #333;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            font-size: 0.9em;
+            font-weight: bold; /* ADDED: Bold footer text */
+        }
+        .main-footer a {
+            color: #e74c3c; /* Your main color */
+            text-decoration: none;
+        }
+        .main-footer a:hover {
+            text-decoration: underline;
+        }
+        .social-icons { /* ADDED: Social icons styling */
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .social-icons a {
+            color: white;
+            font-size: 1.5em;
+            margin: 0 10px;
+            transition: color 0.2s;
+        }
+        .social-icons a:hover {
+            color: #e74c3c;
         }
 
-        /* Ensure table actions have space for new button */
-        .styled-table .table-actions {
-            display: flex;
-            gap: 5px; /* Smaller gap between buttons */
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-            justify-content: flex-end; /* Align buttons to the right */
-        }
 
-        /* Adjust column width for actions if needed */
-        .styled-table th:nth-child(3),
-        .styled-table td:nth-child(3) {
-            width: 200px; /* Adjust as needed to fit buttons */
-            min-width: 180px; /* Ensure minimum width */
-        }
-
-        /* Responsive adjustments for table actions on very small screens */
-        @media (max-width: 480px) {
-            .styled-table .table-actions {
-                flex-direction: column; /* Stack buttons vertically */
-                align-items: stretch; /* Make them full width */
-                gap: 8px;
+        /* Responsive adjustments */
+        @media (max-width: 992px) { /* Tablet breakpoint */
+            .hero-section {
+                padding: 60px 30px;
+                gap: 30px;
             }
-            .styled-table th:nth-child(3),
-            .styled-table td:nth-child(3) {
-                width: auto; /* Allow width to be flexible */
+            .hero-content h1 {
+                font-size: 3em;
+            }
+            .hero-content p {
+                font-size: 1em;
+            }
+            .benefits-section, .admin-control-section, .pricing-section { /* Added admin-control-section */
+                padding: 60px 30px;
+            }
+            .benefits-section h2, .admin-control-section h2, .pricing-section h2 { /* Added admin-control-section */
+                font-size: 2.2em;
+            }
+            .benefit-card h3 {
+                font-size: 1.3em;
+            }
+            .benefit-card p {
+                font-size: 0.95em;
+            }
+            /* Phone frame scaling on tablet */
+            .phone-frame {
+                transform: scale(0.9);
+            }
+            .admin-control-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjust grid for tablet */
+            }
+        }
+
+        @media (max-width: 768px) { /* Mobile breakpoint */
+            .main-header {
+                padding: 15px 20px;
+            }
+            .main-header .nav-links {
+                display: none; /* Hide desktop nav links */
+            }
+            .hamburger-menu {
+                display: block; /* Show hamburger menu */
+            }
+            .hero-section {
+                padding: 50px 20px 0; /* Reduced bottom padding */
+                flex-direction: column; /* Stack content vertically */
+                text-align: center;
+            }
+            .hero-content, .hero-image-container {
                 min-width: unset;
+                max-width: 100%;
+            }
+            .hero-image-container {
+                 /* Make container shorter to accommodate scaled element */
+                min-height: 450px; 
+            }
+            .hero-content h1 {
+                font-size: 2.5em;
+            }
+            .hero-content p {
+                font-size: 1em;
+            }
+            .hero-buttons {
+                justify-content: center; /* Center buttons when stacked */
+                width: 100%;
+            }
+            .hero-buttons .btn-primary, .hero-buttons .btn-secondary {
+                flex-grow: 1; /* Make buttons fill width */
+                max-width: 100%;
+            }
+            .benefits-section, .admin-control-section, .pricing-section { /* Added admin-control-section */
+                padding: 40px 20px;
+            }
+            .benefits-section h2, .admin-control-section h2, .pricing-section h2 { /* Added admin-control-section */
+                font-size: 2em;
+            }
+            .pricing-card {
+                margin: 20px auto;
+            }
+            /* Phone frame scaling on mobile */
+            .phone-frame {
+                 /* Reset properties that interfere with scaling */
+                width: 390px;
+                height: 844px;
+                max-width: none;
+                
+                /* ✅ FIX: Scale the element down to look like the example */
+                transform: scale(0.8);
+                margin-top: -80px; /* Adjust margin to pull the scaled element up */
+            }
+            .phone-frame iframe {
+                width: calc(100% - 20px); 
+                height: calc(100% - 20px);
+                border-radius: 30px; 
+            }
+            .phone-frame::before { /* Notch adjustment for smaller phones */
+                top: 15px;
+                width: 150px;
+                height: 30px;
+                border-radius: 15px;
+            }
+            .phone-frame .volume-up::before,
+            .phone-frame .volume-down::before,
+            .phone-frame .silent-switch::before,
+            .phone-frame .power-button::before {
+                width: 6px; /* Thinner side buttons */
             }
         }
     </style>
 </head>
 <body>
-    <header class="app-header">
-        <h1>Super Admin Dashboard</h1>
-        <button id="logoutBtn" class="header-btn">Logout</button>
+    <header class="main-header">
+        <div class="logo-text">OrderHey!</div> <nav class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#admin-control">Admin Control</a> <a href="#pricing">Pricing</a>
+            <a href="login.html">Login</a>
+        </nav>
+        <div class="hamburger-menu" id="hamburgerMenu">
+            <i class="fas fa-bars"></i>
+        </div>
+        <nav class="mobile-nav-links" id="mobileNavLinks">
+            <div class="close-mobile-menu" id="closeMobileMenu">
+                <i class="fas fa-times"></i>
+            </div>
+            <a href="#features">Features</a>
+            <a href="#admin-control">Admin Control</a> <a href="#pricing">Pricing</a>
+            <a href="login.html">Login</a>
+        </nav>
     </header>
 
-    <main class="container">
-        <section class="card-section">
-            <h2 class="section-title">Create Store</h2>
-            <form id="createStoreForm" class="form-card">
-                <label for="storeName">Store Name:</label>
-                <input type="text" id="storeName" placeholder="e.g., My Awesome Restaurant" required>
-                <button type="submit" class="primary-btn">Create Store</button>
-                <p id="createStoreMessage" class="message"></p>
-            </form>
+    <main>
+        <section class="hero-section">
+            <div class="hero-content" data-aos="fade-right" data-aos-duration="1000">
+                <h1>Elevate Your Restaurant Experience with OrderHey QR Menus.</h1>
+                <p>Transform your dining operations with OrderHey's intuitive and efficient QR code menu system. Delight your customers with a seamless ordering experience, reduce operational costs, and keep your menu effortlessly up-to-date in real-time.</p>
+                <div class="hero-buttons">
+                    <a href="login.html" class="btn-primary">Get Started Now</a>
+                    <a href="#benefits" class="btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image-container" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="200">
+                <div class="phone-frame">
+                    <iframe src="https://qr-restaurant-ordering-system-1.onrender.com/order.html?storeSlug=foodme&table=A4" 
+                            frameborder="0" 
+                            allowfullscreen>
+                    </iframe>
+                    <div class="volume-up"></div>
+                    <div class="volume-down"></div>
+                    <div class="silent-switch"></div>
+                    <div class="power-button"></div> </div>
+            </div>
         </section>
 
-        <section class="card-section">
-            <h2 class="section-title">Manage Admins</h2>
-            <div class="form-container">
-                <h3 class="section-subtitle">Create Admin</h3>
-                <form id="createAdminForm" class="form-card">
-                    <label for="adminEmail">Email:</label>
-                    <input type="email" id="adminEmail" placeholder="admin@example.com" required>
-
-                    <label for="adminPassword">Password:</label>
-                    <input type="password" id="adminPassword" required>
-
-                    <label for="adminStore">Assign to Store:</label>
-                    <select id="adminStore" required></select>
-
-                    <button type="submit" class="primary-btn">Create Admin</button>
-                    <p id="createAdminMessage" class="message"></p>
-                </form>
+        <section id="benefits" class="benefits-section">
+            <h2 data-aos="fade-up" data-aos-duration="800">Why Choose OrderHey?</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="100">
+                    <div class="icon"><i class="fas fa-qrcode"></i></div>
+                    <h3>Seamless Ordering</h3>
+                    <p>Customers scan, browse, and order directly from their smartphones, eliminating physical menus and waiting times.</p>
+                </div>
+                <div class="benefit-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="200">
+                    <div class="icon"><i class="fas fa-dollar-sign"></i></div>
+                    <h3>Cost Efficiency</h3>
+                    <p>Reduce printing costs, minimize errors, and optimize staff workload with a streamlined digital process.</p>
+                </div>
+                <div class="benefit-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="300">
+                    <div class="icon"><i class="fas fa-sync-alt"></i></div>
+                    <h3>Real-time Updates</h3>
+                    <p>Instantly update prices, mark items as out of stock, or add new specials without reprinting a single menu.</p>
+                </div>
+                <div class="benefit-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="400">
+                    <div class="icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Insightful Analytics</h3>
+                    <p>Track popular dishes, peak ordering times, and customer preferences to make data-driven business decisions.</p>
+                </div>
+                <div class="benefit-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="500">
+                    <div class="icon"><i class="fas fa-headset"></i></div>
+                    <h3>Dedicated Support</h3>
+                    <p>Our team is here to assist you every step of the way, ensuring a smooth transition and continuous operation.</p>
+                </div>
+                <div class="benefit-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="600">
+                    <div class="icon"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>Mobile-First Design</h3>
+                    <p>Your digital menu looks stunning and functions flawlessly on any smartphone or tablet device.</p>
+                </div>
             </div>
+        </section>
 
-            <div class="table-container">
-                <h3 class="section-subtitle">Existing Admins</h3>
-                <table id="adminsTable" class="styled-table">
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>Store</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        </tbody>
-                </table>
-                <p id="adminListMessage" class="error-message"></p>
+        <section id="admin-control" class="admin-control-section">
+            <h2 data-aos="fade-up" data-aos-duration="800">Powerful Admin Control</h2>
+            <p data-aos="fade-up" data-aos-duration="800" data-aos-delay="100" class="section-description">Manage every aspect of your restaurant effortlessly from a single, intuitive dashboard. OrderHey provides you with the tools to stay in control.</p>
+            <div class="admin-control-grid">
+                <div class="admin-feature-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="200">
+                    <div class="icon"><i class="fas fa-tachometer-alt"></i></div>
+                    <h3>Dashboard Overview</h3>
+                    <p>Get a quick glance at your live orders, pending items, and ready-to-serve dishes. Stay updated with real-time order notifications.</p>
+                </div>
+                <div class="admin-feature-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="300">
+                    <div class="icon"><i class="fas fa-list-alt"></i></div>
+                    <h3>Manage Categories</h3>
+                    <p>Organize your menu with custom categories like Appetizers, Main Courses, Drinks, and Desserts for easy customer navigation.</p>
+                </div>
+                <div class="admin-feature-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="400">
+                    <div class="icon"><i class="fas fa-book-open"></i></div>
+                    <h3>Manage Menu</h3>
+                    <p>Add, edit, or remove menu items with ease. Update prices, descriptions, images, and mark items as best-sellers or out of stock instantly.</p>
+                </div>
+                <div class="admin-feature-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="500">
+                    <div class="icon"><i class="fas fa-paint-brush"></i></div>
+                    <h3>Store Branding</h3>
+                    <p>Personalize your customer's ordering experience by uploading your restaurant's logo and updating store contact information.</p>
+                </div>
+                <div class="admin-feature-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="600">
+                    <div class="icon"><i class="fas fa-qrcode"></i></div>
+                    <h3>Manage Tables & QR Codes</h3>
+                    <p>Effortlessly create and manage tables, generate unique QR codes for each, and print them for your customers to scan.</p>
+                </div>
+                <div class="admin-feature-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="700">
+                    <div class="icon"><i class="fas fa-receipt"></i></div>
+                    <h3>Live Orders</h3>
+                    <p>Monitor all incoming orders in real-time, update order statuses (e.g., Pending, Confirmed, Ready), and print or download receipts.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="pricing-section">
+            <h2 data-aos="fade-up" data-aos-duration="800">Simple Pricing</h2>
+            <div class="pricing-card" data-aos="fade-up" data-aos-duration="800" data-aos-delay="200">
+                <h3>Monthly Plan</h3>
+                <p class="price">$5<span>/month</span></p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Unlimited Menu Items</li>
+                    <li><i class="fas fa-check-circle"></i> Unlimited Categories</li>
+                    <li><i class="fas fa-check-circle"></i> Unlimited Tables & QR Codes</li>
+                    <li><i class="fas fa-check-circle"></i> Real-time Order Tracking</li>
+                    <li><i class="fas fa-check-circle"></i> Store Branding & Logo</li>
+                    <li><i class="fas fa-check-circle"></i> Basic Analytics</li>
+                    <li><i class="fas fa-check-circle"></i> Dedicated Support</li>
+                </ul>
+                <a href="login.html" class="btn-primary">Start Free Trial</a>
             </div>
         </section>
     </main>
 
-    <div id="editAdminModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Edit Admin</h2>
-                <span class="close-button" id="closeEditModal">&times;</span>
+    <footer class="main-footer">
+        &copy; 2025 OrderHey! All rights reserved. | <a href="#privacy">Privacy Policy</a> | <a href="#terms">Terms of Service</a>
+        <div class="social-icons"> <a href="https://t.me/yourtelegramusername" target="_blank" aria-label="Contact us on Telegram"><i class="fab fa-telegram-plane"></i></a>
             </div>
-            <form id="editAdminForm" class="form-card">
-                <input type="hidden" id="editAdminId">
-                <label for="editAdminEmail">Email:</label>
-                <input type="email" id="editAdminEmail" required>
-                
-                <label for="editAdminStore">Assign to Store:</label>
-                <select id="editAdminStore" required></select>
-                
-                <p id="editAdminMessage" class="message"></p>
-                <button type="submit" class="primary-btn">Update Admin</button>
-            </form>
-        </div>
-    </div>
+    </footer>
 
-    <!-- Reset Admin Password Modal -->
-    <div id="resetPasswordModal" class="modal-pw"> <!-- CHANGED: class="modal-pw" -->
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="section-title">Reset Password for <span id="resetAdminEmail"></span></h2>
-                <span class="close-button" id="closeResetPasswordModal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="resetPasswordForm" class="form-card">
-                    <input type="hidden" id="resetAdminId">
-                    <label for="newAdminPassword">New Password:</label>
-                    <input type="password" id="newAdminPassword" placeholder="Enter new password" required minlength="6">
-                    <label for="confirmAdminPassword">Confirm New Password:</label>
-                    <input type="password" id="confirmAdminPassword" placeholder="Confirm new password" required minlength="6">
-                    <button type="submit" class="primary-btn full-width" id="resetPasswordSubmitBtn">Reset Password</button>
-                    <p id="resetPasswordMessage" class="message"></p>
-                </form>
-            </div>
-        </div>
-    </div>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true // animations will only run once on scroll down
+        });
+        // JavaScript for Mobile Menu Toggle
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const mobileNavLinks = document.getElementById('mobileNavLinks');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
 
-    <script src="../js/api.js?v=<%= Date.now() %>" type="module"></script>
-    <script src="../js/auth.js?v=<%= Date.now() %>" type="module"></script>
-    <script src="../js/superadmin.js?v=<%= Date.now() %>" type="module"></script>
+        if (hamburgerMenu && mobileNavLinks && closeMobileMenu) {
+            hamburgerMenu.addEventListener('click', () => {
+                mobileNavLinks.classList.add('active');
+            });
+
+            closeMobileMenu.addEventListener('click', () => {
+                mobileNavLinks.classList.remove('active');
+            });
+
+            // Close mobile menu when a link is clicked
+            mobileNavLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileNavLinks.classList.remove('active');
+                });
+            });
+        }
+    </script>
 </body>
 </html>

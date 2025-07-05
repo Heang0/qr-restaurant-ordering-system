@@ -37,11 +37,11 @@ export function checkAuthAndRedirect() {
     // If user is authenticated and on the correct page (or a public page), allow them to proceed.
     // For authenticated users, if they land on home.html, they should probably be redirected to their dashboard.
     if (path.includes('home.html')) {
-        if (role === 'superadmin') {
-            window.location.href = 'index.html';
-        } else if (role === 'admin') {
-            window.location.href = 'admin.html';
-        }
+       if (role === 'superadmin') {
+    redirectPath = 'superadmin.html'; // Updated path for Super Admin
+} else if (role === 'admin') {
+    redirectPath = 'admin.html';
+}
         // For 'customer' role, if they landed on home.html, it's fine as they mainly use order.html via QR.
         return false; // Indicate a redirect happened or should happen
     }
