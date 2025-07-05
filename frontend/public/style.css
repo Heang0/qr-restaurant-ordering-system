@@ -826,7 +826,7 @@ input:focus, textarea:focus, select:focus {
         width: 100%; /* Ensure it respects its container */
     }
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 0.9em;
+        font-size: 0.7em;
     }
 }
 
