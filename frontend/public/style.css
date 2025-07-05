@@ -1279,6 +1279,7 @@ input[type="file"] {
     margin: 0;
     font-size: 1.4em;
     color: #2980b9;
+    text-align: left;
 }
 
 .pending-badge {
@@ -1547,7 +1548,7 @@ input[type="file"] {
 }
 
 .order-container .menu-card .menu-card-content h3 {
-    font-size: 1.2em;
+    font-size: 1.2em; /* Adjusted for better readability on smaller screens */
     font-weight: bold;
     color: #000000;
     margin: 0;
@@ -2801,3 +2802,4 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
 .modal-pw .message { /* CHANGED: from #resetPasswordModal .message */
     margin-top: 15px;
 }
+
