@@ -1,7 +1,7 @@
 const express = require('express');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const bcrypt = require('bcryptjs'); // ADDED: Import bcrypt for password hashing
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
@@ -17,7 +17,8 @@ router.post('/', protect, authorize('superadmin'), async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        user = new User({ email, password: hashedPassword, role: 'admin', storeId });
+        // FIX 1: Change 'password' to 'passwordHash' to match the User model schema
+        user = new User({ email, passwordHash: hashedPassword, role: 'admin', storeId });
         await user.save();
         res.status(201).json({ message: 'Admin created successfully', user: { id: user._id, email: user.email, storeId: user.storeId } });
     } catch (error) {
@@ -29,7 +30,7 @@ router.post('/', protect, authorize('superadmin'), async (req, res) => {
 // List Admins (Super Admin only) - Populates store name
 router.get('/', protect, authorize('superadmin'), async (req, res) => {
     try {
-        const admins = await User.find({ role: 'admin' }).populate('storeId', 'name'); // Populate store name
+        const admins = await User.find({ role: 'admin' }).populate('storeId', 'name');
         res.json(admins);
     } catch (error) {
         console.error(error);
@@ -37,7 +38,7 @@ router.get('/', protect, authorize('superadmin'), async (req, res) => {
     }
 });
 
-// NEW ENDPOINT: Reset Admin Password (Super Admin only)
+// NEW ENDPOINT: Reset Admin Password (Super Admin only) - This already exists
 router.put('/:id/reset-password', protect, authorize('superadmin'), async (req, res) => {
     const { id } = req.params;
     const { newPassword } = req.body;
@@ -52,9 +53,8 @@ router.put('/:id/reset-password', protect, authorize('superadmin'), async (req, 
             return res.status(404).json({ message: 'Admin user not found.' });
         }
 
-        // Hash the new password
         const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPassword, salt);
+        user.passwordHash = await bcrypt.hash(newPassword, salt); // Ensure this is passwordHash
         await user.save();
 
         res.json({ message: 'Admin password reset successfully.' });
@@ -63,6 +63,33 @@ router.put('/:id/reset-password', protect, authorize('superadmin'), async (req, 
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// FIX 2: Add Update Admin details (Super Admin only)
+// This route is needed for the 'Edit Admin' functionality in the Super Admin dashboard
+router.put('/:id', protect, authorize('superadmin'), async (req, res) => {
+    const { id } = req.params;
+    const { storeId } = req.body; // Assuming only storeId can be updated via frontend 'Edit Admin' form
+
+    try {
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'Admin user not found.' });
+        }
+
+        // Only allow updating fields that are sent (e.g., storeId)
+        if (storeId !== undefined) {
+            user.storeId = storeId;
+        }
+        // If you had other editable fields for admin, you would add them here.
+
+        await user.save();
+        res.json({ message: 'Admin updated successfully', user: { id: user._id, email: user.email, storeId: user.storeId } });
+    } catch (error) {
+        console.error('Error updating admin:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 // Delete Admin (Super Admin only)
 router.delete('/:id', protect, authorize('superadmin'), async (req, res) => {
