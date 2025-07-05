@@ -604,7 +604,7 @@ input:focus, textarea:focus, select:focus {
 
     /* Order page menu item name font size adjustment */
     .order-container .menu-card .menu-card-content h3 {
-        font-size: 1.1em; /* Adjust this value as needed */
+        font-size: 1em; /* Adjust this value as needed */
     }
     
     /* Ensure main content has the correct margin based on sidebar collapsed state */
@@ -826,8 +826,8 @@ input:focus, textarea:focus, select:focus {
         width: 100%; /* Ensure it respects its container */
     }
     .order-container .menu-card .menu-card-content h3 {
-    font-size: 0.8em; /* Adjusted for better readability on smaller screens */
-}
+        font-size: 0.9em;
+    }
 }
 
 /* Specific styles for the product quick view modal */
@@ -1282,7 +1282,6 @@ input[type="file"] {
     margin: 0;
     font-size: 1.4em;
     color: #2980b9;
-    text-align: left;
 }
 
 .pending-badge {
@@ -1551,7 +1550,7 @@ input[type="file"] {
 }
 
 .order-container .menu-card .menu-card-content h3 {
-    font-size: 1em; /* Adjusted for better readability on smaller screens */
+    font-size: 1em;
     /* font-weight: bold; */
     color: #000000;
     margin: 0;
@@ -1579,7 +1578,7 @@ input[type="file"] {
 }
 
 .order-container .menu-card .price {
-    font-size: 1.2em; /* Larger price */
+    font-size: 1.1em; /* Larger price */
     font-weight: 700;
     color: #e74c3c; /* Red price from sample */
     margin: 0;
@@ -2805,4 +2804,3 @@ body:not(:has(.bottom-nav)) #floatingCartBtn {
 .modal-pw .message { /* CHANGED: from #resetPasswordModal .message */
     margin-top: 15px;
 }
-
