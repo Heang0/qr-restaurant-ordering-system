@@ -3,60 +3,57 @@ export function checkAuthAndRedirect() {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
 
-    const path = window.location.pathname;
+    const path = window.location.pathname; // Gets path like '/index.html'
 
-    // List of publicly accessible pages that DON'T require a login
-    const publicPages = ['/home.html', '/login.html', '/order.html']; // CITE: Add home.html to public pages
+    // List of publicly accessible pages that DON'T require a login.
+    // 'index.html' is now the public homepage. 'superadmin.html' and 'admin.html' are NOT public.
+    const publicPages = ['/index.html', '/login.html', '/order.html']; // Updated 'home.html' to 'index.html'
 
-    // If no token exists (user is not authenticated)
+    // Scenario 1: User is NOT authenticated (no token)
     if (!token) {
-        // If the current path is NOT one of the public pages, then redirect to login.html (or home.html if home is the default landing)
-        // Since home.html is now the desired landing for non-logged-in users,
-        // we only redirect to login.html IF they try to access an admin/protected page directly.
+        // If the current path is NOT one of the public pages (i.e., it's a protected page like /admin.html or /superadmin.html),
+        // redirect them to the public homepage (/index.html).
         if (!publicPages.some(publicPath => path.includes(publicPath))) {
-            // If they are on a protected page AND not logged in, redirect them to home.html
-            window.location.href = 'home.html'; // CITE: Redirect to home.html instead of login.html for protected pages
-            return false;
+            window.location.href = 'index.html'; // Redirect to the new homepage
+            return false; // Indicate a redirect happened
         }
-        // If they are on a public page (like home.html or login.html), allow them to stay
-        return true;
+        // If they are on a public page (e.g., /index.html, /login.html), allow them to stay.
+        return true; // No redirect needed
     }
 
-    // If a token exists (user is authenticated), redirect based on role
-    if (role === 'superadmin' && !path.includes('index.html')) {
-        window.location.href = 'index.html';
-        return false; // Redirecting, so return false
-    } else if (role === 'admin' && !path.includes('admin.html')) {
-        window.location.href = 'admin.html';
-        return false; // Redirecting, so return false
-    } else if (role === 'customer' && !path.includes('order.html')) {
-        // This case is usually handled by QR code. If they somehow get here, allow it or redirect home.
-        return true;
-    }
-    
-    // If user is authenticated and on the correct page (or a public page), allow them to proceed.
-    // For authenticated users, if they land on home.html, they should probably be redirected to their dashboard.
-    if (path.includes('home.html')) {
-       if (role === 'superadmin') {
-    redirectPath = 'superadmin.html'; // Updated path for Super Admin
-} else if (role === 'admin') {
-    redirectPath = 'admin.html';
-}
-        // For 'customer' role, if they landed on home.html, it's fine as they mainly use order.html via QR.
-        return false; // Indicate a redirect happened or should happen
-    }
+    // Scenario 2: User IS authenticated (token exists)
+    // Always ensure authenticated users are on their *correct* dashboard.
+    // If they are on a public page (like index.html or login.html) while authenticated,
+    // or on the wrong dashboard, redirect them to their specific dashboard.
 
-    return true; // User is authenticated and on the correct page
+    if (role === 'superadmin') {
+        // If superadmin is NOT on their superadmin dashboard, redirect them there.
+        if (!path.includes('superadmin.html')) {
+            window.location.href = 'superadmin.html'; // Correctly redirect to superadmin.html
+            return false; // Indicate a redirect
+        }
+    } else if (role === 'admin') {
+        // If admin is NOT on their admin dashboard, redirect them there.
+        if (!path.includes('admin.html')) {
+            window.location.href = 'admin.html'; // Correctly redirect to admin.html
+            return false; // Indicate a redirect
+        }
+    }
+    // For 'customer' role, they primarily use 'order.html' via QR code.
+    // If an authenticated customer is on a public page (like index.html or login.html),
+    // we allow them to stay, as there's no fixed "customer dashboard" in your current setup.
+
+    // This specific block from your previous 'auth.js' was problematic due to 'redirectPath'
+    // being undefined and its logic being redundant after the specific role checks above.
+    // It is removed.
+
+    // If we reach here, the user is authenticated and is either:
+    // 1. On their correct dashboard page (superadmin.html or admin.html).
+    // 2. A customer on an allowed public page (index.html, login.html, or order.html).
+    return true; // No redirect needed, allow access
 }
 
 export function logout() {
     localStorage.clear(); // Clear all stored user data
-    window.location.href = 'home.html'; // CITE: Redirect to home.html after logout
+    window.location.href = 'index.html'; // Redirect to the new homepage (index.html) after logout
 }
-
-// Ensure checkAuthAndRedirect is called on every page load
-// You will need to call this in each HTML file that needs authentication check
-// e.g., in admin.js, index.js, etc.
-// For home.html, you generally would NOT call checkAuthAndRedirect initially
-// unless home.html needs to redirect *authenticated* users.
-// The provided home.html does not call checkAuthAndRedirect, which is correct for a public landing page.
