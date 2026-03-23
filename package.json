@@ -10,9 +10,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "private": true,
-  "workspaces": [
-    "backend",
-    "frontend"
-  ]
+  "private": true
 }
