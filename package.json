@@ -1,14 +1,33 @@
 {
-  "name": "qr-restaurant-ordering-system-root",
-  "version": "1.0.0",
-  "description": "Root package for QR Restaurant Ordering System",
-  "main": "index.js",
+  "name": "qr-restaurant-frontend",
+  "version": "2.0.0",
+  "description": "Next.js QR Restaurant Ordering System",
+  "private": true,
   "scripts": {
-    "start": "echo 'Run backend/server.js directly or deploy with Render'",
-    "install-all": "npm install --prefix backend && npm install --prefix frontend"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "private": true
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.0",
+    "next": "^14.2.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^20.12.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.0"
+  }
 }
