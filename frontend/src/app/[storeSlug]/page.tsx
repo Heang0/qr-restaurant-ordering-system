@@ -42,27 +42,39 @@ function OrderContent() {
     const loadMenu = async () => {
       try {
         setIsLoading(true);
+        setError('');
+        
         const storeResponse = await fetch(`/api/stores?slug=${storeSlug}`);
-        if (storeResponse.ok) {
-          const storeData = await storeResponse.json();
-          setStore(storeData);
-          localStorage.setItem('storeId', storeData._id);
-          localStorage.setItem('storeSlug', storeData.slug);
+        if (!storeResponse.ok) {
+          setError('Store not found');
+          setIsLoading(false);
+          return;
+        }
+        
+        const storeData = await storeResponse.json();
+        if (!storeData || !storeData._id) {
+          setError('Store not found');
+          setIsLoading(false);
+          return;
+        }
+        
+        setStore(storeData);
+        localStorage.setItem('storeId', storeData._id);
+        localStorage.setItem('storeSlug', storeData.slug);
 
-          const menuResponse = await fetch(`/api/menu?storeId=${storeData._id}`);
-          if (menuResponse.ok) {
-            const menuData = await menuResponse.json();
-            setMenuItems(menuData);
+        const menuResponse = await fetch(`/api/menu?storeId=${storeData._id}`);
+        if (menuResponse.ok) {
+          const menuData = await menuResponse.json();
+          setMenuItems(menuData);
 
-            const categoryMap = new Map();
-            categoryMap.set('all', { _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' });
-            menuData.forEach((item: MenuItemType) => {
-              if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId._id) {
-                categoryMap.set(String(item.categoryId._id), item.categoryId);
-              }
-            });
-            setCategories(Array.from(categoryMap.values()));
-          }
+          const categoryMap = new Map();
+          categoryMap.set('all', { _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' });
+          menuData.forEach((item: MenuItemType) => {
+            if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId._id) {
+              categoryMap.set(String(item.categoryId._id), item.categoryId);
+            }
+          });
+          setCategories(Array.from(categoryMap.values()));
         }
       } catch (err) {
         console.error('Failed to load menu:', err);
@@ -73,7 +85,7 @@ function OrderContent() {
     };
 
     loadMenu();
-  }, [storeSlug]);
+  }, [storeSlug, t]);
 
   // Fetch orders
   useEffect(() => {

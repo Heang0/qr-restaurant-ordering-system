@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || '';
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || '';
 
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },

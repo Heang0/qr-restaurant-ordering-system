@@ -64,20 +64,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language, t }) => {
 
   const fetchStore = async () => {
     try {
-      const token = localStorage.getItem('token');
       const storeId = localStorage.getItem('storeId');
-      
+
       if (!storeId) {
         // No store assigned, show empty form
         setLoading(false);
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/stores/${storeId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/stores?id=${storeId}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -150,20 +145,22 @@ const SettingsView: React.FC<SettingsViewProps> = ({ language, t }) => {
     setMessage({ type: '', text: '' });
 
     try {
-      const token = localStorage.getItem('token');
       const storeId = localStorage.getItem('storeId');
-      
+
       let logoUrl = logoFile ? await uploadToCloudinary(logoFile) : (store?.logo || formData.logo || undefined);
 
-      const response = await fetch(`http://localhost:5000/api/stores/${storeId}`, {
+      const response = await fetch(`/api/stores?id=${storeId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ...formData,
-          logo: logoUrl
+          name: formData.name,
+          slug: formData.slug,
+          description: formData.description,
+          address: formData.address,
+          phone: formData.phone,
+          logoUrl: logoUrl
         })
       });
 

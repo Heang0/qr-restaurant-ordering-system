@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import mongoose from 'mongoose';
 
+const CategorySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  nameKm: { type: String },
+  description: { type: String },
+  descriptionKm: { type: String },
+  storeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
+  order: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+
 const MenuItemSchema = new mongoose.Schema({
   storeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Store', required: true },
   name: { type: String, required: true },
@@ -15,6 +25,7 @@ const MenuItemSchema = new mongoose.Schema({
   order: { type: Number, default: 0 }
 }, { timestamps: true });
 
+const Category = mongoose.models.Category || mongoose.model('Category', CategorySchema);
 const MenuItem = mongoose.models.MenuItem || mongoose.model('MenuItem', MenuItemSchema);
 
 // GET - Fetch menu items for a store

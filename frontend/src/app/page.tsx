@@ -12,7 +12,7 @@ export default function Home() {
   const { language } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-white">
       <Header />
       <main>
         <HeroSection />
