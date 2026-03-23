@@ -1,16 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "outputDirectory": ".next",
-  "regions": ["sin1"],
-  "env": {
-    "MONGO_URI": "@mongo-uri",
-    "JWT_SECRET": "@jwt-secret",
-    "CLOUDINARY_API_KEY": "@cloudinary-key",
-    "CLOUDINARY_API_SECRET": "@cloudinary-secret",
-    "CLOUDINARY_CLOUD_NAME": "@cloudinary-name"
-  }
+  "installCommand": "npm install",
+  "outputDirectory": ".next"
 }
