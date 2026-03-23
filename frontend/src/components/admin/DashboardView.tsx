@@ -9,7 +9,6 @@ interface DashboardViewProps {
 }
 
 const DashboardView: React.FC<DashboardViewProps> = ({ language, t }) => {
-  const router = useRouter();
   const [stats, setStats] = useState({
     totalOrders: 0,
     revenue: 0,
