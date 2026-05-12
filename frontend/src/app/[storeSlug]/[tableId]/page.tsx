@@ -193,11 +193,11 @@ function OrderContent() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header tableId={urlTableSlug.toUpperCase()} language={language} storeName={store?.name || 'Loading...'} storeLogo={store?.logoUrl} />
+    <div className="min-h-screen bg-[#fcfcfd] hero-gradient">
+      <Header tableId={urlTableSlug.toUpperCase()} language={language} storeName={store?.name || 'Loading...'} storeLogo={store?.logo_url || store?.logo} />
 
       {activeTab === 'menu' ? (
-        <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
+        <main className="max-w-screen-xl mx-auto px-5 py-8 pb-32">
           <MenuGrid
             items={filteredItems}
             categories={categories}
@@ -216,8 +216,6 @@ function OrderContent() {
       ) : (
         <CustomerOrders orders={orders} language={language} t={t} />
       )}
-
-      <FloatingCartButton count={cartCount} onClick={() => setIsCartOpen(true)} />
 
       <BottomNav
         cartCount={cartCount}
