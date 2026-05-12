@@ -55,11 +55,11 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ orders, language, t }) 
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm text-gray-500">
-                    {language === 'km' ? 'លេខកូដ' : 'Order'} #{order._id.slice(-6)}
+                    {language === 'km' ? 'លេខកូដ' : 'Order'} #{order.id.slice(-6)}
                   </p>
                   <p className="text-xs text-gray-400">
                     {new Date(order.createdAt).toLocaleString()}
@@ -72,7 +72,7 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ orders, language, t }) 
 
               <div className="border-t border-gray-100 pt-3 mb-3">
                 {order.items.map((item, index) => (
-                  <div key={`${order._id}-${index}`} className="flex items-center justify-between gap-3 py-3">
+                  <div key={`${order.id}-${index}`} className="flex items-center justify-between gap-3 py-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary-dark/10 overflow-hidden border border-primary/20 flex-shrink-0 flex items-center justify-center">
                         <span className="text-lg font-bold text-primary">x{item.quantity}</span>

@@ -18,7 +18,9 @@ function OrderContent() {
   const { t, language } = useLanguage();
 
   const storeSlug = params.storeSlug as string || 'orderhey';
-  const tableId = params.tableId as string || 'A1';
+  const urlTableSlug = params.tableId as string || 'A1';
+
+  const [resolvedTableId, setResolvedTableId] = useState<string>(urlTableSlug);
 
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -44,10 +46,10 @@ function OrderContent() {
         if (storeResponse.ok) {
           const storeData = await storeResponse.json();
           setStore(storeData);
-          localStorage.setItem('storeId', storeData._id);
+          localStorage.setItem('storeId', storeData.id);
           localStorage.setItem('storeSlug', storeData.slug);
 
-          const menuResponse = await fetch(`/api/menu?storeId=${storeData._id}`);
+          const menuResponse = await fetch(`/api/menu?storeId=${storeData.id}`);
           if (menuResponse.ok) {
             const menuData = await menuResponse.json();
             setMenuItems(menuData);
@@ -55,11 +57,24 @@ function OrderContent() {
             const categoryMap = new Map();
             categoryMap.set('all', { _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' });
             menuData.forEach((item: MenuItemType) => {
-              if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId._id) {
-                categoryMap.set(String(item.categoryId._id), item.categoryId);
+              if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId.id) {
+                categoryMap.set(String(item.categoryId.id), item.categoryId);
               }
             });
             setCategories(Array.from(categoryMap.values()));
+          }
+
+          // Resolve table slug to real UUID
+          const tablesResponse = await fetch(`/api/tables?storeId=${storeData.id}`);
+          if (tablesResponse.ok) {
+            const tablesData = await tablesResponse.json();
+            const matchingTable = tablesData.find((t: any) => 
+              t.name.toLowerCase().replace(/\s+/g, '-') === urlTableSlug.toLowerCase() || 
+              t.id === urlTableSlug
+            );
+            if (matchingTable) {
+              setResolvedTableId(matchingTable.id);
+            }
           }
         }
       } catch (err) {
@@ -84,7 +99,7 @@ function OrderContent() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`/api/orders?storeId=${store._id}&tableId=${tableId}`);
+      const response = await fetch(`/api/orders?storeId=${store.id}&tableId=${resolvedTableId}`);
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
@@ -96,12 +111,12 @@ function OrderContent() {
 
   const addToCart = (item: MenuItemType, quantity: number = 1) => {
     setCart(prev => {
-      const existing = prev.find(i => i.menuItemId === item._id);
+      const existing = prev.find(i => i.menuItemId === item.id);
       if (existing) {
-        return prev.map(i => i.menuItemId === item._id ? { ...i, quantity: i.quantity + quantity } : i);
+        return prev.map(i => i.menuItemId === item.id ? { ...i, quantity: i.quantity + quantity } : i);
       }
       return [...prev, {
-        menuItemId: item._id,
+        menuItemId: item.id,
         name: item.name,
         nameKm: item.nameKm,
         price: item.price,
@@ -127,8 +142,8 @@ function OrderContent() {
   const handleSubmitOrder = async () => {
     try {
       const orderData = {
-        storeId: store._id,
-        tableId: tableId,
+        storeId: store.id,
+        tableId: resolvedTableId,
         items: cart.map(item => ({ menuItemId: item.menuItemId, quantity: item.quantity, remark: item.notes || '' }))
       };
 
@@ -170,7 +185,7 @@ function OrderContent() {
   };
 
   const filteredItems = menuItems.filter(item => {
-    const categoryId = typeof item.categoryId === 'object' ? item.categoryId._id : item.categoryId;
+    const categoryId = typeof item.categoryId === 'object' ? item.categoryId.id : item.categoryId;
     const matchesCategory = selectedCategory === 'all' || !categoryId || String(categoryId) === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.nameKm?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -179,7 +194,7 @@ function OrderContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header tableId={tableId} language={language} storeName={store?.name || 'Loading...'} storeLogo={store?.logoUrl} />
+      <Header tableId={urlTableSlug.toUpperCase()} language={language} storeName={store?.name || 'Loading...'} storeLogo={store?.logoUrl} />
 
       {activeTab === 'menu' ? (
         <main className="max-w-7xl mx-auto px-4 py-6 pb-24">

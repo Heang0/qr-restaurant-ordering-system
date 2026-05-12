@@ -1,103 +1,33 @@
-# OrderHey - QR Restaurant Ordering System
+# OrderHey! QR Restaurant Ordering System
 
-A professional, bilingual (Khmer & English) QR-based restaurant ordering system built with Next.js 14.
-
-## Features
-
-- ✅ QR Code Ordering
-- ✅ Real-time Orders with Sound Notifications
-- ✅ Bilingual Support (Khmer & English)
-- ✅ Toast Notifications
-- ✅ Loading Skeletons & Empty States
-- ✅ Mobile-Friendly Responsive Design
-- ✅ Cloudinary Image Uploads
-- ✅ Full Menu Management (CRUD)
-- ✅ Order Management & Status Updates
-- ✅ Table Management with QR Codes
-- ✅ Multi-Store Support
-
-## Tech Stack
-
-- **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend:** Next.js API Routes
-- **Database:** MongoDB Atlas
-- **Image Storage:** Cloudinary
-- **Deployment:** Vercel
-
-## Quick Start
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-## Environment Variables
-
-Create `.env.local`:
-
-```env
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-```
-
-## Deployment
-
-### Deploy to Vercel
-
-1. **Push to GitHub**
-2. **Import on Vercel** - https://vercel.com
-3. **Add Environment Variables**
-4. **Deploy**
-
-### Set Custom Domain
-
-In Vercel Dashboard:
-- Settings → Domains
-- Add: `order-hey.vercel.app`
+A professional, bilingual (Khmer & English) QR-based restaurant ordering system.
 
 ## Project Structure
 
-```
-frontend/
-├── src/
-│   ├── app/
-│   │   ├── api/              # API routes
-│   │   ├── [storeSlug]/      # Customer ordering
-│   │   ├── admin/            # Admin dashboard
-│   │   ├── superadmin/       # Super admin
-│   │   └── login/            # Login
-│   ├── components/
-│   │   ├── admin/            # Admin components
-│   │   └── order/            # Order components
-│   ├── contexts/             # React contexts
-│   ├── hooks/                # Custom hooks
-│   └── lib/                  # Utilities
-└── public/
-    └── sounds/               # Notification sounds
+This project is separated into a standalone Backend and Frontend for maximum performance and scalability.
+
+- **/backend**: Express + TypeScript API server. Handles database logic, authentication, and order processing.
+- **/frontend**: Next.js 14 Web application. Handles the user interface and customer ordering flow.
+
+## Getting Started
+
+### 1. Install Dependencies
+From the root directory, run:
+```bash
+npm run install:all
 ```
 
-## Usage
+### 2. Environment Setup
+- Create `backend/.env` (use `backend/env.example` as a template)
+- Create `frontend/.env.local`
 
-### Admin Dashboard
-- **URL:** `/admin`
-- Manage menu, orders, tables
+### 3. Run Development Server
+From the root directory, run:
+```bash
+npm run dev
+```
+This will start both the backend (Port 5000) and the frontend (Port 3000) simultaneously.
 
-### Super Admin
-- **URL:** `/superadmin`
-- Manage stores and users
-
-### Customer Ordering
-- **URL:** `/[storeSlug]/[tableId]`
-- Example: `/orderhey/a1`
-
-## License
-
-MIT
+## Deployment
+- Deploy the `/backend` to a Node.js host (like VPS or Railway).
+- Deploy the `/frontend` to Vercel.

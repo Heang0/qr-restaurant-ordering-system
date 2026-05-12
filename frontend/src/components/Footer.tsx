@@ -2,88 +2,116 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
-import logo from '@/assets/logo.png';
 
 const Footer: React.FC = () => {
   const { t, language } = useLanguage();
 
   return (
-    <footer id="contact" className="bg-gray-900 text-white py-12 md:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-          {/* Brand */}
-          <div className="text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
-              <Image src={logo} alt="OrderHey" width={40} height={40} className="w-10 h-10 object-contain" />
-              <span className="text-2xl font-bold">OrderHey!</span>
-            </div>
-            <p className={`text-gray-400 text-sm md:text-base ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-              {language === 'km'
-                ? 'ប្រព័ន្ធម៉ឺនុយ QR ដ៏មានប្រសិទ្ធភាពសម្រាប់ភោជនីយដ្ឋានរបស់អ្នក'
-                : 'Efficient QR menu system for your restaurant'}
+    <footer className="bg-gray-950 text-white pt-24 pb-12 overflow-hidden relative">
+      {/* Subtle top border gradient */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+          {/* Brand Info */}
+          <div className="lg:col-span-1">
+            <Link href="/" className="flex items-center gap-3 mb-8 group">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-6 transition-transform duration-500">
+                <span className="text-white font-black text-2xl">O</span>
+              </div>
+              <span className="text-2xl font-bold tracking-tighter">OrderHey!</span>
+            </Link>
+            <p className={`text-gray-400 text-lg leading-relaxed mb-8 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans text-gray-500'}`}>
+              {language === 'km' 
+                ? 'ប្រព័ន្ធម៉ឺនុយ QR ដ៏មានប្រសិទ្ធភាពសម្រាប់ភោជនីយដ្ឋានរបស់អ្នក ដើម្បីបង្កើនបទពិសោធន៍នៃការញ៉ាំអាហារ និងការលក់។'
+                : 'Empowering restaurants with seamless QR ordering solutions to elevate guest experiences and drive growth.'}
             </p>
+            <div className="flex gap-4">
+              {['facebook', 'telegram', 'instagram'].map((platform) => (
+                <Link 
+                  key={platform}
+                  href="https://t.me/Emma_Heang" 
+                  target="_blank"
+                  className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center hover:bg-primary hover:border-primary transition-all duration-300"
+                >
+                  <div className="w-5 h-5 bg-gray-500 rounded-sm"></div>
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Quick Links */}
-          <div className="text-center">
-            <h3 className="text-base md:text-lg font-semibold mb-4">{t('footer.contact')}</h3>
-            <a 
-              href="https://t.me/Emma_Heang" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-flex items-center gap-2 text-gray-400 hover:text-red-500 transition-colors text-sm md:text-base"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-              </svg>
-              <span>@Emma_Heang</span>
-            </a>
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-600 mb-8">Navigation</h3>
+            <ul className="space-y-4">
+              {['Features', 'Admin Control', 'Pricing', 'Documentation'].map((item) => (
+                <li key={item}>
+                  <Link href="#" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                    {item}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Social Media */}
-          <div className="text-center md:text-right">
-            <h3 className="text-base md:text-lg font-semibold mb-4">{t('footer.followUs')}</h3>
-            <div className="flex items-center justify-center md:justify-end gap-3">
-              <a 
-                href="https://t.me/Emma_Heang" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                aria-label="Telegram"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                </svg>
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-600 mb-8">{t('footer.contact')}</h3>
+            <div className="space-y-6">
+              <a href="https://t.me/Emma_Heang" target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 group">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.467 8.246l-1.98 9.33c-.144.664-.54 1.134-1.1.812l-3.02-2.225-1.457 1.401-.174.126-.262-.225 1.053-4.32-3.141-2.31c-.556-.41-.515-.712.18-.737l3.87-.563 1.731-3.504c.311-.63.76-.63 1.07 0l1.732 3.504 3.87.563c.695.1.735.4.18.737z"/></svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Telegram Support</div>
+                  <div className="text-gray-300 group-hover:text-white transition-colors">@Emma_Heang</div>
+                </div>
               </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                aria-label="Instagram"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
-              </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                aria-label="LinkedIn"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                </svg>
-              </a>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Office</div>
+                  <div className="text-gray-300">Phnom Penh, Cambodia</div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* Newsletter / CTA */}
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-600 mb-8">Newsletter</h3>
+            <div className="p-1 rounded-2xl bg-gray-900 border border-gray-800 flex items-center focus-within:border-primary transition-colors">
+              <input 
+                type="email" 
+                placeholder="Email address"
+                className="bg-transparent border-0 focus:ring-0 text-sm px-4 flex-1 outline-none"
+              />
+              <button className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center hover:bg-primary-dark transition-colors">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7-7 7M3 12h18" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-4 px-2 italic">Join 1,000+ restaurant owners getting our weekly updates.</p>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-8 md:mt-12 pt-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} OrderHey. {t('footer.rights')}
-          </p>
+        <div className="border-t border-gray-900 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-8 text-sm text-gray-500">
+            <span>© {new Date().getFullYear()} OrderHey. {t('footer.rights')}</span>
+          </div>
+          <div className="flex gap-8 text-sm">
+            <Link href="#" className="text-gray-500 hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="#" className="text-gray-500 hover:text-white transition-colors">Terms of Service</Link>
+          </div>
         </div>
       </div>
     </footer>

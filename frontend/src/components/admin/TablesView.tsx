@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Order, Store } from '@/types';
 
 interface Table {
-  _id: string;
+  id: string;
   name: string;
   slug: string;
   qrCode?: string;
@@ -38,6 +38,9 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
   });
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  // Always-current ref so getOrderURL never reads stale closure state
+  const storeSlugRef = useRef<string>('');
+
   const formatCurrency = (value: number | undefined) => `$${(value || 0).toFixed(2)}`;
 
   const escapeHtml = (value: string) =>
@@ -49,6 +52,13 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       .replace(/'/g, '&#39;');
 
   useEffect(() => {
+    // Clean up any stale/broken values from previous sessions
+    const cachedSlug = localStorage.getItem('storeSlug');
+    if (cachedSlug && cachedSlug !== 'undefined' && cachedSlug !== 'null') {
+      storeSlugRef.current = cachedSlug; // pre-load from cache immediately
+    } else {
+      localStorage.removeItem('storeSlug');
+    }
     fetchTables();
   }, []);
 
@@ -62,7 +72,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
   const getOrdersForTable = (orders: Order[], table: Table) =>
     orders.filter(
       (order) =>
-        order.tableId === table._id ||
+        order.tableId === table.id ||
         order.tableName === table.name
     );
 
@@ -104,12 +114,17 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       const storeData = await storeResponse.json();
       const ordersData = await ordersResponse.json();
 
-      setTables(Array.isArray(tablesData) ? tablesData : []);
+      setTables(Array.isArray(tablesData) ? tablesData.map((t: any) => ({
+        ...t,
+        isActive: localStorage.getItem(`table_active_${t.id}`) === 'false' ? false : true
+      })) : []);
       setAllOrders(Array.isArray(ordersData) ? ordersData : []);
       setStore(storeData || null);
 
-      if (storeData && typeof storeData === 'object' && 'slug' in storeData && storeData.slug) {
-        localStorage.setItem('storeSlug', String(storeData.slug));
+      // Always save the real slug — write to ref immediately (sync) and localStorage
+      if (storeData?.slug && storeData.slug !== 'undefined') {
+        storeSlugRef.current = storeData.slug;   // instant, no re-render needed
+        localStorage.setItem('storeSlug', storeData.slug);
       }
     } catch (error) {
       console.error('Failed to fetch tables:', error);
@@ -119,11 +134,10 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
   };
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const name = event.target.value;
+    const name = event.target.value.toUpperCase();
     const autoSlug = name
-      .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
+      .replace(/[^A-Z0-9-]/g, '')
       .replace(/-+/g, '-');
 
     setFormData({ ...formData, name, slug: autoSlug });
@@ -141,13 +155,23 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
         body: JSON.stringify({ ...formData, storeId })
       });
 
-      if (!response.ok) throw new Error('Failed to create table');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Table creation failed:', errorData);
+        setMessage({
+          type: 'error',
+          text: errorData.message || (language === 'km' ? 'មិនអាចបង្កើតតុបានទេ!' : 'Failed to create table!')
+        });
+        throw new Error(errorData.message || 'Failed to create table');
+      }
 
       setMessage({
         type: 'success',
         text: language === 'km' ? 'តុត្រូវបានបង្កើត!' : 'Table created!',
       });
       setShowCreateModal(false);
+      setFormData({ name: '', slug: '', isActive: true });
+      fetchTables();
       setFormData({ name: '', slug: '', isActive: true });
       fetchTables();
     } catch (error) {
@@ -179,10 +203,10 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
   const generateQRCode = async (tableId: string) => {
     try {
-      const response = await fetch(`/api/tables/${tableId}/qr`, { method: 'POST' });
-      const data = await response.json();
-      fetchTables();
-      return data?.qrCode || null;
+      const table = tables.find(t => t.id === tableId);
+      if (!table) return null;
+      const url = getOrderURL(table);
+      return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
     } catch (error) {
       console.error('Failed to generate QR code:', error);
       return null;
@@ -193,7 +217,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
     let qrCode = table.qrCode;
 
     if (!qrCode) {
-      qrCode = await generateQRCode(table._id) || undefined;
+      qrCode = await generateQRCode(table.id) || undefined;
     }
 
     if (qrCode) {
@@ -204,13 +228,21 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
   const toggleActive = async (tableId: string, currentStatus: boolean) => {
     try {
+      const newStatus = !currentStatus;
+      localStorage.setItem(`table_active_${tableId}`, String(newStatus));
+      
+      setTables(prevTables => 
+        prevTables.map(t => 
+          t.id === tableId ? { ...t, isActive: newStatus } : t
+        )
+      );
+      
       const response = await fetch(`/api/tables/${tableId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !currentStatus })
+        body: JSON.stringify({ isActive: newStatus })
       });
       if (!response.ok) throw new Error('Failed to update');
-      fetchTables();
     } catch (error) {
       console.error('Failed to update table:', error);
     }
@@ -226,7 +258,17 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
     if (!confirmed) return;
 
     try {
-      // Note: This endpoint may not exist, you might need to create it
+      const ordersToClear = allOrders.filter(o => o.tableId === table.id && o.status !== 'completed' && o.status !== 'cancelled');
+      await Promise.all(
+        ordersToClear.map(order => 
+          fetch(`/api/orders/${order.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+          })
+        )
+      );
+
       setMessage({
         type: 'success',
         text:
@@ -245,9 +287,11 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
   const getOrderURL = (table: Table) => {
     const baseUrl = window.location.origin;
-    const storeSlug = localStorage.getItem('storeSlug');
-    // New clean URL format: /storeSlug/tableSlug
-    return storeSlug ? `${baseUrl}/${storeSlug}/${table.slug}` : `${baseUrl}/your-store/${table.slug}`;
+    // Read from ref – always up‑to‑date, fall back to a generic placeholder if missing
+    const slugFromRef = storeSlugRef.current;
+    const storeSlug = slugFromRef && slugFromRef !== 'undefined' ? slugFromRef : 'your-store';
+    const cleanTableSlug = table.name.toLowerCase().replace(/\s+/g, '-');
+    return `${baseUrl}/${storeSlug}/${cleanTableSlug}`;
   };
 
   const receiptRows = useMemo(() => {
@@ -255,7 +299,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
     return receiptState.orders.flatMap((order) =>
       order.items.map((item) => ({
-        orderId: order._id,
+        orderId: order.id,
         createdAt: order.createdAt,
         name: item.name,
         quantity: item.quantity,
@@ -272,7 +316,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
   );
 
   const receiptOrderCodes = useMemo(
-    () => (receiptState ? receiptState.orders.map((order) => `#${order._id.slice(-6)}`).join(', ') : ''),
+    () => (receiptState ? receiptState.orders.map((order) => `#${order.id.slice(-6)}`).join(', ') : ''),
     [receiptState]
   );
 
@@ -285,7 +329,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
   );
 
   const receiptApprovalCode = useMemo(
-    () => (receiptState?.orders[0]?._id ? receiptState.orders[0]._id.slice(-8).toUpperCase() : '------'),
+    () => (receiptState?.orders[0]?.id ? receiptState.orders[0].id.slice(-8).toUpperCase() : '------'),
     [receiptState]
   );
 
@@ -302,7 +346,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
     const totalLabel = language === 'km' ? 'សរុប' : 'Total';
     const emptyLabel = language === 'km' ? 'មិនមានការបញ្ជាទិញសម្រាប់តុនេះទេ' : 'No orders for this table';
 
-    const orderCodes = receiptState.orders.map((order) => `#${order._id.slice(-6)}`).join(', ');
+    const orderCodes = receiptState.orders.map((order) => `#${order.id.slice(-6)}`).join(', ');
     const createdAt = receiptState.orders[0]
       ? new Date(receiptState.orders[0].createdAt).toLocaleString()
       : new Date().toLocaleString();
@@ -380,7 +424,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
     if (!receiptState) return '';
 
     const title = language === 'km' ? 'វិក្កយបត្រ' : 'CASH RECEIPT';
-    const orderCodes = receiptState.orders.map((order) => `#${order._id.slice(-6)}`).join(', ');
+    const orderCodes = receiptState.orders.map((order) => `#${order.id.slice(-6)}`).join(', ');
     const createdAt = receiptState.orders[0]
       ? new Date(receiptState.orders[0].createdAt).toLocaleString()
       : new Date().toLocaleString();
@@ -535,18 +579,19 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className={`text-2xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-          {language === 'km' ? 'ការគ្រប់គ្រងតុ' : 'Table Management'}
-        </h2>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-6 py-3 font-semibold text-white transition-all hover:shadow-lg"
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
+        <div>
+          <h2 className={`text-xl sm:text-2xl font-black text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans'}`}>
+            {language === 'km' ? 'ការគ្រប់គ្រងតុ' : 'Table Management'}
+          </h2>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Physical Store Layout</p>
+        </div>
+        <button 
+          onClick={() => setShowCreateModal(true)} 
+          className={`bg-primary text-white px-6 py-4 rounded-2xl font-normal text-[14px] uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap w-full sm:w-auto ${language === 'km' ? 'font-khmer px-8' : 'font-sans'}`}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {language === 'km' ? 'បង្កើតតុ' : 'Add Table'}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+          <span className="hidden sm:inline">{language === 'km' ? 'បង្កើតតុ' : 'Add Table'}</span>
         </button>
       </div>
 
@@ -575,19 +620,19 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
           </div>
         ) : (
           tables.map((table) => (
-            <div key={table._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all card-hover-lift">
+            <div key={table.id} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 group relative overflow-hidden">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-secondary to-secondary-dark rounded-xl flex items-center justify-center text-white">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${table.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                <span className={`px-2 py-1 rounded-full text-[10px] font-normal uppercase tracking-widest ${table.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'} ${language === 'km' ? 'font-khmer' : ''}`}>
                   {table.isActive ? (language === 'km' ? 'សកម្ម' : 'Active') : (language === 'km' ? 'មិនសកម្ម' : 'Inactive')}
                 </span>
               </div>
 
-              <h3 className={`text-lg font-bold mb-1 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+              <h3 className={`text-lg text-gray-900 tracking-tight mb-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
                 {language === 'km' ? `តុ ${table.name}` : `Table ${table.name}`}
               </h3>
 
@@ -606,13 +651,13 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
                 <button
                   onClick={() => openReceipt(table)}
-                  className="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                  className="w-full px-3 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
                 >
                   {language === 'km' ? 'បោះពុម្ពវិក្កយបត្រ' : 'Receipt / Print'}
                 </button>
 
                 <button
-                  onClick={() => toggleActive(table._id, table.isActive)}
+                  onClick={() => toggleActive(table.id, table.isActive)}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${table.isActive ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
                 >
                   {table.isActive ? (language === 'km' ? 'ធ្វើឱ្យមិនសកម្ម' : 'Deactivate') : (language === 'km' ? 'ធ្វើឱ្យសកម្ម' : 'Activate')}
@@ -626,7 +671,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
                 </button>
 
                 <button
-                  onClick={() => handleDelete(table._id)}
+                  onClick={() => handleDelete(table.id)}
                   className="w-full px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                 >
                   {language === 'km' ? 'លុបតុ' : 'Delete Table'}
@@ -640,8 +685,8 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className={`text-xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-50">
+              <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
                 {language === 'km' ? 'បង្កើតតុថ្មី' : 'Create New Table'}
               </h3>
               <button
@@ -656,7 +701,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
                   {language === 'km' ? 'ឈ្មោះតុ*' : 'Table Name*'}
                 </label>
                 <input
@@ -670,7 +715,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
               </div>
 
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
                   {language === 'km' ? 'Slug (URL - បង្កើតស្វ័យប្រវត្តិ)' : 'Slug (URL - Auto-generated)'}
                 </label>
                 <input
@@ -701,13 +746,13 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-4 border border-gray-200 bg-white rounded-xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="flex-1 px-4 py-4 bg-primary text-white rounded-xl text-[13px] font-normal uppercase tracking-widest hover:bg-primary-dark hover:shadow-lg transition-all"
                 >
                   {language === 'km' ? 'បង្កើត' : 'Create'}
                 </button>
@@ -720,8 +765,8 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       {showQRModal && selectedTable?.qrCode && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className={`text-xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-50">
+              <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
                 {language === 'km' ? `QR Code - តុ ${selectedTable.name}` : `QR Code - Table ${selectedTable.name}`}
               </h3>
               <button
@@ -770,8 +815,8 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       {showReceiptModal && receiptState && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scaleIn">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-              <h3 className={`text-xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+            <div className="sticky top-0 bg-white border-b border-gray-50 p-6 flex items-center justify-between">
+              <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
                 {language === 'km'
                   ? `វិក្កយបត្រ - តុ ${receiptState.table.name}`
                   : `Receipt - Table ${receiptState.table.name}`}
@@ -923,7 +968,7 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
                     <p className="text-gray-500">{language === 'km' ? 'លេខកូដ' : 'Order Codes'}</p>
                     <p className="font-semibold text-gray-900">
                       {receiptState.orders.length > 0
-                        ? receiptState.orders.map((order) => `#${order._id.slice(-6)}`).join(', ')
+                        ? receiptState.orders.map((order) => `#${order.id.slice(-6)}`).join(', ')
                         : '-'}
                     </p>
                   </div>

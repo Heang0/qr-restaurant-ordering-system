@@ -42,39 +42,27 @@ function OrderContent() {
     const loadMenu = async () => {
       try {
         setIsLoading(true);
-        setError('');
-        
         const storeResponse = await fetch(`/api/stores?slug=${storeSlug}`);
-        if (!storeResponse.ok) {
-          setError('Store not found');
-          setIsLoading(false);
-          return;
-        }
-        
-        const storeData = await storeResponse.json();
-        if (!storeData || !storeData._id) {
-          setError('Store not found');
-          setIsLoading(false);
-          return;
-        }
-        
-        setStore(storeData);
-        localStorage.setItem('storeId', storeData._id);
-        localStorage.setItem('storeSlug', storeData.slug);
+        if (storeResponse.ok) {
+          const storeData = await storeResponse.json();
+          setStore(storeData);
+          localStorage.setItem('storeId', storeData.id);
+          localStorage.setItem('storeSlug', storeData.slug);
 
-        const menuResponse = await fetch(`/api/menu?storeId=${storeData._id}`);
-        if (menuResponse.ok) {
-          const menuData = await menuResponse.json();
-          setMenuItems(menuData);
+          const menuResponse = await fetch(`/api/menu?storeId=${storeData.id}`);
+          if (menuResponse.ok) {
+            const menuData = await menuResponse.json();
+            setMenuItems(menuData);
 
-          const categoryMap = new Map();
-          categoryMap.set('all', { _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' });
-          menuData.forEach((item: MenuItemType) => {
-            if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId._id) {
-              categoryMap.set(String(item.categoryId._id), item.categoryId);
-            }
-          });
-          setCategories(Array.from(categoryMap.values()));
+            const categoryMap = new Map();
+            categoryMap.set('all', { _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' });
+            menuData.forEach((item: MenuItemType) => {
+              if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId.id) {
+                categoryMap.set(String(item.categoryId.id), item.categoryId);
+              }
+            });
+            setCategories(Array.from(categoryMap.values()));
+          }
         }
       } catch (err) {
         console.error('Failed to load menu:', err);
@@ -85,7 +73,7 @@ function OrderContent() {
     };
 
     loadMenu();
-  }, [storeSlug, t]);
+  }, [storeSlug]);
 
   // Fetch orders
   useEffect(() => {
@@ -99,7 +87,7 @@ function OrderContent() {
   const fetchOrders = async () => {
     try {
       const tableId = searchParams.get('table') || 'A1';
-      const response = await fetch(`/api/orders?storeId=${store._id}&tableId=${tableId}`);
+      const response = await fetch(`/api/orders?storeId=${store.id}&tableId=${tableId}`);
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
@@ -111,12 +99,12 @@ function OrderContent() {
 
   const addToCart = (item: MenuItemType, quantity: number = 1) => {
     setCart(prev => {
-      const existing = prev.find(i => i.menuItemId === item._id);
+      const existing = prev.find(i => i.menuItemId === item.id);
       if (existing) {
-        return prev.map(i => i.menuItemId === item._id ? { ...i, quantity: i.quantity + quantity } : i);
+        return prev.map(i => i.menuItemId === item.id ? { ...i, quantity: i.quantity + quantity } : i);
       }
       return [...prev, {
-        menuItemId: item._id,
+        menuItemId: item.id,
         name: item.name,
         nameKm: item.nameKm,
         price: item.price,
@@ -142,7 +130,7 @@ function OrderContent() {
   const handleSubmitOrder = async () => {
     try {
       const orderData = {
-        storeId: store._id,
+        storeId: store.id,
         tableId: tableId,
         items: cart.map(item => ({ menuItemId: item.menuItemId, quantity: item.quantity, remark: item.notes || '' }))
       };
@@ -188,7 +176,7 @@ function OrderContent() {
   };
 
   const filteredItems = menuItems.filter(item => {
-    const categoryId = typeof item.categoryId === 'object' ? item.categoryId._id : item.categoryId;
+    const categoryId = typeof item.categoryId === 'object' ? item.categoryId.id : item.categoryId;
     const matchesCategory = selectedCategory === 'all' || !categoryId || String(categoryId) === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.nameKm?.toLowerCase().includes(searchQuery.toLowerCase());

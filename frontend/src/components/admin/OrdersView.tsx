@@ -136,7 +136,7 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
       
       const nextOrders = Array.isArray(data) ? data : [];
       const nextPendingIds = new Set(
-        nextOrders.filter((order: Order) => order.status === 'pending').map((order: Order) => order._id)
+        nextOrders.filter((order: Order) => order.status === 'pending').map((order: Order) => order.id)
       );
 
       const hasNewPendingOrder =
@@ -181,9 +181,9 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
 
       if (updatedOrder) {
         setOrders((prev) =>
-          prev.map((order) => (order._id === updatedOrder._id ? updatedOrder : order))
+          prev.map((order) => (order.id === updatedOrder.id ? updatedOrder : order))
         );
-        setSelectedOrder((prev) => (prev?._id === updatedOrder._id ? updatedOrder : prev));
+        setSelectedOrder((prev) => (prev?.id === updatedOrder.id ? updatedOrder : prev));
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -229,130 +229,142 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className={`text-2xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-          {language === 'km' ? kmText.title : 'Orders Management'}
-        </h2>
+    <div className="space-y-8 animate-fadeIn">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className={`text-xl sm:text-2xl font-black text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans'}`}>
+            {language === 'km' ? kmText.title : 'Live Orders'}
+          </h2>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Real-time Kitchen Monitor</p>
+        </div>
+        <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-gray-50 shadow-sm overflow-x-auto no-scrollbar max-w-full">
+           {stats.map((stat) => (
+             <button
+               key={stat.status}
+               onClick={() => setFilter(stat.status)}
+               className={`px-5 py-2.5 rounded-xl text-[10px] font-normal uppercase tracking-[0.15em] transition-all duration-300 whitespace-nowrap ${
+                 filter === stat.status
+                   ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                   : 'text-gray-400 hover:bg-gray-50'
+               } ${language === 'km' ? 'font-khmer' : ''}`}
+             >
+               {stat.label}
+             </button>
+           ))}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {stats.map((stat) => (
-          <button
-            key={stat.status}
-            onClick={() => setFilter(stat.status)}
-            className={`p-4 rounded-2xl transition-all ${
-              filter === stat.status
-                ? 'bg-gradient-to-br ' + stat.color + ' text-white shadow-lg scale-105'
-                : 'bg-white hover:shadow-md'
-            }`}
-          >
-            <p className={`text-sm font-medium ${filter === stat.status ? 'text-white/90' : 'text-gray-600'}`}>
-              {stat.label}
-            </p>
-            <p className={`text-2xl font-bold mt-1 ${filter === stat.status ? 'text-white' : 'text-gray-800'}`}>
-              {orders.filter((o) => stat.status === 'all' || o.status === stat.status).length}
-            </p>
-          </button>
-        ))}
-      </div>
-
-      {/* Orders Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Orders Grid/Table */}
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 overflow-hidden animate-fadeIn relative">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className={`px-6 py-4 text-left text-sm font-semibold text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className={`px-8 py-5 text-left text-[10px] text-gray-400 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
                   {language === 'km' ? kmText.table : 'Table'}
                 </th>
-                <th className={`px-6 py-4 text-left text-sm font-semibold text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                  {language === 'km' ? kmText.items : 'Items'}
+                <th className={`px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                  {language === 'km' ? kmText.items : 'Summary'}
                 </th>
-                <th className={`px-6 py-4 text-left text-sm font-semibold text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                  {language === 'km' ? kmText.status : 'Status'}
-                </th>
-                <th className={`px-6 py-4 text-left text-sm font-semibold text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                  {language === 'km' ? kmText.time : 'Time'}
-                </th>
-                <th className={`px-6 py-4 text-left text-sm font-semibold text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                <th className={`px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
                   {language === 'km' ? 'ទឹកប្រាក់' : 'Total'}
                 </th>
-                <th className={`px-6 py-4 text-center text-sm font-semibold text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                <th className={`px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                  {language === 'km' ? kmText.status : 'Status'}
+                </th>
+                <th className={`px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
                   {language === 'km' ? kmText.actions : 'Actions'}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-500">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                      {language === 'km' ? 'កំពុងផ្ទុក...' : 'Loading...'}
+                  <td colSpan={5} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary border-t-transparent"></div>
+                      <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">{language === 'km' ? 'កំពុងផ្ទុក...' : 'Updating...'}</span>
                     </div>
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                    {language === 'km' ? kmText.noOrders : 'No orders found'}
+                  <td colSpan={5} className="px-8 py-20 text-center">
+                    <div className="max-w-xs mx-auto">
+                       <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                       </div>
+                       <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
+                         {language === 'km' ? kmText.noOrders : 'No active orders'}
+                       </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50 transition-colors">
-                    <td className={`px-6 py-4 font-medium ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                      {getTableLabel(order)}
+                  <tr key={order.id} className="hover:bg-primary/5 transition-all group duration-300">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-900 text-white flex items-center justify-center font-black text-lg shadow-lg group-hover:scale-110 transition-transform">
+                          {getTableLabel(order)}
+                        </div>
+                        <div className="flex flex-col">
+                           <span className={`text-sm text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-bold'}`}>Table {getTableLabel(order)}</span>
+                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">ID: {order.id.slice(-6)}</span>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {order.items.length} {language === 'km' ? 'មុខ' : 'items'}
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col">
+                         <span className={`text-sm text-gray-700 ${language === 'km' ? 'font-khmer font-normal' : 'font-bold'}`}>{order.items.length} {language === 'km' ? 'មុខ' : 'items'}</span>
+                         <span className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">
+                            {order.items.map(i => i.name).join(', ')}
+                         </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-primary font-bold">${getOrderTotal(order).toFixed(2)}</span>
+                    <td className="px-8 py-6">
+                      <span className="text-lg font-black text-primary tracking-tight">${getOrderTotal(order).toFixed(2)}</span>
                     </td>
-                    <td className={`px-6 py-4 text-sm text-gray-600 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                      {new Date(order.createdAt).toLocaleString()}
+                    <td className="px-8 py-6">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(order.status)}`}>
+                         <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+                         <span className={language === 'km' ? 'font-khmer font-normal' : ''}>{getStatusText(order.status)}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                        {getStatusText(order.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => {
                             setSelectedOrder(order);
                             setShowDetailsModal(true);
                           }}
-                          className="px-3 py-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
+                          className="w-10 h-10 rounded-xl bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm"
                         >
-                          {language === 'km' ? kmText.viewDetails : 'View'}
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         </button>
+                        
                         {order.status === 'pending' && (
                           <button
-                            onClick={() => updateOrderStatus(order._id, 'preparing')}
-                            className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                            onClick={() => updateOrderStatus(order.id, 'preparing')}
+                            className="h-10 px-4 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
                           >
                             {language === 'km' ? kmText.accept : 'Accept'}
                           </button>
                         )}
                         {order.status === 'preparing' && (
                           <button
-                            onClick={() => updateOrderStatus(order._id, 'ready')}
-                            className="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                            onClick={() => updateOrderStatus(order.id, 'ready')}
+                            className="h-10 px-4 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                           >
-                            {language === 'km' ? kmText.ready : 'Ready'}
+                            {language === 'km' ? kmText.ready : 'Mark Ready'}
                           </button>
                         )}
                         {order.status === 'ready' && (
                           <button
-                            onClick={() => updateOrderStatus(order._id, 'completed')}
-                            className="px-3 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                            onClick={() => updateOrderStatus(order.id, 'completed')}
+                            className="h-10 px-4 rounded-xl bg-gray-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg"
                           >
-                            {language === 'km' ? kmText.complete : 'Complete'}
+                            {language === 'km' ? kmText.complete : 'Deliver'}
                           </button>
                         )}
                       </div>
@@ -367,112 +379,102 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
 
       {/* Order Details Modal */}
       {showDetailsModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
-              <h3 className={`text-xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                {language === 'km' ? 'ព័ត៌មានលម្អិតការបញ្ជាទិញ' : 'Order Details'}
-              </h3>
-              <button
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden border border-white/40">
+            <div className="p-8 border-b border-gray-100 flex items-center justify-between">
+               <div>
+                  <h3 className={`text-2xl text-gray-900 tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                    Order Details
+                  </h3>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Ticket # {selectedOrder.id.slice(-8)}</p>
+               </div>
+               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">{language === 'km' ? kmText.table : 'Table'}</p>
-                  <p className={`font-semibold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>{getTableLabel(selectedOrder)}</p>
+            <div className="p-8 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-8 mb-10">
+                <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
+                  <p className={`text-[13px] text-gray-400 uppercase tracking-widest mb-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{language === 'km' ? kmText.table : 'Dining Table'}</p>
+                  <p className={`text-2xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{getTableLabel(selectedOrder)}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">{language === 'km' ? kmText.time : 'Time'}</p>
-                  <p className={`font-semibold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>{new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{language === 'km' ? kmText.status : 'Status'}</p>
-                  <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedOrder.status)}`}>
-                    {getStatusText(selectedOrder.status)}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{language === 'km' ? 'សរុប' : 'Total'}</p>
-                  <p className="text-lg font-bold text-primary">${getOrderTotal(selectedOrder).toFixed(2)}</p>
+                <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
+                  <p className={`text-[13px] text-gray-400 uppercase tracking-widest mb-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>Status</p>
+                  <p className={`text-lg text-primary uppercase tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{getStatusText(selectedOrder.status)}</p>
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className={`font-semibold mb-3 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                  {language === 'km' ? kmText.items : 'Order Items'}
+              <div className="space-y-6">
+                <h4 className={`text-sm text-gray-900 uppercase tracking-[0.2em] border-b border-gray-100 pb-4 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                  {language === 'km' ? kmText.items : 'Menu Selection'}
                 </h4>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {selectedOrder.items.map((item, index) => (
-                    <div
-                      key={`${selectedOrder._id}-${index}`}
-                      className="flex items-center justify-between gap-3 py-2 border-b border-gray-100 last:border-0"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary-dark/10 overflow-hidden border border-primary/20 flex-shrink-0 flex items-center justify-center">
-                          <span className="text-lg font-bold text-primary">x{item.quantity}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-medium text-sm truncate ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                            {language === 'km' && (item as any).nameKm ? (item as any).nameKm : item.name}
-                          </p>
-                          <p className="text-xs text-gray-500">${(item.price * item.quantity).toFixed(2)}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
+                    <div key={index} className="flex items-center justify-between group">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center font-black text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300 shadow-sm border border-gray-100">
+                             x{item.quantity}
+                          </div>
+                          <div>
+                             <p className={`text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-bold'}`}>
+                                {language === 'km' && (item as any).nameKm ? (item as any).nameKm : item.name}
+                             </p>
+                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Unit Price: ${item.price.toFixed(2)}</p>
+                          </div>
+                       </div>
+                       <p className="font-black text-gray-900 tracking-tight">${(item.price * item.quantity).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setShowDetailsModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-                >
-                  {t('common.cancel')}
-                </button>
-                {selectedOrder.status === 'pending' && (
-                  <button
-                    onClick={() => {
-                      updateOrderStatus(selectedOrder._id, 'preparing');
-                      setShowDetailsModal(false);
-                    }}
-                    className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
-                  >
-                    {language === 'km' ? kmText.accept : 'Accept Order'}
-                  </button>
-                )}
-                {selectedOrder.status === 'preparing' && (
-                  <button
-                    onClick={() => {
-                      updateOrderStatus(selectedOrder._id, 'ready');
-                      setShowDetailsModal(false);
-                    }}
-                    className="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors"
-                  >
-                    {language === 'km' ? kmText.ready : 'Mark Ready'}
-                  </button>
-                )}
-                {selectedOrder.status === 'ready' && (
-                  <button
-                    onClick={() => {
-                      updateOrderStatus(selectedOrder._id, 'completed');
-                      setShowDetailsModal(false);
-                    }}
-                    className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-xl font-medium hover:bg-gray-600 transition-colors"
-                  >
-                    {language === 'km' ? kmText.complete : 'Complete Order'}
-                  </button>
-                )}
+              <div className="mt-10 p-6 rounded-[1.5rem] bg-gray-900 text-white flex items-center justify-between shadow-2xl shadow-gray-200">
+                 <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total Payable</p>
+                    <p className="text-3xl font-black tracking-tighter">${getOrderTotal(selectedOrder).toFixed(2)}</p>
+                 </div>
+                 <div className="text-right">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Received at</p>
+                    <p className="text-sm font-medium">{new Date(selectedOrder.createdAt).toLocaleTimeString()}</p>
+                 </div>
               </div>
+            </div>
+
+            <div className="p-8 border-t border-gray-100 flex gap-4 bg-gray-50/50">
+               <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="flex-1 px-6 py-4 rounded-2xl border border-gray-200 bg-white text-xs uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all shadow-sm font-normal"
+               >
+                  Close
+               </button>
+               {selectedOrder.status === 'pending' && (
+                 <button
+                   onClick={() => {
+                     updateOrderStatus(selectedOrder.id, 'preparing');
+                     setShowDetailsModal(false);
+                   }}
+                   className="flex-1 px-6 py-4 rounded-2xl bg-primary text-white text-xs uppercase tracking-widest hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 font-normal"
+                 >
+                   {language === 'km' ? kmText.accept : 'Process Order'}
+                 </button>
+               )}
+               {selectedOrder.status === 'preparing' && (
+                 <button
+                   onClick={() => {
+                     updateOrderStatus(selectedOrder.id, 'ready');
+                     setShowDetailsModal(false);
+                   }}
+                   className="flex-1 px-6 py-4 rounded-2xl bg-emerald-600 text-white text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 font-normal"
+                 >
+                   {language === 'km' ? kmText.ready : 'Mark Ready'}
+                 </button>
+               )}
             </div>
           </div>
         </div>

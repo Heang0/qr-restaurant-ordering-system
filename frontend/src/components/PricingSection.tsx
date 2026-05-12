@@ -10,86 +10,80 @@ const PricingSection: React.FC = () => {
   const features = t('pricing.features');
 
   return (
-    <section id="pricing" className="py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
+    <section id="pricing" className="py-32 bg-[#fcfcfd]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold mb-4 ${
-            language === 'km' ? 'font-khmer' : 'font-sans'
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <h2 className={`text-4xl md:text-5xl text-gray-900 mb-6 tracking-tight ${
+            language === 'km' ? 'font-khmer text-khmer font-normal' : 'font-sans font-extrabold'
           }`}>
-            <span className="bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
-              {t('pricing.title')}
-            </span>
+            {t('pricing.title')}
           </h2>
-          <p className={`text-gray-600 text-base md:text-lg ${
-            language === 'km' ? 'font-khmer' : 'font-sans'
-          }`}>
-            {t('pricingDesc')}
+          <div className="w-20 h-1.5 bg-primary mx-auto rounded-full mb-8"></div>
+          <p className={`text-lg text-gray-500 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+            One simple price for everything. No hidden fees.
           </p>
         </div>
 
-        {/* Pricing Card */}
         <div className="flex justify-center">
-          <div className="w-full max-w-md">
-            <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 group hover:shadow-3xl transition-all duration-300 card-hover-lift">
-              {/* Featured Badge */}
-              <div className="absolute top-4 right-4 bg-gradient-to-r from-red-600 to-red-500 text-white px-4 py-1.5 rounded-full text-xs md:text-sm font-bold shadow-lg">
-                {language === 'km' ? 'ពេញនិយម' : 'POPULAR'}
-              </div>
-
-              <div className="p-6 md:p-10">
-                {/* Header */}
-                <div className="text-center mb-8">
-                  <h3 className={`text-xl md:text-2xl font-bold text-gray-800 mb-3 ${
-                    language === 'km' ? 'font-khmer' : 'font-sans'
-                  }`}>
-                    {language === 'km' ? 'គម្រោងអាជីវកម្ម' : 'Business Plan'}
-                  </h3>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
-                      $9.99
-                    </span>
-                    <span className="text-gray-500 text-sm md:text-base">/{t('pricing.period')}</span>
+          <div className="w-full max-w-lg">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-dark rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative bg-white rounded-[2rem] shadow-premium-lg overflow-hidden border border-gray-100 p-8 md:p-12">
+                {/* Popular Badge */}
+                <div className="absolute top-8 right-8">
+                  <div className="bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full shadow-lg shadow-primary/20">
+                    Most Popular
                   </div>
                 </div>
 
+                {/* Header */}
+                <div className="mb-10">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                    {language === 'km' ? 'គម្រោងអាជីវកម្ម' : 'Full Access'}
+                  </h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-6xl font-black text-gray-900 tracking-tighter">
+                      $9.99
+                    </span>
+                    <span className="text-gray-400 font-medium text-lg">{t('pricing.period')}</span>
+                  </div>
+                  <p className="text-gray-500 mt-4 text-sm font-medium">Perfect for restaurants of any size.</p>
+                </div>
+
                 {/* Features */}
-                <ul className="space-y-3 md:space-y-4 mb-8">
+                <div className="space-y-5 mb-12">
                   {Array.isArray(features) && features.map((feature: string, index: number) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div key={index} className="flex items-center gap-4">
+                      <div className="shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                        <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <span className={`text-gray-700 text-sm md:text-base ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                      <span className={`text-gray-600 font-medium ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
                         {feature}
                       </span>
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
 
                 {/* CTA Button */}
                 <Link
                   href="https://t.me/Emma_Heang"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 btn-hover-lift block text-center"
+                  className={`btn-primary w-full text-center py-5 text-xl shadow-primary/20 shadow-2xl block ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}
                 >
                   {t('pricing.signup')}
                 </Link>
 
                 {/* Guarantee */}
-                <p className={`text-center text-gray-500 text-xs md:text-sm mt-5 ${
-                  language === 'km' ? 'font-khmer' : 'font-sans'
-                }`}>
-                  {language === 'km' ? 'ធានាសងប្រាក់វិញក្នុងរយៈពេល ៣០ ថ្ងៃ' : '30-day money-back guarantee'}
-                </p>
+                <div className="mt-8 flex items-center justify-center gap-2 text-gray-400 text-xs font-semibold uppercase tracking-widest">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  {language === 'km' ? 'ធានាសងប្រាក់វិញក្នុងរយៈពេល ៣០ ថ្ងៃ' : 'Secure 30-Day Money Back'}
+                </div>
               </div>
-
-              {/* Decorative Elements */}
-              <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-red-50 rounded-full blur-3xl"></div>
-              <div className="absolute -top-20 -left-20 w-40 h-40 bg-orange-50 rounded-full blur-3xl"></div>
             </div>
           </div>
         </div>

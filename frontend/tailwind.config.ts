@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#e74c3c",
+          DEFAULT: "#e84c3d",
           dark: "#c0392b",
           light: "#ff6b5b",
         },
@@ -18,6 +18,11 @@ const config: Config = {
           DEFAULT: "#3498db",
           dark: "#2980b9",
           light: "#5dade2",
+        },
+        accent: {
+          DEFAULT: "#8b5cf6",
+          dark: "#7c3aed",
+          light: "#a78bfa",
         },
         khmer: {
           DEFAULT: "#1a5f7a",
@@ -27,7 +32,7 @@ const config: Config = {
       },
       fontFamily: {
         khmer: ["Kantumruy Pro", "sans-serif"],
-        english: ["Inter", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "Inter", "sans-serif"],
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

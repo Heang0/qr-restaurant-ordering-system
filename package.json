@@ -1,33 +1,27 @@
 {
-  "name": "qr-restaurant-frontend",
-  "version": "2.0.0",
-  "description": "Next.js QR Restaurant Ordering System",
-  "private": true,
+  "name": "qr-restaurant-ordering-system",
+  "version": "1.0.0",
+  "description": "A professional, bilingual (Khmer & English) QR-based restaurant ordering system built with Next.js 14.",
+  "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Heang0/qr-restaurant-ordering-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Heang0/qr-restaurant-ordering-system/issues"
+  },
+  "homepage": "https://github.com/Heang0/qr-restaurant-ordering-system#readme",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.0",
-    "next": "^14.2.0",
-    "qrcode": "^1.5.4",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^20.12.0",
-    "@types/qrcode": "^1.5.5",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3",
-    "typescript": "^5.4.0"
+    "concurrently": "^9.2.1"
   }
 }

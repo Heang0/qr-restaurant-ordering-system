@@ -40,11 +40,11 @@ export const useRealtimeOrders = (
   };
 
   const checkForNewOrders = async (orders: any[]) => {
-    const currentOrderIds = new Set(orders.map(o => o._id));
+    const currentOrderIds = new Set(orders.map(o => o.id));
     
     // Check if there are new orders
     const hasNewOrder = orders.some(order => 
-      !lastOrderIdsRef.current.has(order._id) && order.status === 'pending'
+      !lastOrderIdsRef.current.has(order.id) && order.status === 'pending'
     );
 
     if (hasNewOrder) {

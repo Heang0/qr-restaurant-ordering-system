@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface SidebarProps {
   activeTab: string;
@@ -23,37 +24,58 @@ const Sidebar: React.FC<SidebarProps> = ({
   language,
   t,
 }) => {
-  const { logout } = useAuth();
-  const [storeLogo, setStoreLogo] = useState<string>('');
+  const { logout, profileImage } = useAuth();
+  const [userProfile, setUserProfile] = useState<{ email: string; full_name?: string; profile_image?: string }>({ email: '' });
+  const [storeName, setStoreName] = useState<string>('');
 
   useEffect(() => {
-    // Fetch store logo for sidebar
-    const fetchStoreLogo = async () => {
+    const fetchUserProfile = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+        if (!userId || !token) return;
+
+        const res = await fetch(`/api/users/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+
+    const fetchStoreName = async () => {
       try {
         const storeId = localStorage.getItem('storeId');
         if (storeId) {
           const response = await fetch(`/api/stores?id=${storeId}`);
           if (response.ok) {
             const data = await response.json();
-            if (data.logo || data.logoUrl) {
-              setStoreLogo(data.logo || data.logoUrl);
-            }
+            setStoreName(data.name || '');
           }
         }
       } catch (error) {
-        console.error('Failed to fetch store logo:', error);
+        console.error('Failed to fetch store name:', error);
       }
     };
-    fetchStoreLogo();
-  }, []);
+
+    fetchUserProfile();
+    fetchStoreName();
+
+    window.addEventListener('storeUpdate', fetchStoreName);
+    return () => window.removeEventListener('storeUpdate', fetchStoreName);
+  }, [profileImage]);
 
   const menuItems = [
-    { id: 'dashboard', icon: 'dashboard', label: t('admin.dashboard') },
-    { id: 'categories', icon: 'categories', label: language === 'km' ? 'ប្រភេទ' : 'Categories' },
-    { id: 'menu', icon: 'menu', label: t('admin.menu') },
-    { id: 'orders', icon: 'orders', label: t('admin.orders') },
-    { id: 'tables', icon: 'table', label: t('admin.tables') },
-    { id: 'settings', icon: 'settings', label: t('admin.settings') },
+    { id: 'dashboard', icon: 'dashboard', label: language === 'km' ? 'ផ្ទាំងគ្រប់គ្រង' : t('admin.dashboard') },
+    { id: 'categories', icon: 'categories', label: language === 'km' ? 'ការគ្រប់គ្រងប្រភេទ' : 'Categories' },
+    { id: 'menu', icon: 'menu', label: language === 'km' ? 'ការគ្រប់គ្រងម៉ឺនុយ' : t('admin.menu') },
+    { id: 'orders', icon: 'orders', label: language === 'km' ? 'ការគ្រប់គ្រងការបញ្ជាទិញ' : t('admin.orders') },
+    { id: 'tables', icon: 'table', label: language === 'km' ? 'ការគ្រប់គ្រងតុ' : t('admin.tables') },
+    { id: 'settings', icon: 'settings', label: language === 'km' ? 'ការកំណត់ហាង' : t('admin.settings') },
   ];
 
   const getIcon = (iconName: string) => {
@@ -94,122 +116,74 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <>
-      {/* Mobile Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            {storeLogo ? (
-              <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm flex-shrink-0">
-                <img src={storeLogo} alt="Store Logo" className="w-full h-full object-cover" />
-              </div>
+    <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-500 ease-in-out lg:translate-x-0 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-8 border-b border-gray-50 flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg bg-gray-100 flex-shrink-0 ring-2 ring-white ring-offset-2 ring-offset-gray-900/5">
+            {profileImage ? (
+              <img src={profileImage} alt="PF" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">O</span>
+              <div className="w-full h-full bg-primary text-white flex items-center justify-center font-black text-xl">
+                {userProfile.email ? userProfile.email.charAt(0).toUpperCase() : '?'}
               </div>
             )}
-            <div>
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent block">
-                OrderHey!
-              </span>
-              <p className="text-xs text-gray-500">Admin Panel</p>
-            </div>
           </div>
-        </div>
-
-        <nav className="p-4 space-y-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                onTabChange(item.id);
-                onClose();
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                activeTab === item.id
-                  ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gray-100'
-              } ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-            >
-              {getIcon(item.icon)}
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className={`font-medium ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-              {t('common.logout')}
+          <div className="overflow-hidden">
+            <span className={`text-sm font-black text-gray-900 block truncate ${language === 'km' ? 'font-khmer font-bold text-[15px]' : 'font-sans'}`}>
+              {userProfile.full_name || (userProfile.email ? userProfile.email.split('@')[0] : 'User')}
             </span>
-          </button>
+            <span className={`text-[12px] font-black text-primary uppercase tracking-[0.1em] drop-shadow-md ${language === 'km' ? 'font-khmer text-[13px]' : 'font-sans'}`}>
+              {storeName || (language === 'km' ? 'អ្នកគ្រប់គ្រងហាង' : 'Store Manager')}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            {storeLogo ? (
-              <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm flex-shrink-0">
-                <img src={storeLogo} alt="Store Logo" className="w-full h-full object-cover" />
-              </div>
-            ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">O</span>
-              </div>
-            )}
-            <div>
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent block">
-                OrderHey!
-              </span>
-              <p className="text-xs text-gray-500">Admin Panel</p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                activeTab === item.id
-                  ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gray-100'
-              } ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-            >
-              {getIcon(item.icon)}
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-gray-200">
+      <nav className="p-6 space-y-3 flex-1 overflow-y-auto custom-scrollbar">
+        {menuItems.map((item) => (
           <button
-            onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+            key={item.id}
+            onClick={() => {
+              onTabChange(item.id);
+              onClose();
+            }}
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${
+              activeTab === item.id
+                ? 'bg-primary text-white shadow-xl shadow-primary/20'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+            } ${language === 'km' ? 'font-khmer font-normal text-[16px]' : 'font-sans font-bold text-sm'}`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className={`font-medium ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-              {t('common.logout')}
-            </span>
+            <div className={activeTab === item.id ? 'text-white' : ''}>
+              {getIcon(item.icon)}
+            </div>
+            <span className="tracking-tight">{item.label}</span>
           </button>
+        ))}
+      </nav>
+
+      <div className="p-6 border-t border-gray-50 space-y-1 bg-white flex-shrink-0">
+        <div className="lg:hidden mb-4">
+          <LanguageSwitcher />
         </div>
-      </aside>
-    </>
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all group"
+        >
+          <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className={`font-black uppercase tracking-widest ${language === 'km' ? 'font-khmer font-bold text-[16px]' : 'font-sans text-xs'}`}>
+            {t('common.logout')}
+          </span>
+        </button>
+        
+        <div className="px-5 py-1">
+          <span className={`text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block text-center ${language === 'km' ? 'font-khmer text-[11px] font-bold tracking-normal opacity-60' : 'font-sans'}`}>
+            {language === 'km' ? 'ជំនាន់ v1.01' : 'v1.01 Enterprise'}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 

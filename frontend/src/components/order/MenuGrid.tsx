@@ -86,7 +86,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({
       {/* Category Filter Buttons */}
       <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
         {categories.map((category) => {
-          const categoryId = typeof category === 'object' ? String(category._id) : String(category);
+          const categoryId = typeof category === 'object' ? String(category.id) : String(category);
           return (
             <button
               key={categoryId}
@@ -107,7 +107,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
         {items.map((item) => (
           <div
-            key={item._id}
+            key={item.id}
             className="group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 card-hover-lift border border-gray-100"
           >
             {/* Image */}

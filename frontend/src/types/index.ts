@@ -1,5 +1,5 @@
 export interface MenuItem {
-  _id: string;
+  id: string;
   name: string;
   nameKm?: string;
   description?: string;
@@ -33,7 +33,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  _id: string;
+  id: string;
   tableId: string;
   tableName: string;
   storeId: string;
@@ -45,7 +45,7 @@ export interface Order {
 }
 
 export interface Category {
-  _id: string;
+  id: string;
   name: string;
   nameKm?: string;
   description?: string;
@@ -56,7 +56,7 @@ export interface Category {
 }
 
 export interface Store {
-  _id: string;
+  id: string;
   name: string;
   slug: string;
   description?: string;
@@ -68,7 +68,7 @@ export interface Store {
 }
 
 export interface Table {
-  _id: string;
+  id: string;
   name: string;
   slug: string;
   storeId: string;
@@ -77,7 +77,7 @@ export interface Table {
 }
 
 export interface User {
-  _id: string;
+  id: string;
   email: string;
   role: 'superadmin' | 'admin' | 'user';
   storeId?: string;
