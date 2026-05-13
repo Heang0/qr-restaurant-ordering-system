@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MenuItem as MenuItemType, CartItem, Order } from '@/types';
 import Header from '@/components/order/Header';
 import MenuGrid from '@/components/order/MenuGrid';
 import Cart from '@/components/order/Cart';
-import BottomNav from '@/components/order/BottomNav';
+import SideMenu from '@/components/order/SideMenu';
 import FloatingCartButton from '@/components/order/FloatingCartButton';
 import OrderConfirmation from '@/components/order/OrderConfirmation';
 import ImageModal from '@/components/order/ImageModal';
@@ -25,7 +25,7 @@ function OrderContent() {
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +35,19 @@ function OrderContent() {
   const [categories, setCategories] = useState<any[]>([{ _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' }]);
   const [selectedItem, setSelectedItem] = useState<MenuItemType | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'menu' | 'orders'>('menu');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') as 'menu' | 'orders' | 'checkout' || 'menu';
+  
+  const [activeTab, setActiveTabState] = useState<'menu' | 'orders' | 'checkout'>(initialTab);
+
+  // Sync state to URL
+  const setActiveTab = (tab: 'menu' | 'orders' | 'checkout') => {
+    setActiveTabState(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   // Fetch store and menu
   useEffect(() => {
@@ -56,9 +68,14 @@ function OrderContent() {
 
             const categoryMap = new Map();
             categoryMap.set('all', { _id: 'all', name: t('common.all'), nameKm: 'ទាំងអស់' });
-            menuData.forEach((item: MenuItemType) => {
-              if (item.categoryId && typeof item.categoryId === 'object' && item.categoryId.id) {
-                categoryMap.set(String(item.categoryId.id), item.categoryId);
+            
+            menuData.forEach((item: any) => {
+              // Check categories (plural) which is where backend joins it
+              const category = item.categories || (typeof item.categoryId === 'object' ? item.categoryId : null);
+              
+              if (category && (category.id || category._id)) {
+                const catId = String(category.id || category._id);
+                categoryMap.set(catId, category);
               }
             });
             setCategories(Array.from(categoryMap.values()));
@@ -90,19 +107,30 @@ function OrderContent() {
 
   // Fetch orders
   useEffect(() => {
-    if (store) {
+    if (store && resolvedTableId) {
       fetchOrders();
-      const interval = setInterval(fetchOrders, 30000);
+      const interval = setInterval(fetchOrders, 5000);
       return () => clearInterval(interval);
     }
-  }, [store]);
+  }, [store, resolvedTableId]);
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`/api/orders?storeId=${store.id}&tableId=${resolvedTableId}`);
+      const response = await fetch(`/api/orders?storeId=${store.id}&tableId=${resolvedTableId}&status=active`);
       if (response.ok) {
         const data = await response.json();
-        setOrders(data);
+        const mappedOrders = data.map((order: any) => ({
+          ...order,
+          totalAmount: Number(order.total_price || order.total_amount || 0),
+          createdAt: order.created_at
+        }));
+        
+        // If orders were present and now they are gone, it means the table was cleared
+        if (orders.length > 0 && mappedOrders.length === 0) {
+          clearCart();
+        }
+        
+        setOrders(mappedOrders);
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -142,9 +170,18 @@ function OrderContent() {
   const handleSubmitOrder = async () => {
     try {
       const orderData = {
-        storeId: store.id,
-        tableId: resolvedTableId,
-        items: cart.map(item => ({ menuItemId: item.menuItemId, quantity: item.quantity, remark: item.notes || '' }))
+        store_id: store.id,
+        table_id: resolvedTableId,
+        items: cart.map(item => ({ 
+          menu_item_id: item.menuItemId, 
+          quantity: item.quantity, 
+          price: item.price,
+          name: item.name,
+          image: item.image,
+          remark: item.notes || '' 
+        })),
+        total_price: cartTotal * 1.1, // Including VAT
+        status: 'pending'
       };
 
       const response = await fetch('/api/orders', {
@@ -193,10 +230,25 @@ function OrderContent() {
   });
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] hero-gradient">
-      <Header tableId={urlTableSlug.toUpperCase()} language={language} storeName={store?.name || 'Loading...'} storeLogo={store?.logo_url || store?.logo} />
+    <div className="min-h-screen bg-[#fcfcfd]">
+      <Header 
+        tableId={urlTableSlug.toUpperCase()} 
+        language={language} 
+        storeName={store?.name || 'Loading...'} 
+        storeLogo={store?.logo_url || store?.logo} 
+        onMenuClick={() => setIsMenuOpen(true)}
+      />
 
-      {activeTab === 'menu' ? (
+      <SideMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        onTabChange={setActiveTab} 
+        activeTab={activeTab}
+        storeName={store?.name}
+        storeLogo={store?.logo_url || store?.logo}
+      />
+
+      {activeTab === 'menu' && (
         <main className="max-w-screen-xl mx-auto px-5 py-8 pb-32">
           <MenuGrid
             items={filteredItems}
@@ -213,32 +265,36 @@ function OrderContent() {
             onImageClick={handleImageClick}
           />
         </main>
-      ) : (
+      )}
+
+      {activeTab === 'orders' && (
         <CustomerOrders orders={orders} language={language} t={t} />
       )}
 
-      <BottomNav
-        cartCount={cartCount}
-        onCartClick={() => setIsCartOpen(true)}
-        language={language}
-        t={t}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      {activeTab === 'checkout' && (
+        <Cart
+          isOpen={true}
+          onClose={() => setActiveTab('menu')}
+          cart={cart}
+          total={cartTotal}
+          onAddToCart={addToCart}
+          onRemoveFromCart={removeFromCart}
+          onUpdateQuantity={updateQuantity}
+          onUpdateNotes={updateNotes}
+          onSubmitOrder={handleSubmitOrder}
+          language={language}
+          t={t}
+        />
+      )}
 
-      <Cart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cart={cart}
-        total={cartTotal}
-        onAddToCart={addToCart}
-        onRemoveFromCart={removeFromCart}
-        onUpdateQuantity={updateQuantity}
-        onUpdateNotes={updateNotes}
-        onSubmitOrder={handleSubmitOrder}
-        language={language}
-        t={t}
-      />
+      {activeTab === 'menu' && (
+        <FloatingCartButton 
+          count={cartCount} 
+          totalPrice={cartTotal}
+          onClick={() => setActiveTab('checkout')}
+          language={language}
+        />
+      )}
 
       <OrderConfirmation
         isOpen={isConfirmationOpen}

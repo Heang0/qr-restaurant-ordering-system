@@ -34,66 +34,85 @@ const CustomerOrders: React.FC<CustomerOrdersProps> = ({ orders, language, t }) 
   };
 
   const getOrderTotal = (order: Order) => {
-    return order.totalAmount || order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const amount = Number(order.totalAmount || 0);
+    if (!isNaN(amount) && amount > 0) return amount;
+    return order.items.reduce((sum, item) => sum + (Number(item.price || 0) * item.quantity), 0);
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
-      <h2 className={`text-2xl font-bold mb-6 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-        {language === 'km' ? 'ការបញ្ជាទិញរបស់អ្នក' : 'Your Orders'}
+      <h2 className={`text-xl font-semibold mb-6 text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+        {language === 'km' ? 'ប្រវត្តិនៃការកុម្ម៉ង់' : 'Order History'}
       </h2>
 
       {orders.length === 0 ? (
-        <div className="text-center text-gray-400 py-12">
-          <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p className={language === 'km' ? 'font-khmer' : 'font-sans'}>
-            {language === 'km' ? 'មិនមានការបញ្ជាទិញទេ' : 'No orders yet'}
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p className={`text-[12px] font-medium text-gray-400 uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>
+            {language === 'km' ? 'មិនទាន់មានការកុម្ម៉ង់ទេ' : 'No orders yet'}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-              <div className="flex items-center justify-between mb-3">
+            <div key={order.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm transition-all active:scale-[0.99]">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">
-                    {language === 'km' ? 'លេខកូដ' : 'Order'} #{order.id.slice(-6)}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(order.createdAt).toLocaleString()}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-semibold text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded-md">
+                      #{order.id.slice(-6).toUpperCase()}
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider ${getStatusColor(order.status)}`}>
+                      {getStatusText(order.status)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 font-medium">
+                    {new Date(order.createdAt).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
-                  {getStatusText(order.status)}
-                </span>
               </div>
 
-              <div className="border-t border-gray-100 pt-3 mb-3">
+              <div className="space-y-4 mb-5">
                 {order.items.map((item, index) => (
-                  <div key={`${order.id}-${index}`} className="flex items-center justify-between gap-3 py-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary-dark/10 overflow-hidden border border-primary/20 flex-shrink-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-primary">x{item.quantity}</span>
+                  <div key={`${order.id}-${index}`} className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 flex-shrink-0 overflow-hidden">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[12px] font-bold text-gray-400">{item.quantity}x</span>
+                        )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className={`font-medium text-sm truncate ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+                      <div className="min-w-0">
+                        <p className={`font-medium text-[14px] text-gray-900 truncate ${language === 'km' ? 'font-khmer' : ''}`}>
                           {item.name}
                         </p>
-                        <p className="text-xs text-gray-500">${(item.price * item.quantity).toFixed(2)}</p>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">x{item.quantity}</span>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-[14px] font-semibold text-gray-900 tracking-tight">
+                      ${(Number(item.price || 0) * item.quantity).toFixed(2)}
+                    </p>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <span className={`text-sm font-medium ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                  {language === 'km' ? 'សរុប' : 'Total'}:
+              <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                <span className={`text-[12px] font-medium text-gray-500 uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>
+                  {language === 'km' ? 'សរុប' : 'Total'}
                 </span>
-                <span className="text-lg font-bold text-primary">
+                <span className="text-[17px] font-semibold text-primary tracking-tight">
                   ${getOrderTotal(order).toFixed(2)}
                 </span>
               </div>

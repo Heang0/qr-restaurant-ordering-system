@@ -3,14 +3,29 @@ import { supabase } from '../config/supabase.js';
 
 export const getOrders = async (req: Request, res: Response) => {
   try {
-    const { storeId } = req.query;
+    const { storeId, tableId, status } = req.query;
     if (!storeId) return res.status(400).json({ message: 'Store ID required' });
 
-    const { data: orders, error } = await supabase
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    let query = supabase
       .from('orders')
       .select('*, tables(*)')
       .eq('store_id', storeId)
-      .order('created_at', { ascending: false });
+      .gte('created_at', twentyFourHoursAgo.toISOString());
+
+    if (tableId) {
+      query = query.eq('table_id', tableId);
+    }
+
+    if (status === 'active') {
+      query = query.in('status', ['pending', 'preparing', 'ready']);
+    } else if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: orders, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
     res.json(orders);
@@ -24,13 +39,13 @@ export const createOrder = async (req: Request, res: Response) => {
     const { data: order, error } = await supabase
       .from('orders')
       .insert([req.body])
-      .select()
+      .select('*, tables(*)')
       .single();
 
     if (error) throw error;
     res.status(201).json({ message: 'Order created successfully', order });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 
@@ -41,7 +56,7 @@ export const updateOrder = async (req: Request, res: Response) => {
       .from('orders')
       .update(req.body)
       .eq('id', id)
-      .select()
+      .select('*, tables(*)')
       .single();
 
     if (error || !order) return res.status(404).json({ message: 'Order not found' });
@@ -71,16 +86,27 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    console.log(`Updating order ${id} to status: ${status}`);
+
     const { data: order, error } = await supabase
       .from('orders')
       .update({ status })
       .eq('id', id)
-      .select()
+      .select('*, tables(*)')
       .single();
 
-    if (error || !order) return res.status(404).json({ message: 'Order not found' });
+    if (error) {
+      console.error(`Database error updating order ${id}:`, error);
+      return res.status(400).json({ message: error.message || 'Database error' });
+    }
+
+    if (!order) {
+      return res.status(404).json({ message: `Order ${id} not found` });
+    }
+    
     res.json({ message: 'Order status updated successfully', order });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (error: any) {
+    console.error('Update status crash:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };

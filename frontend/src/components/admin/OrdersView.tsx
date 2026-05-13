@@ -4,17 +4,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OrderItem {
-  menuItemId: string;
+  _id?: string;
+  menuItemId?: string;
   name: string;
   nameKm?: string;
   quantity: number;
   price: number;
-  subtotal: number;
+  subtotal?: number;
   notes?: string;
+  image?: string;
 }
 
 interface Order {
-  _id: string;
+  id: string;
+  _id?: string;
   tableId: string;
   tableName: string;
   storeId: string;
@@ -24,6 +27,25 @@ interface Order {
   createdAt: string;
   updatedAt: string;
 }
+
+type ApiOrder = Order & {
+  table_id?: string;
+  table_name?: string;
+  store_id?: string;
+  total_price?: number | string;
+  total_amount?: number | string;
+  created_at?: string;
+  updated_at?: string;
+  tables?: {
+    table_number?: string;
+    name?: string;
+  };
+};
+
+type ApiOrderItem = OrderItem & {
+  menu_item_id?: string;
+  remark?: string;
+};
 
 interface OrdersViewProps {
   language: 'en' | 'km';
@@ -72,6 +94,42 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
   const soundBlockedRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
+
+  const toNumber = (value: unknown) => {
+    const nextValue = Number(value);
+    return Number.isFinite(nextValue) ? nextValue : 0;
+  };
+
+  const getItemSubtotal = (item: OrderItem) => {
+    const subtotal = toNumber(item.subtotal);
+    if (subtotal > 0) return subtotal;
+    return toNumber(item.price) * toNumber(item.quantity);
+  };
+
+  const normalizeOrder = (order: ApiOrder): Order => ({
+    ...order,
+    id: order.id || order._id || '',
+    tableId: order.tableId || order.table_id || '',
+    tableName: order.tableName || order.table_name || order.tables?.table_number || order.tables?.name || '',
+    storeId: order.storeId || order.store_id || '',
+    totalAmount:
+      toNumber(order.totalAmount) ||
+      toNumber(order.total_price) ||
+      toNumber(order.total_amount) ||
+      (Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + getItemSubtotal(item), 0) : 0),
+    createdAt: order.createdAt || order.created_at || '',
+    updatedAt: order.updatedAt || order.updated_at || '',
+    items: Array.isArray(order.items)
+      ? order.items.map((item: ApiOrderItem) => ({
+          ...item,
+          menuItemId: item.menuItemId || item.menu_item_id || '',
+          quantity: toNumber(item.quantity),
+          price: toNumber(item.price),
+          subtotal: getItemSubtotal(item),
+          notes: item.notes || item.remark || '',
+        }))
+      : [],
+  });
 
   useEffect(() => {
     const audio = new Audio('/sounds/new-order.mp3');
@@ -124,7 +182,7 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 30000);
+    const interval = setInterval(fetchOrders, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -134,9 +192,9 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
       const response = await fetch(`/api/orders?storeId=${storeId || ''}`);
       const data = await response.json();
       
-      const nextOrders = Array.isArray(data) ? data : [];
+      const nextOrders = Array.isArray(data) ? data.map((order: ApiOrder) => normalizeOrder(order)) : [];
       const nextPendingIds = new Set(
-        nextOrders.filter((order: Order) => order.status === 'pending').map((order: Order) => order.id)
+        nextOrders.filter((order: Order) => order.status === 'pending').map((order: Order) => getOrderId(order))
       );
 
       const hasNewPendingOrder =
@@ -181,9 +239,17 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
 
       if (updatedOrder) {
         setOrders((prev) =>
-          prev.map((order) => (order.id === updatedOrder.id ? updatedOrder : order))
+          prev.map((order) => {
+            const currentId = getOrderId(order);
+            const updatedId = updatedOrder.id || updatedOrder._id;
+            return currentId === updatedId ? updatedOrder : order;
+          })
         );
-        setSelectedOrder((prev) => (prev?.id === updatedOrder.id ? updatedOrder : prev));
+        setSelectedOrder((prev) => {
+          const currentId = prev ? getOrderId(prev) : '';
+          const updatedId = updatedOrder.id || updatedOrder._id;
+          return currentId === updatedId ? updatedOrder : prev;
+        });
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -213,12 +279,16 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
   };
 
   const getOrderTotal = (order: Order) => {
-    return order.totalAmount || order.items.reduce((sum, item) => sum + item.subtotal, 0);
+    return toNumber(order.totalAmount) || order.items.reduce((sum, item) => sum + getItemSubtotal(item), 0);
   };
 
-  const getTableLabel = (order: Order) => order.tableName || order.tableId;
+  const getOrderId = (order: Order) => order.id || order._id || '';
 
-  const filteredOrders = filter === 'all' ? orders : orders.filter((order) => order.status === filter);
+  const getTableLabel = (order: Order) => order.tableName || order.tableId || '-';
+
+  const filteredOrders = filter === 'all'
+    ? orders.filter((o) => o.status !== 'cancelled' && o.status !== 'completed')
+    : orders.filter((order) => order.status === filter);
 
   const stats = [
     { status: 'all', label: language === 'km' ? kmText.all : 'Total', color: 'from-gray-500 to-gray-600' },
@@ -302,7 +372,7 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-primary/5 transition-all group duration-300">
+                  <tr key={getOrderId(order)} className="hover:bg-primary/5 transition-all group duration-300">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gray-900 text-white flex items-center justify-center font-black text-lg shadow-lg group-hover:scale-110 transition-transform">
@@ -310,7 +380,7 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
                         </div>
                         <div className="flex flex-col">
                            <span className={`text-sm text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-bold'}`}>Table {getTableLabel(order)}</span>
-                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">ID: {order.id.slice(-6)}</span>
+                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">ID: {getOrderId(order).slice(-6)}</span>
                         </div>
                       </div>
                     </td>
@@ -345,7 +415,7 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
                         
                         {order.status === 'pending' && (
                           <button
-                            onClick={() => updateOrderStatus(order.id, 'preparing')}
+                            onClick={() => updateOrderStatus(getOrderId(order), 'preparing')}
                             className="h-10 px-4 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
                           >
                             {language === 'km' ? kmText.accept : 'Accept'}
@@ -353,19 +423,16 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
                         )}
                         {order.status === 'preparing' && (
                           <button
-                            onClick={() => updateOrderStatus(order.id, 'ready')}
+                            onClick={() => updateOrderStatus(getOrderId(order), 'completed')}
                             className="h-10 px-4 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
                           >
                             {language === 'km' ? kmText.ready : 'Mark Ready'}
                           </button>
                         )}
-                        {order.status === 'ready' && (
-                          <button
-                            onClick={() => updateOrderStatus(order.id, 'completed')}
-                            className="h-10 px-4 rounded-xl bg-gray-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg"
-                          >
-                            {language === 'km' ? kmText.complete : 'Deliver'}
-                          </button>
+                        {order.status === 'completed' && (
+                          <div className="h-10 px-4 flex items-center justify-center text-emerald-600 font-bold uppercase text-[10px] tracking-widest bg-emerald-50 rounded-xl border border-emerald-100">
+                             {language === 'km' ? kmText.completed : 'Delivered'}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -379,104 +446,103 @@ const OrdersView: React.FC<OrdersViewProps> = ({ language, t }) => {
 
       {/* Order Details Modal */}
       {showDetailsModal && selectedOrder && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden border border-white/40">
-            <div className="p-8 border-b border-gray-100 flex items-center justify-between">
-               <div>
-                  <h3 className={`text-2xl text-gray-900 tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                    Order Details
-                  </h3>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Ticket # {selectedOrder.id.slice(-8)}</p>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8 animate-fadeIn">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden border border-white/40 animate-scaleIn">
+              {/* Modal Header - Fixed */}
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                  </div>
+                  <div>
+                    <h3 className={`text-xl text-gray-900 tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                      {language === 'km' ? 'ព័ត៌មានលម្អិតនៃការបញ្ជាទិញ' : 'Order Specification'}
+                    </h3>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-0.5">#{getOrderId(selectedOrder).slice(-8)} • Table {getTableLabel(selectedOrder)}</p>
+                  </div>
                </div>
                <button
-                onClick={() => setShowDetailsModal(false)}
-                className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
-              >
-                <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-8 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-8 mb-10">
-                <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
-                  <p className={`text-[13px] text-gray-400 uppercase tracking-widest mb-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{language === 'km' ? kmText.table : 'Dining Table'}</p>
-                  <p className={`text-2xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{getTableLabel(selectedOrder)}</p>
-                </div>
-                <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
-                  <p className={`text-[13px] text-gray-400 uppercase tracking-widest mb-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>Status</p>
-                  <p className={`text-lg text-primary uppercase tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{getStatusText(selectedOrder.status)}</p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <h4 className={`text-sm text-gray-900 uppercase tracking-[0.2em] border-b border-gray-100 pb-4 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                  {language === 'km' ? kmText.items : 'Menu Selection'}
-                </h4>
-                <div className="space-y-4">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between group">
-                       <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center font-black text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300 shadow-sm border border-gray-100">
-                             x{item.quantity}
-                          </div>
-                          <div>
-                             <p className={`text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-bold'}`}>
-                                {language === 'km' && (item as any).nameKm ? (item as any).nameKm : item.name}
-                             </p>
-                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Unit Price: ${item.price.toFixed(2)}</p>
-                          </div>
-                       </div>
-                       <p className="font-black text-gray-900 tracking-tight">${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-10 p-6 rounded-[1.5rem] bg-gray-900 text-white flex items-center justify-between shadow-2xl shadow-gray-200">
-                 <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Total Payable</p>
-                    <p className="text-3xl font-black tracking-tighter">${getOrderTotal(selectedOrder).toFixed(2)}</p>
-                 </div>
-                 <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Received at</p>
-                    <p className="text-sm font-medium">{new Date(selectedOrder.createdAt).toLocaleTimeString()}</p>
-                 </div>
-              </div>
-            </div>
-
-            <div className="p-8 border-t border-gray-100 flex gap-4 bg-gray-50/50">
-               <button
-                  onClick={() => setShowDetailsModal(false)}
-                  className="flex-1 px-6 py-4 rounded-2xl border border-gray-200 bg-white text-xs uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all shadow-sm font-normal"
+                 onClick={() => setShowDetailsModal(false)}
+                 className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
                >
-                  Close
+                 <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                 </svg>
                </button>
+            </div>
+
+            {/* Modal Body - Scrollable */}
+            <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
+              <div className="space-y-6">
+                {selectedOrder.items.map((item, idx) => (
+                  <div key={idx} className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm flex items-center justify-between group hover:border-primary/20 transition-colors">
+                    <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-lg font-black text-primary border border-gray-100 group-hover:bg-primary group-hover:text-white transition-all">
+                        {item.quantity}
+                      </div>
+                      <div>
+                        <p className={`text-base text-gray-900 tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>
+                          {language === 'km' && item.nameKm ? item.nameKm : item.name}
+                        </p>
+                        {item.notes && (
+                          <p className={`text-xs text-amber-600 mt-1 italic flex items-center gap-1.5 ${language === 'km' ? 'font-khmer font-normal' : ''}`}>
+                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                             {item.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm font-black text-gray-900">${getItemSubtotal(item).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200/60">
+                 <div className="flex items-center justify-between mb-2 text-gray-400 text-xs font-bold uppercase tracking-widest">
+                    <span>Subtotal</span>
+                    <span>${getOrderTotal(selectedOrder).toFixed(2)}</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-gray-900 font-black uppercase tracking-widest text-sm">Total Amount</span>
+                    <span className="text-2xl font-black text-primary">${getOrderTotal(selectedOrder).toFixed(2)}</span>
+                 </div>
+              </div>
+            </div>
+
+            {/* Modal Footer - Fixed */}
+            <div className="p-6 border-t border-gray-100 bg-white flex gap-4 shrink-0">
                {selectedOrder.status === 'pending' && (
                  <button
                    onClick={() => {
-                     updateOrderStatus(selectedOrder.id, 'preparing');
+                     updateOrderStatus(getOrderId(selectedOrder), 'preparing');
                      setShowDetailsModal(false);
                    }}
-                   className="flex-1 px-6 py-4 rounded-2xl bg-primary text-white text-xs uppercase tracking-widest hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 font-normal"
+                   className="flex-1 py-4 bg-primary text-white rounded-2xl text-xs font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all active:scale-95"
                  >
-                   {language === 'km' ? kmText.accept : 'Process Order'}
+                   {language === 'km' ? kmText.accept : 'Accept Order'}
                  </button>
                )}
                {selectedOrder.status === 'preparing' && (
                  <button
                    onClick={() => {
-                     updateOrderStatus(selectedOrder.id, 'ready');
+                     updateOrderStatus(getOrderId(selectedOrder), 'completed');
                      setShowDetailsModal(false);
                    }}
-                   className="flex-1 px-6 py-4 rounded-2xl bg-emerald-600 text-white text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 font-normal"
+                   className="flex-1 py-4 bg-green-600 text-white rounded-2xl text-xs font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-green-600/20 hover:-translate-y-0.5 transition-all active:scale-95"
                  >
-                   {language === 'km' ? kmText.ready : 'Mark Ready'}
+                   {language === 'km' ? kmText.markReady : 'Mark as Ready'}
                  </button>
                )}
+               <button
+                 onClick={() => setShowDetailsModal(false)}
+                 className={`px-8 py-4 border border-gray-100 bg-gray-50 text-gray-400 rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all ${selectedOrder.status === 'completed' ? 'flex-1' : ''}`}
+               >
+                 {language === 'km' ? 'បិទ' : 'Close'}
+               </button>
             </div>
           </div>
+        </div>
         </div>
       )}
     </div>

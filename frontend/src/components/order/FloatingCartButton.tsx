@@ -4,26 +4,42 @@ import React from 'react';
 
 interface FloatingCartButtonProps {
   count: number;
+  totalPrice?: number;
   onClick: () => void;
+  language?: 'en' | 'km';
 }
 
-const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ count, onClick }) => {
+const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ count, totalPrice = 0, onClick, language = 'en' }) => {
   if (count === 0) return null;
 
   return (
-    <button
-      onClick={onClick}
-      className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-primary-dark text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 z-40 pulse-animation"
-    >
-      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-      {count > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 bg-secondary text-white text-[10px] sm:text-xs font-bold rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center shadow-lg">
-          {count}
-        </span>
-      )}
-    </button>
+    <div className="fixed bottom-6 left-6 right-6 z-[45] animate-slideUp">
+      <button
+        onClick={onClick}
+        className="w-full h-16 bg-primary rounded-full shadow-2xl shadow-primary/40 flex items-center justify-between px-6 hover:scale-[1.02] active:scale-95 transition-all duration-300"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <span className="text-white font-black text-[13px]">{count}</span>
+          </div>
+          <span className={`text-white text-[13px] font-black uppercase tracking-widest ${language === 'km' ? 'font-khmer font-medium' : 'font-sans'}`}>
+            {language === 'km' ? 'មុខម្ហូបបានជ្រើសរើស' : 'Item Selected'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end">
+            <span className="text-white/60 text-[9px] font-black uppercase tracking-widest leading-none mb-1">Total</span>
+            <span className="text-white text-[18px] font-black tracking-tighter leading-none">${totalPrice.toFixed(2)}</span>
+          </div>
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-lg">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+        </div>
+      </button>
+    </div>
   );
 };
 

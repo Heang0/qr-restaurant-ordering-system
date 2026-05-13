@@ -50,16 +50,10 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-
   useEffect(() => {
-    // Clean up any stale/broken values from previous sessions
-    const cachedSlug = localStorage.getItem('storeSlug');
-    if (cachedSlug && cachedSlug !== 'undefined' && cachedSlug !== 'null') {
-      storeSlugRef.current = cachedSlug; // pre-load from cache immediately
-    } else {
-      localStorage.removeItem('storeSlug');
-    }
     fetchTables();
+    const interval = setInterval(fetchTables, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -258,13 +252,26 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
     if (!confirmed) return;
 
     try {
-      const ordersToClear = allOrders.filter(o => o.tableId === table.id && o.status !== 'completed' && o.status !== 'cancelled');
+      const ordersToClear = allOrders.filter(o => {
+        const orderTableId = o.tableId || (o as any).table_id;
+        const orderTableName = o.tableName || (o as any).table_name || (o as any).tables?.name;
+        return (orderTableId === table.id || orderTableName === table.name) && o.status !== 'cancelled';
+      });
+      
+      if (ordersToClear.length === 0) {
+        setMessage({
+          type: 'success',
+          text: language === 'km' ? 'មិនមានការបញ្ជាទិញដែលត្រូវសម្អាតទេ' : 'No orders to clear'
+        });
+        return;
+      }
+
       await Promise.all(
         ordersToClear.map(order => 
-          fetch(`/api/orders/${order.id}`, {
+          fetch(`/api/orders/${order.id || (order as any)._id}/status`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'completed' })
+            body: JSON.stringify({ status: 'cancelled' })
           })
         )
       );
@@ -683,23 +690,27 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       </div>
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
-            <div className="flex items-center justify-between p-6 border-b border-gray-50">
-              <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                {language === 'km' ? 'បង្កើតតុថ្មី' : 'Create New Table'}
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md flex flex-col max-h-[85vh] overflow-hidden border border-white/10 animate-scaleIn">
+              {/* Modal Header - Fixed */}
+              <div className="p-6 border-b border-gray-50 flex items-center justify-between shrink-0">
+                <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                  {language === 'km' ? 'បង្កើតតុថ្មី' : 'Create New Table'}
+                </h3>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
+                >
+                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Modal Body - Scrollable */}
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
               <div>
                 <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
                   {language === 'km' ? 'ឈ្មោះតុ*' : 'Table Name*'}
@@ -742,22 +753,26 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-4 border border-gray-200 bg-white rounded-xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors"
-                >
-                  {t('common.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-4 bg-primary text-white rounded-xl text-[13px] font-normal uppercase tracking-widest hover:bg-primary-dark hover:shadow-lg transition-all"
-                >
-                  {language === 'km' ? 'បង្កើត' : 'Create'}
-                </button>
-              </div>
-            </form>
+                </div>
+
+                {/* Modal Footer - Fixed */}
+                <div className="p-6 border-t border-gray-100 bg-white flex gap-4 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className={`flex-1 px-6 py-4 border border-gray-200 bg-white rounded-2xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    className={`flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
+                  >
+                    {language === 'km' ? 'បង្កើត' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -813,35 +828,38 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
       )}
 
       {showReceiptModal && receiptState && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-scaleIn">
-            <div className="sticky top-0 bg-white border-b border-gray-50 p-6 flex items-center justify-between">
-              <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                {language === 'km'
-                  ? `វិក្កយបត្រ - តុ ${receiptState.table.name}`
-                  : `Receipt - Table ${receiptState.table.name}`}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowReceiptModal(false);
-                  setReceiptState(null);
-                }}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl flex flex-col max-h-[85vh] overflow-hidden border border-white/10 animate-scaleIn">
+              {/* Modal Header - Fixed */}
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+                <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                  {language === 'km'
+                    ? `វិក្កយបត្រ - តុ ${receiptState.table.name}`
+                    : `Receipt - Table ${receiptState.table.name}`}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowReceiptModal(false);
+                    setReceiptState(null);
+                  }}
+                  className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
+                >
+                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            <div className="bg-gray-100 p-6">
-              <div className="mx-auto max-w-[330px]">
-                <div className="h-[14px]" style={receiptEdgeStyle}></div>
-                  <div className="bg-white px-[18px] py-5 shadow-[0_18px_36px_rgba(0,0,0,0.14)] [font-family:'Roboto','Open_Sans','Kantumruy_Pro',Arial,sans-serif]">
-                    <div className="text-center">
-                    <h4 className="[font-family:'Montserrat','Poppins','Segoe_UI',Arial,sans-serif] text-[20px] font-bold tracking-[0.11em] text-gray-900">
-                      {(store?.name || 'SHOP NAME').toUpperCase()}
-                    </h4>
+              {/* Modal Body - Scrollable */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-100/50 p-4 sm:p-8">
+                <div className="mx-auto max-w-[330px]">
+                  <div className="h-[14px]" style={receiptEdgeStyle}></div>
+                    <div className="bg-white px-[18px] py-5 shadow-[0_18px_36px_rgba(0,0,0,0.14)] [font-family:'Roboto','Open_Sans','Kantumruy_Pro',Arial,sans-serif]">
+                      <div className="text-center">
+                      <h4 className="[font-family:'Montserrat','Poppins','Segoe_UI',Arial,sans-serif] text-[20px] font-bold tracking-[0.11em] text-gray-900">
+                        {(store?.name || 'SHOP NAME').toUpperCase()}
+                      </h4>
                     <div className={`mt-1.5 text-[11px] leading-[1.45] text-gray-500 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
                       {store?.address && <div>{store.address}</div>}
                       {store?.phone && <div>{store.phone}</div>}
@@ -1024,17 +1042,26 @@ const TablesView: React.FC<TablesViewProps> = ({ language, t }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              </div>
+
+              {/* Modal Footer - Fixed */}
+              <div className="p-6 border-t border-gray-100 bg-white flex flex-col sm:flex-row gap-4 shrink-0">
                 <button
                   onClick={printReceipt}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2"
                 >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 00-2 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 00-2 2z" />
+                  </svg>
                   {language === 'km' ? 'បោះពុម្ពវិក្កយបត្រ' : 'Print Receipt'}
                 </button>
                 <button
                   onClick={downloadReceipt}
-                  className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition-colors"
+                  className="flex-1 px-6 py-4 bg-gray-900 text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:bg-black transition-all flex items-center justify-center gap-2"
                 >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
                   {language === 'km' ? 'ទាញយកវិក្កយបត្រ' : 'Download Receipt'}
                 </button>
               </div>

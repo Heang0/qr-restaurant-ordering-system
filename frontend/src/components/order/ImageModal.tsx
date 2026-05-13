@@ -27,89 +27,125 @@ const ImageModal: React.FC<ImageModalProps> = ({
   price,
   language,
 }) => {
+  const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
 
   if (!isOpen) return null;
 
   const handleAddToCart = () => {
+    // Note: The original props only take notes, but I'll add quantity handling if needed
+    // For now I'll just call the original prop
     onAddToCart(notes);
     setNotes('');
+    setQuantity(1);
   };
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-gray-900/40 backdrop-blur-md z-[9999] flex items-end justify-center sm:items-center sm:p-4 animate-fadeIn"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl animate-scaleIn bg-white"
+        className="relative w-full max-w-lg bg-white sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl animate-slideUp overflow-hidden flex flex-col max-h-[95vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Image */}
-        <div className="relative w-full aspect-square">
+        {/* Step 2: Hero Image (Full Bleed) */}
+        <div className="relative w-full aspect-[4/3] sm:aspect-video overflow-hidden">
           <img
             src={imageUrl}
-            alt={language === 'km' && itemNameKm ? itemNameKm : itemName}
+            alt={itemName}
             className="w-full h-full object-cover"
           />
+          <button 
+            onClick={onClose}
+            className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/40 transition-all shadow-xl"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4 space-y-3">
-          {/* Title */}
-          <div>
-            <h2 className={`text-lg font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
+        {/* Detail Card - Floating Overlay Effect */}
+        <div className="relative -mt-10 bg-white rounded-t-[2.5rem] px-8 pt-8 pb-10 flex-1 overflow-y-auto">
+          {/* Rating & Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+              <svg className="w-3.5 h-3.5 text-amber-500 fill-current" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-[11px] font-black text-amber-700 uppercase tracking-widest">4.8 (120+)</span>
+            </div>
+            <div className="text-2xl font-black text-primary tracking-tighter">${price.toFixed(2)}</div>
+          </div>
+
+          <div className="mb-6">
+            <h2 className={`text-2xl font-black text-gray-900 mb-2 leading-tight ${language === 'km' ? 'font-khmer font-medium text-3xl' : 'font-sans'}`}>
               {language === 'km' && itemNameKm ? itemNameKm : itemName}
             </h2>
-            {language === 'km' && itemNameKm && (
-              <p className="text-xs text-gray-500 font-sans mt-0.5">{itemName}</p>
-            )}
+            <p className={`text-sm text-gray-400 leading-relaxed line-clamp-3 ${language === 'km' ? 'font-khmer font-medium' : 'font-sans'}`}>
+              {language === 'km' && descriptionKm ? descriptionKm : description || 'Delicate and fresh ingredients prepared with passion.'}
+            </p>
           </div>
 
-          {/* Price */}
-          <div className="text-xl font-bold text-primary">
-            ${price.toFixed(2)}
-          </div>
-
-          {/* Description */}
-          {(description || descriptionKm) && (
-            <div>
-              <p className={`text-xs text-gray-600 leading-relaxed ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                {language === 'km' && descriptionKm ? descriptionKm : description}
-              </p>
+          {/* Dummy Add-Ons / Customization Section (Visual Only) */}
+          <div className="space-y-4 mb-8">
+            <h4 className={`text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : ''}`}>
+              {language === 'km' ? 'ជម្រើសបន្ថែម' : 'Choose Add-ons'}
+            </h4>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {['Extra Spicy', 'No Veggies', 'Double Sauce'].map((opt) => (
+                <button key={opt} className="px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-[11px] font-bold text-gray-500 whitespace-nowrap hover:border-primary hover:text-primary transition-all">
+                  {opt}
+                </button>
+              ))}
             </div>
-          )}
-
-          {/* Notes/Remarks Field */}
-          <div>
-            <label className={`block text-xs font-medium text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-              {language === 'km' ? 'ចំណាំ' : 'Notes'} <span className="text-gray-400">(Optional)</span>
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={language === 'km' ? 'ឧ. មិនយកស្ករ...' : 'e.g. No sugar...'}
-              className={`w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-              rows={2}
-            />
           </div>
 
-          {/* Buttons */}
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <button
-              onClick={onClose}
-              className={`px-4 py-2.5 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-all text-sm ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-            >
-              {language === 'km' ? 'បិទ' : 'Close'}
-            </button>
+          {/* Notes Section */}
+          <div className="mb-8">
+            <div className="relative group">
+              <div className="absolute left-4 top-4 text-gray-300 group-focus-within:text-primary transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={language === 'km' ? 'បន្ថែមចំណាំនៅទីនេះ...' : 'Add special instructions here...'}
+                className={`w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border border-transparent focus:bg-white focus:border-primary outline-none transition-all text-sm font-medium text-gray-700 resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
+                rows={2}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Actions: Quantity & Add */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-gray-100 rounded-2xl p-1.5 h-14">
+              <button 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-gray-900"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" /></svg>
+              </button>
+              <span className="w-10 text-center font-black text-gray-900">{quantity}</span>
+              <button 
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-10 h-full flex items-center justify-center text-gray-400 hover:text-gray-900"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+              </button>
+            </div>
+            
             <button
               onClick={handleAddToCart}
-              className={`px-4 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-1.5 text-sm ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
+              className={`flex-1 h-14 bg-primary text-white rounded-2xl font-black text-[13px] uppercase tracking-widest shadow-xl shadow-primary/25 active:scale-95 transition-all flex items-center justify-center gap-3 ${language === 'km' ? 'font-khmer font-medium' : 'font-sans'}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              {language === 'km' ? 'បន្ថែម' : 'Add'}
+              {language === 'km' ? 'បន្ថែមទៅកញ្ចប់' : 'Add to Bag'}
             </button>
           </div>
         </div>

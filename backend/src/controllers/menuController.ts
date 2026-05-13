@@ -33,12 +33,14 @@ export const getMenuItems = async (req: Request, res: Response) => {
 
 export const createMenuItem = async (req: Request, res: Response) => {
   try {
-    const { storeId, categoryId, name, price, description, isAvailable, image, ...body } = req.body;
+    const { storeId, categoryId, name, nameKm, price, description, descriptionKm, isAvailable, image, ...body } = req.body;
     
     // Discovery showed: [ 'id', 'name', 'description', 'price', 'image', 'category_id', 'store_id', 'is_available', 'created_at' ]
     const insertData = { 
       name,
+      name_km: nameKm,
       description,
+      description_km: descriptionKm,
       price: parseFloat(price) || 0,
       image,
       category_id: categoryId || null,
@@ -66,12 +68,14 @@ export const createMenuItem = async (req: Request, res: Response) => {
 export const updateMenuItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { storeId, categoryId, name, price, description, isAvailable, image } = req.body;
+    const { storeId, categoryId, name, nameKm, price, description, descriptionKm, isAvailable, image } = req.body;
     
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
+    if (nameKm !== undefined) updateData.name_km = nameKm;
     if (price !== undefined) updateData.price = parseFloat(price);
     if (description !== undefined) updateData.description = description;
+    if (descriptionKm !== undefined) updateData.description_km = descriptionKm;
     if (isAvailable !== undefined) updateData.is_available = isAvailable;
     if (image !== undefined) updateData.image = image;
     if (categoryId !== undefined) updateData.category_id = categoryId || null;

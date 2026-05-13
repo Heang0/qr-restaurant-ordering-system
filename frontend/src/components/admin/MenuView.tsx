@@ -8,7 +8,8 @@ import { MenuSkeleton } from '@/components/admin/Skeletons';
 import { EmptyState } from '@/components/admin/EmptyState';
 
 interface MenuItem {
-  _id: string;
+  id?: string;
+  _id?: string;
   name: string;
   nameKm?: string;
   description?: string;
@@ -16,12 +17,13 @@ interface MenuItem {
   price: number;
   image?: string;
   imageUrl?: string;
-  categoryId?: string | { _id: string };
+  categoryId?: string | { id?: string; _id?: string };
   isAvailable: boolean;
 }
 
 interface Category {
-  _id: string;
+  id?: string;
+  _id?: string;
   name: string;
   nameKm?: string;
 }
@@ -54,6 +56,11 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
     const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [filterAvailable, setFilterAvailable] = useState<string>('all'); // all, available, unavailable
+
+  const getMenuItemId = (item: MenuItem) => item.id || item._id || '';
+  const getCategoryId = (category: Category) => category.id || category._id || '';
+  const getCategoryRefId = (categoryId: MenuItem['categoryId']) =>
+    typeof categoryId === 'object' && categoryId !== null ? categoryId.id || categoryId._id : categoryId;
 
   useEffect(() => {
     fetchMenuItems();
@@ -159,7 +166,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
       };
 
       const url = editingItem
-        ? `/api/menu/${editingItem.id}`
+        ? `/api/menu/${getMenuItemId(editingItem)}`
         : '/api/menu';
 
       const response = await fetch(url, {
@@ -198,7 +205,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
       description: item.description || '',
       descriptionKm: item.descriptionKm || '',
       price: String(item.price),
-      categoryId: typeof item.categoryId === 'object' ? item.categoryId.id : (item.categoryId || ''),
+      categoryId: getCategoryRefId(item.categoryId) || '',
       isAvailable: item.isAvailable !== undefined ? item.isAvailable : true
     });
     if (item.imageUrl) {
@@ -257,9 +264,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
       (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
     // Category filter - handle both string IDs and objects
-    const itemCategoryId = typeof item.categoryId === 'object' && item.categoryId !== null 
-      ? item.categoryId.id 
-      : item.categoryId;
+    const itemCategoryId = getCategoryRefId(item.categoryId);
     const matchesCategory = selectedCategory === 'all' || !itemCategoryId || itemCategoryId === selectedCategory;
 
     // Availability filter
@@ -272,11 +277,11 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
 
   const getCategoryName = (categoryId: any) => {
     // Handle both string ID and object
-    const catId = typeof categoryId === 'object' && categoryId !== null ? categoryId.id : categoryId;
+    const catId = getCategoryRefId(categoryId);
     
     if (!catId || catId === '') return language === 'km' ? 'ទូទៅ' : 'General';
     
-    const category = categories.find(c => c.id === catId);
+    const category = categories.find(c => getCategoryId(c) === catId);
     return category ? (language === 'km' && category.nameKm ? category.nameKm : category.name) : (language === 'km' ? 'ទូទៅ' : 'General');
   };
 
@@ -327,7 +332,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
             >
               <option value="all" className="font-normal">{language === 'km' ? 'ប្រភេទទាំងអស់' : 'All Categories'}</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
+                <option key={getCategoryId(cat)} value={getCategoryId(cat)}>
                   {language === 'km' && cat.nameKm ? cat.nameKm : cat.name}
                 </option>
               ))}
@@ -392,7 +397,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
           </div>
         ) : (
           filteredItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 group flex gap-6 p-5 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500">
+            <div key={getMenuItemId(item)} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 group flex gap-6 p-5 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500">
               {/* Image */}
               <div className="w-32 h-32 flex-shrink-0 rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-sm relative">
                 {item.imageUrl ? (
@@ -438,7 +443,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => handleDelete(getMenuItemId(item))}
                         className="w-10 h-10 rounded-xl bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm border border-gray-100"
                       >
                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -446,7 +451,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
                    </div>
 
                    <button
-                     onClick={() => toggleAvailability(item.id, item.isAvailable)}
+                     onClick={() => toggleAvailability(getMenuItemId(item), item.isAvailable)}
                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                        item.isAvailable
                          ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white'
@@ -464,23 +469,27 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
 
       {/* Create Menu Item Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scaleIn">
-            <div className="sticky top-0 bg-white border-b border-gray-50 p-6 flex items-center justify-between z-10">
-              <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                {language === 'km' ? 'បង្កើតមុខម្ហូបថ្មី' : 'Create New Menu Item'}
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden border border-white/10 animate-scaleIn">
+              {/* Modal Header - Fixed */}
+              <div className="p-6 border-b border-gray-50 flex items-center justify-between shrink-0">
+                <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                  {language === 'km' ? 'បង្កើតមុខម្ហូបថ្មី' : 'Create New Menu Item'}
+                </h3>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
+                >
+                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Modal Body - Scrollable */}
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
               {/* Image Upload */}
               <div>
                 <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
@@ -593,7 +602,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
                   >
                     <option value="">{language === 'km' ? 'ជ្រើសរើសប្រភេទ' : 'Select Category'}</option>
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
+                      <option key={getCategoryId(cat)} value={getCategoryId(cat)}>
                         {language === 'km' && cat.nameKm ? cat.nameKm : cat.name}
                       </option>
                     ))}
@@ -614,62 +623,70 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  disabled={uploading}
-                  className={`flex-1 px-4 py-4 border border-gray-200 bg-white rounded-xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 ${language === 'km' ? 'font-khmer' : ''}`}
-                >
-                  {language === 'km' ? 'បោះបង់' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className={`flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer font-normal' : ''}`}
-                >
-                  {uploading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span>{language === 'km' ? 'កំពុងបង្ហោះ...' : 'Uploading...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      <span>{language === 'km' ? 'បង្កើត' : 'Create'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                </div>
+
+                {/* Modal Footer - Fixed */}
+                <div className="p-6 border-t border-gray-100 bg-white flex gap-4 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    disabled={uploading}
+                    className={`flex-1 px-6 py-4 border border-gray-200 bg-white rounded-2xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 ${language === 'km' ? 'font-khmer' : ''}`}
+                  >
+                    {language === 'km' ? 'បោះបង់' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className={`flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
+                  >
+                    {uploading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span>{language === 'km' ? 'កំពុងបង្ហោះ...' : 'Uploading...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>{language === 'km' ? 'បង្កើត' : 'Create'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* Edit Menu Item Modal */}
       {showEditModal && editingItem && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scaleIn">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
-              <h3 className={`text-xl font-bold ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                {language === 'km' ? 'កែសម្រួលមុខម្ហូប' : 'Edit Menu Item'}
-              </h3>
-              <button
-                onClick={() => { setShowEditModal(false); setEditingItem(null); }}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden border border-white/10 animate-scaleIn">
+              {/* Modal Header - Fixed */}
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+                <h3 className={`text-xl text-gray-900 tracking-tight ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
+                  {language === 'km' ? 'កែសម្រួលមុខម្ហូប' : 'Edit Menu Item'}
+                </h3>
+                <button
+                  onClick={() => { setShowEditModal(false); setEditingItem(null); }}
+                  className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
+                >
+                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Modal Body - Scrollable */}
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
               {/* Image Upload - Same as Create Modal */}
               <div>
                 <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
@@ -783,7 +800,7 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
                   >
                     <option value="">{language === 'km' ? 'ជ្រើសរើសប្រភេទ' : 'Select Category'}</option>
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
+                      <option key={getCategoryId(cat)} value={getCategoryId(cat)}>
                         {language === 'km' && cat.nameKm ? cat.nameKm : cat.name}
                       </option>
                     ))}
@@ -804,39 +821,43 @@ const MenuView: React.FC<MenuViewProps> = ({ language, t }) => {
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => { setShowEditModal(false); setEditingItem(null); }}
-                  disabled={uploading}
-                  className={`flex-1 px-4 py-4 border border-gray-200 bg-white rounded-xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 ${language === 'km' ? 'font-khmer' : ''}`}
-                >
-                  {language === 'km' ? 'បោះបង់' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className={`flex-1 px-4 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer font-normal' : ''}`}
-                >
-                  {uploading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span>{language === 'km' ? 'កំពុងរក្សាទុក...' : 'Saving...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>{language === 'km' ? 'រក្សាទុក' : 'Save Changes'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                </div>
+
+                {/* Modal Footer - Fixed */}
+                <div className="p-6 border-t border-gray-100 bg-white flex gap-4 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setShowEditModal(false); setEditingItem(null); }}
+                    disabled={uploading}
+                    className={`flex-1 px-6 py-4 border border-gray-200 bg-white rounded-2xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 ${language === 'km' ? 'font-khmer' : ''}`}
+                  >
+                    {language === 'km' ? 'បោះបង់' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className={`flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
+                  >
+                    {uploading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span>{language === 'km' ? 'កំពុងរក្សាទុក...' : 'Saving...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{language === 'km' ? 'រក្សាទុក' : 'Save Changes'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

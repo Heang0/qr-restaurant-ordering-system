@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { MenuItem } from '@/types';
-import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MenuGridProps {
   items: MenuItem[];
@@ -34,41 +33,74 @@ const MenuGrid: React.FC<MenuGridProps> = ({
   onImageClick,
 }) => {
   const getCategoryName = (category: any) => {
-    if (!category) return t('common.all');
+    if (!category) return language === 'km' ? 'ទាំងអស់' : 'All';
     if (typeof category === 'string') return category;
-    if (typeof category === 'object') {
-      return language === 'km' && category.nameKm ? category.nameKm : category.name;
-    }
-    return String(category);
+    const cat = category as { name: string; nameKm?: string };
+    return language === 'km' && cat.nameKm ? cat.nameKm : cat.name;
+  };
+
+  const getCategoryIcon = (id: string, isActive: boolean) => {
+    const icons: Record<string, JSX.Element> = {
+      'all': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      ),
+      'burger': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.5c0 1.93-1.57 3.5-3.5 3.5H6.5c-1.93 0-3.5-1.57-3.5-3.5V14h18v1.5zM3 10.5c0-1.93 1.57-3.5 3.5-3.5h11c1.93 0 3.5 1.57 3.5 3.5V12H3v-1.5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7V5.5C7 4.12 8.12 3 9.5 3h5C15.88 3 17 4.12 17 5.5V7M3 12h18v2H3v-2z" />
+        </svg>
+      ),
+      'pizza': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3L2 12h3v8h14v-8h3L12 3z" />
+        </svg>
+      ),
+      'drink': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      'dessert': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.5a3.5 3.5 0 01-7 0V7h7v8.5zM3 15.5a3.5 3.5 0 017 0V7H3v8.5z" />
+        </svg>
+      ),
+      'asian': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+      ),
+      'healthy': (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l1.912 5.886H20.09l-4.994 3.63 1.91 5.884-4.996-3.63-4.996 3.63 1.91-5.884-4.994-3.63h6.178L12 3z" />
+        </svg>
+      ),
+    };
+    const foundKey = Object.keys(icons).find(k => id.toLowerCase().includes(k)) || 'asian';
+    return icons[foundKey];
   };
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 space-y-4">
+      <div className="flex flex-col items-center justify-center py-32 space-y-6">
         <div className="relative w-12 h-12">
-          <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
           <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Loading Menu...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-20 px-6">
-        <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-black uppercase tracking-widest text-center shadow-sm">
-          {error}
-        </div>
+        <p className={`text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] ${language === 'km' ? 'font-khmer' : ''}`}>
+          {language === 'km' ? 'កំពុងរៀបចំ...' : 'Loading Menu...'}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      {/* Search Bar - App Style */}
-      <div className="relative group max-w-2xl mx-auto w-full">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Search Bar */}
+      <div className="relative max-w-2xl mx-auto group px-1">
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors duration-300">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -77,105 +109,109 @@ const MenuGrid: React.FC<MenuGridProps> = ({
           type="search"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={t('order.searchPlaceholder')}
-          className={`w-full pl-12 pr-5 py-4 rounded-[1.25rem] bg-white border border-gray-100 shadow-sm focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all duration-300 text-sm font-bold text-gray-900 placeholder-gray-300 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
+          placeholder={language === 'km' ? 'ស្វែងរកមុខម្ហូប...' : 'Search for dishes...'}
+          className={`w-full pl-16 pr-6 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl shadow-sm focus:shadow-xl focus:shadow-primary/5 focus:border-primary focus:bg-white outline-none transition-all duration-500 text-[14px] font-medium text-gray-900 placeholder-gray-500 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
         />
       </div>
 
-      {/* Categories Horizontal Scroll */}
-      <div className="relative">
-        <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide snap-x">
+      {/* Categories */}
+      <div className="sticky top-0 z-30 -mx-5 px-5 bg-[#fcfcfd]/80 backdrop-blur-xl pb-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className={`text-[13px] font-semibold text-gray-500 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : ''}`}>
+            {language === 'km' ? 'ជ្រើសរើសប្រភេទ' : 'Select Category'}
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x -mx-5 px-5">
           {categories.map((category) => {
-            const categoryId = typeof category === 'object' ? String(category.id) : String(category);
+            const categoryId = typeof category === 'object' ? String(category.id || category._id) : String(category);
             const isActive = selectedCategory === categoryId;
             return (
               <button
                 key={categoryId}
                 onClick={() => onCategoryChange(categoryId)}
-                className={`snap-start h-12 px-6 rounded-2xl font-black text-[11px] uppercase tracking-widest whitespace-nowrap transition-all duration-500 relative overflow-hidden group ${
-                  isActive
-                    ? 'bg-gray-900 text-white shadow-xl shadow-gray-900/20'
-                    : 'bg-white text-gray-500 border border-gray-100 hover:bg-gray-50'
-                } ${language === 'km' ? 'font-khmer font-bold text-[13px] normal-case tracking-normal' : 'font-sans'}`}
+                className={`snap-start flex items-center gap-2.5 px-5 py-2.5 rounded-2xl transition-all duration-500 whitespace-nowrap border ${
+                  isActive 
+                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105' 
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-primary/30 hover:text-primary shadow-sm'
+                }`}
               >
-                {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>}
-                <span className="relative z-10">{getCategoryName(category)}</span>
+                <span className={`${isActive ? 'text-white' : 'text-primary'}`}>
+                  {getCategoryIcon(categoryId, isActive)}
+                </span>
+                <span className={`text-[12px] font-semibold uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>
+                  {getCategoryName(category)}
+                </span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Menu Grid - High End Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 md:gap-8">
+      {/* Menu Grid - 2 columns on mobile, 4 on tablet */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 pt-2">
         {items.map((item) => (
           <div
             key={item.id}
-            className="group relative flex flex-col bg-white rounded-[2.5rem] p-3 border border-gray-100/50 shadow-sm hover:shadow-2xl hover:shadow-gray-900/5 transition-all duration-500 hover:-translate-y-2"
+            className="group flex flex-col bg-white rounded-2xl border border-gray-100 hover:border-primary/20 transition-all duration-300 overflow-hidden relative"
           >
-            {/* Image Container */}
+            {/* Image Section */}
             <div 
-              className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-gray-50 cursor-pointer mb-4"
+              className="relative aspect-square overflow-hidden cursor-pointer"
               onClick={() => onImageClick?.(item)}
             >
               {item.imageUrl || item.image ? (
                 <img
                   src={item.imageUrl || item.image}
                   alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-200">
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-200">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
               )}
 
-              {/* Status Tags */}
-              <div className="absolute top-3 left-3 flex flex-col gap-2">
-                {!item.isAvailable && (
-                  <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl border border-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest shadow-xl">
-                    {language === 'km' ? 'អស់' : 'Sold Out'}
+              {item.isPopular && (
+                <div className="absolute top-2 left-2">
+                  <div className="bg-primary/90 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[8px] font-semibold text-white uppercase tracking-wider">
+                    Best Seller
                   </div>
-                )}
-              </div>
-
-              {/* Quick View Button */}
-              <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-[2px]">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-2xl scale-50 group-hover:scale-100 transition-transform duration-500">
-                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
                 </div>
-              </div>
+              )}
+
+              {!item.isAvailable && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                  <span className="px-3 py-1 bg-gray-900/80 text-white rounded-lg text-[9px] font-semibold uppercase tracking-wider">
+                    {language === 'km' ? 'អស់ហើយ' : 'Sold Out'}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Info Section */}
-            <div className="px-2 pb-2">
-              <div className="flex justify-between items-start mb-1">
-                <h3 className={`text-sm font-black text-gray-900 line-clamp-1 ${language === 'km' ? 'font-khmer font-bold text-[15px]' : 'font-sans'}`}>
-                  {language === 'km' && item.nameKm ? item.nameKm : item.name}
-                </h3>
-              </div>
-              
-              <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-3 line-clamp-1">
-                {language === 'km' ? (item.name || 'Delicious Choice') : (item.nameKm || 'Freshly Prepared')}
-              </p>
+            {/* Content Section */}
+            <div className="p-3 flex flex-col flex-1">
+              <h3 className={`text-[13px] font-semibold text-gray-900 leading-snug mb-1 line-clamp-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                {language === 'km' && item.nameKm ? item.nameKm : item.name}
+              </h3>
 
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
-                  <span className="text-lg font-black text-gray-900 tracking-tight">${item.price.toFixed(2)}</span>
-                </div>
+              {(item.description || item.descriptionKm) && (
+                <p className={`text-[10px] text-gray-400 line-clamp-1 mb-3 leading-tight ${language === 'km' ? 'font-khmer' : 'font-normal'}`}>
+                  {language === 'km' && item.descriptionKm ? item.descriptionKm : item.description}
+                </p>
+              )}
+
+              <div className="mt-auto flex items-center justify-between">
+                <span className="text-[14px] font-semibold text-gray-900 tracking-tight">${item.price.toFixed(2)}</span>
                 
                 <button
                   onClick={() => onAddToCart(item, 1)}
                   disabled={!item.isAvailable}
-                  className="w-11 h-11 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20 hover:scale-110 active:scale-90 transition-all duration-300 disabled:opacity-30 disabled:grayscale"
+                  className="w-8 h-8 rounded-full bg-gray-50 text-gray-900 flex items-center justify-center hover:bg-primary hover:text-white transition-colors duration-300 disabled:opacity-5 shadow-sm"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
               </div>
@@ -186,16 +222,15 @@ const MenuGrid: React.FC<MenuGridProps> = ({
 
       {/* Empty State */}
       {items.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-32 animate-fadeIn">
-          <div className="w-24 h-24 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mb-6">
-            <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <div className="w-20 h-20 bg-white rounded-[2rem] shadow-sm flex items-center justify-center mb-6">
+             <svg className="w-8 h-8 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+             </svg>
           </div>
-          <h4 className={`text-lg font-black text-gray-900 mb-2 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-            {language === 'km' ? 'មិនមានទិន្នន័យ' : 'No Items Found'}
-          </h4>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Try adjusting your filters</p>
+          <h3 className={`text-lg font-medium text-gray-900 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>
+            {language === 'km' ? 'រកមិនឃើញមុខម្ហូបទេ' : 'No matches found'}
+          </h3>
         </div>
       )}
     </div>

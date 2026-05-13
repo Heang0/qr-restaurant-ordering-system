@@ -11,6 +11,10 @@ export interface MenuItem {
   storeId?: string;
   isAvailable: boolean;
   order?: number;
+  rating?: number;
+  reviewsCount?: number;
+  prepTime?: string;
+  isPopular?: boolean;
 }
 
 export interface CartItem {
@@ -26,9 +30,11 @@ export interface CartItem {
 export interface OrderItem {
   menuItemId: string;
   name: string;
+  nameKm?: string;
   quantity: number;
   price: number;
   subtotal: number;
+  image?: string;
   notes?: string;
 }
 

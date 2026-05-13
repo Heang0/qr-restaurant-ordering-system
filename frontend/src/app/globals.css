@@ -7,10 +7,11 @@
 :root {
   --font-khmer: 'Kantumruy Pro', sans-serif;
   --font-english: 'Plus Jakarta Sans', sans-serif;
-  --primary: #e84c3d;
-  --primary-dark: #c0392b;
-  --secondary: #f8fafc; /* Neutral secondary */
-  --accent: #e84c3d;    /* Match primary */
+  --primary: #FF5200;       /* Vibrant App Orange-Red */
+  --primary-dark: #E64A19;
+  --primary-shadow: rgba(255, 82, 0, 0.1);
+  --secondary: #F8FAFC;
+  --accent: #FF5200;
 }
 
 * {
@@ -124,6 +125,42 @@ html {
   animation: shimmer 2s infinite;
 }
 
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.4s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
 /* Transitions */
 .transition-soft {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -146,6 +183,15 @@ html {
 
 /* Typography fix for Khmer */
 .font-khmer {
-  line-height: 1.8;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+.font-khmer-bold {
+  font-weight: 700;
+}
+
+.font-khmer-light {
+  font-weight: 300;
 }
 
