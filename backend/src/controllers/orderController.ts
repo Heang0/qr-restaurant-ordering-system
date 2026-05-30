@@ -16,7 +16,14 @@ export const getOrders = async (req: Request, res: Response) => {
       .gte('created_at', twentyFourHoursAgo.toISOString());
 
     if (tableId) {
-      query = query.eq('table_id', tableId);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(String(tableId))) {
+        query = query.eq('table_id', tableId);
+      } else {
+        // If it's not a UUID (like 'a1'), we should probably return empty or handle differently
+        // For now, let's just return empty results to avoid the 500 error
+        return res.json([]);
+      }
     }
 
     if (status === 'active') {
@@ -27,10 +34,14 @@ export const getOrders = async (req: Request, res: Response) => {
 
     const { data: orders, error } = await query.order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching orders from Supabase:', error);
+      throw error;
+    }
     res.json(orders);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (error: any) {
+    console.error('Order fetching crash:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 

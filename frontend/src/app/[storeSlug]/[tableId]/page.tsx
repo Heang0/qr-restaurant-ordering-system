@@ -107,7 +107,8 @@ function OrderContent() {
 
   // Fetch orders
   useEffect(() => {
-    if (store && resolvedTableId) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (store && resolvedTableId && uuidRegex.test(resolvedTableId)) {
       fetchOrders();
       const interval = setInterval(fetchOrders, 5000);
       return () => clearInterval(interval);
