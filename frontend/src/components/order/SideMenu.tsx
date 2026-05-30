@@ -11,6 +11,7 @@ interface SideMenuProps {
   activeTab: string;
   storeName?: string;
   storeLogo?: string;
+  unreadCount?: number;
 }
 
 const SideMenu: React.FC<SideMenuProps> = ({ 
@@ -19,7 +20,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
   onTabChange, 
   activeTab,
   storeName,
-  storeLogo
+  storeLogo,
+  unreadCount = 0
 }) => {
   const { language, t } = useLanguage();
 
@@ -104,9 +106,14 @@ const SideMenu: React.FC<SideMenuProps> = ({
                 }`}
               >
                 <span className={`${isActive ? 'text-white' : 'text-primary'}`}>{item.icon}</span>
-                <span className={`text-[12px] font-medium uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>
+                <span className={`text-[12px] font-medium uppercase tracking-widest flex-1 ${language === 'km' ? 'font-khmer' : ''}`}>
                   {item.label}
                 </span>
+                {item.id === 'orders' && unreadCount > 0 && (
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-scaleIn">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
             );
           })}

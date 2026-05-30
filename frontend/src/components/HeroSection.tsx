@@ -47,9 +47,7 @@ const HeroSection: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
               <Link
-                href="https://t.me/Emma_Heang"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/register"
                 className={`btn-primary flex items-center justify-center gap-2 group text-lg py-4 px-10 shadow-primary/20 shadow-2xl ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}
               >
                 {t('home.getStarted')}

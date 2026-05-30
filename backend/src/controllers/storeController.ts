@@ -27,7 +27,10 @@ export const getStores = async (req: Request, res: Response) => {
     
     const mappedStores = stores.map(store => ({
       ...store,
-      isActive: store.is_active
+      isActive: store.is_active,
+      bakongAccountId: store.bakong_account_id,
+      bakongMerchantName: store.bakong_merchant_name,
+      bakongMerchantCity: store.bakong_merchant_city
     }));
     
     res.json(mappedStores);
@@ -55,7 +58,7 @@ export const getStoreById = async (req: Request, res: Response) => {
 
 export const createStore = async (req: Request, res: Response) => {
   try {
-    const { name, slug, description, isActive, logo_url } = req.body;
+    const { name, slug, description, isActive, logo_url, bakongAccountId, bakongMerchantName, bakongMerchantCity } = req.body;
     
     const { data: store, error } = await supabase
       .from('stores')
@@ -64,7 +67,10 @@ export const createStore = async (req: Request, res: Response) => {
         slug,
         description,
         is_active: isActive,
-        logo_url
+        logo_url,
+        bakong_account_id: bakongAccountId,
+        bakong_merchant_name: bakongMerchantName,
+        bakong_merchant_city: bakongMerchantCity || 'Phnom Penh'
       }])
       .select()
       .single();
@@ -84,7 +90,7 @@ export const createStore = async (req: Request, res: Response) => {
 export const updateStore = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { isActive, logo, ...body } = req.body;
+    const { isActive, logo, bakongAccountId, bakongMerchantName, bakongMerchantCity, ...body } = req.body;
     
     const updateData: any = { ...body };
     if (isActive !== undefined) {
@@ -92,6 +98,15 @@ export const updateStore = async (req: Request, res: Response) => {
     }
     if (logo !== undefined) {
       updateData.logo_url = logo;
+    }
+    if (bakongAccountId !== undefined) {
+      updateData.bakong_account_id = bakongAccountId;
+    }
+    if (bakongMerchantName !== undefined) {
+      updateData.bakong_merchant_name = bakongMerchantName;
+    }
+    if (bakongMerchantCity !== undefined) {
+      updateData.bakong_merchant_city = bakongMerchantCity;
     }
     
     const { data: store, error } = await supabase

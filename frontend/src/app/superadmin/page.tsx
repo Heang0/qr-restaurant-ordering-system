@@ -9,6 +9,7 @@ import UsersView from '@/components/admin/UsersView';
 import StoresView from '@/components/admin/StoresView';
 import AuditLogsView from '@/components/admin/AuditLogsView';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Sidebar from '@/components/admin/Sidebar';
 
 type Tab = 'dashboard' | 'stores' | 'users' | 'audit' | 'settings';
 
@@ -32,16 +33,87 @@ export default function SuperAdminPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: '1', title: 'New Store Registered', message: 'The "Riverside Bistro" has just registered.', time: '2 mins ago', type: 'store', read: false, targetTab: 'stores' },
-    { id: '2', title: 'Admin Account Created', message: 'A new store manager (Dara) was added.', time: '1 hour ago', type: 'user', read: false, targetTab: 'users' },
-    { id: '3', title: 'System Update', message: 'System updated to version 2.1.0', time: '5 hours ago', type: 'system', read: true },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const hasLoadedNotifs = useRef(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/audit', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const logs = await res.json();
+      if (!Array.isArray(logs)) return;
+
+      // Map audit logs to notification format, show last 20
+      const mapped: Notification[] = logs.slice(0, 20).map((log: any) => {
+        const userEmail = log.users?.email || log.user_email || 'System';
+        let title = log.action.replace(/_/g, ' ');
+        let message = `By: ${userEmail}`;
+        let type: Notification['type'] = 'system';
+        let targetTab: Tab | undefined = undefined;
+
+        if (log.action === 'USER_LOGIN') {
+          title = language === 'km' ? 'អ្នកប្រើចូលប្រព័ន្ធ' : 'User Login';
+          message = language === 'km' ? `${userEmail} បានចូលប្រព័ន្ធ` : `${userEmail} logged in`;
+          type = 'user';
+          targetTab = 'audit';
+        } else if (log.entity_type === 'store') {
+          title = language === 'km' ? 'ហាងថ្មីបានចុះឈ្មោះ' : 'Store Activity';
+          message = language === 'km' ? `ហាង ${userEmail} បានធ្វើបច្ចុប្បន្នភាព` : `Store updated by ${userEmail}`;
+          type = 'store';
+          targetTab = 'stores';
+        } else if (log.entity_type === 'users' || log.action.includes('USER')) {
+          title = language === 'km' ? 'ការគ្រប់គ្រងអ្នកប្រើ' : 'User Activity';
+          message = language === 'km' ? `${userEmail} ធ្វើការផ្លាស់ប្ដូរ` : `${userEmail} made a change`;
+          type = 'user';
+          targetTab = 'users';
+        }
+
+        // Smart relative time
+        const logDate = new Date(log.created_at);
+        const diffMs = Date.now() - logDate.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        let time = '';
+        if (diffMins < 1) time = language === 'km' ? 'ទើបតែ' : 'Just now';
+        else if (diffMins < 60) time = language === 'km' ? `${diffMins} នាទីមុន` : `${diffMins}m ago`;
+        else if (diffHours < 24) time = language === 'km' ? `${diffHours} ម៉ោងមុន` : `${diffHours}h ago`;
+        else time = language === 'km' ? `${diffDays} ថ្ងៃមុន` : `${diffDays}d ago`;
+
+        // Preserve read state from localStorage if exists
+        const savedRead = localStorage.getItem(`notif_read_${log.id}`) === 'true';
+
+        return {
+          id: log.id,
+          title,
+          message,
+          time,
+          type,
+          read: savedRead,
+          targetTab
+        };
+      });
+
+      setNotifications(mapped);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const clearNotifications = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    notifications.forEach(n => localStorage.setItem(`notif_read_${n.id}`, 'true'));
+  };
 
   useEffect(() => {
     const savedTab = localStorage.getItem('superAdminTab') as Tab;
@@ -54,9 +126,17 @@ export default function SuperAdminPage() {
       if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) {
         setIsNotificationsOpen(false);
       }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // refresh every 30s
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearInterval(interval);
+    };
   }, [profileImage]);
 
   const fetchUserProfile = async () => {
@@ -111,6 +191,7 @@ export default function SuperAdminPage() {
 
   const markAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    localStorage.setItem(`notif_read_${id}`, 'true');
   };
 
   const handleNotificationClick = (notif: Notification) => {
@@ -230,11 +311,11 @@ export default function SuperAdminPage() {
       case 'settings':
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-10">
-              <h2 className={`text-2xl font-black mb-10 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans'}`}>{language === 'km' ? 'ការកំណត់គណនី' : 'Account Settings'}</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+              <h2 className={`text-xl font-bold mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ការកំណត់គណនី' : 'Account Settings'}</h2>
               <div className="flex flex-col lg:flex-row items-start gap-12">
                 <div className="relative group mx-auto lg:mx-0">
-                  <div className="w-48 h-48 rounded-full overflow-hidden border-8 border-white shadow-2xl bg-gray-50 relative z-10 transition-transform duration-500 group-hover:scale-105">
+                  <div className="w-48 h-48 rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 relative z-10 transition-transform duration-500 group-hover:scale-105">
                     {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-200"><svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>}
                     {isUploading && <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]"><div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div></div>}
                   </div>
@@ -245,15 +326,15 @@ export default function SuperAdminPage() {
                 <form onSubmit={handleUpdateProfile} className="flex-1 w-full space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className={`text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 ${language === 'km' ? 'font-khmer text-[12px]' : 'font-sans'}`}>{language === 'km' ? 'ឈ្មោះពេញ' : 'Full Name'}</label>
-                      <input type="text" value={userProfile.full_name || ''} onChange={(e) => setUserProfile({ ...userProfile, full_name: e.target.value })} className={`w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all font-bold text-gray-900 ${language === 'km' ? 'font-khmer text-lg' : 'font-sans'}`} placeholder={language === 'km' ? 'បញ្ជាក់ឈ្មោះរបស់អ្នក' : 'e.g. John Doe'} />
+                      <label className={`text-sm font-semibold text-gray-700 block mb-1.5 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ឈ្មោះពេញ' : 'Full Name'}</label>
+                      <input type="text" value={userProfile.full_name || ''} onChange={(e) => setUserProfile({ ...userProfile, full_name: e.target.value })} className={`w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary outline-none transition-all text-sm text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`} placeholder={language === 'km' ? 'បញ្ជាក់ឈ្មោះរបស់អ្នក' : 'e.g. John Doe'} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
-                      <input type="email" disabled value={userProfile.email} className="w-full px-5 py-4 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-gray-400 cursor-not-allowed" />
+                      <label className="text-sm font-semibold text-gray-700 block mb-1.5">Email Address</label>
+                      <input type="email" disabled value={userProfile.email} className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-400 cursor-not-allowed" />
                     </div>
                   </div>
-                  <button type="submit" disabled={isSaving} className={`bg-primary text-white px-10 py-5 rounded-2xl font-black text-[13px] uppercase tracking-widest hover:shadow-2xl hover:shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 ${language === 'km' ? 'font-khmer font-bold text-[16px]' : 'font-sans'}`}>
+                  <button type="submit" disabled={isSaving} className={`bg-primary text-white px-6 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 ${language === 'km' ? 'font-khmer' : ''}`}>
                     {isSaving ? (language === 'km' ? 'កំពុងរក្សាទុក...' : 'Saving...') : (language === 'km' ? 'រក្សាទុកការផ្លាស់ប្តូរ' : 'Save Changes')}
                   </button>
                 </form>
@@ -266,112 +347,126 @@ export default function SuperAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-500 ease-in-out lg:translate-x-0 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-8 border-b border-gray-50 flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg bg-gray-100 flex-shrink-0 ring-2 ring-white ring-offset-2 ring-offset-gray-900/5">
-              {profileImage ? <img src={profileImage} alt="PF" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-primary text-white flex items-center justify-center font-black text-xl">{userProfile.email ? userProfile.email.charAt(0).toUpperCase() : '?'}</div>}
-            </div>
-            <div className="overflow-hidden">
-              <span className={`text-sm font-black text-gray-900 block truncate ${language === 'km' ? 'font-khmer font-bold text-[15px]' : 'font-sans'}`}>{userProfile.full_name || (userProfile.email ? userProfile.email.split('@')[0] : 'User')}</span>
-              <span className={`text-[12px] font-black text-primary uppercase tracking-[0.1em] drop-shadow-md ${language === 'km' ? 'font-khmer text-[13px]' : 'font-sans'}`}>{language === 'km' ? 'អ្នកគ្រប់គ្រងជាន់ខ្ពស់' : 'Super Admin'}</span>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen flex" style={{ background: '#f3f4f6' }}>
+      {/* Unified POS Sidebar */}
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={(tab) => handleTabChange(tab as Tab)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogout={handleLogout}
+        language={language}
+        t={t}
+        unreadCount={unreadCount}
+        role="superadmin"
+      />
 
-        {/* Scrollable Nav Area */}
-        <nav className="p-6 space-y-3 flex-1 overflow-y-auto custom-scrollbar">
-          {menuItems.map((item) => (
-            <button key={item.id} onClick={() => { handleTabChange(item.id as Tab); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${activeTab === item.id ? 'bg-primary text-white shadow-xl shadow-primary/20' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'} ${language === 'km' ? 'font-khmer font-normal text-[16px]' : 'font-sans font-bold text-sm'}`}>
-              <div className={activeTab === item.id ? 'text-white' : ''}>{getIcon(item.icon)}</div>
-              <span className="tracking-tight">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* STICKY BOTTOM AREA: Language, Logout & Version */}
-        <div className="p-6 border-t border-gray-50 space-y-1 bg-white flex-shrink-0">
-          <div className="lg:hidden mb-4"><LanguageSwitcher /></div>
-          <button onClick={handleLogout} className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all group">
-            <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-            <span className={`font-black uppercase tracking-widest ${language === 'km' ? 'font-khmer font-bold text-[16px]' : 'font-sans text-xs'}`}>{t('common.logout')}</span>
-          </button>
-          
-          {/* VERSION BADGE */}
-          <div className="px-5 py-1">
-             <span className={`text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block text-center ${language === 'km' ? 'font-khmer text-[11px] font-bold tracking-normal opacity-60' : 'font-sans'}`}>
-                {language === 'km' ? 'ជំនាន់ v1.01' : 'v1.01 Enterprise'}
-             </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-72 w-full max-w-full overflow-x-hidden">
-        <header className="bg-white/80 backdrop-blur-xl border-b border-gray-50 sticky top-0 z-30">
-          <div className="px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-3 rounded-2xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" /></svg></button>
-                <h1 className={`text-2xl font-black text-gray-900 tracking-tight capitalize ${language === 'km' ? 'font-khmer font-normal text-3xl' : 'font-sans'}`}>{menuItems.find(item => item.id === activeTab)?.label}</h1>
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-[260px] w-full max-w-full overflow-x-hidden">
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+          <div className="px-4 sm:px-6 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+              <div>
+                <h1 className={`text-sm font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+                  {menuItems.find(item => item.id === activeTab)?.label || 'Super Admin'}
+                </h1>
               </div>
-              <div className="flex items-center gap-2 sm:gap-6">
-                <div className="hidden lg:block"><LanguageSwitcher /></div>
-                <div className="relative" ref={notificationsRef}>
-                  <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="p-3 rounded-2xl bg-gray-50 text-gray-600 hover:bg-gray-100 transition-all relative group">
-                    <svg className="w-6 h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                    {unreadCount > 0 && <span className="absolute top-2.5 right-2.5 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>}
-                  </button>
-                  {isNotificationsOpen && (
-                    <div className="fixed inset-x-4 top-24 lg:absolute lg:inset-auto lg:right-0 lg:mt-4 w-auto lg:w-[24rem] bg-white rounded-[2rem] shadow-2xl border border-gray-50 overflow-hidden animate-scaleIn z-50">
-                      <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                        <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest">Notifications</h4>
-                        <span className="px-3 py-1 bg-primary text-white text-[9px] font-black rounded-lg uppercase tracking-widest">{unreadCount} New</span>
-                      </div>
-                      <div className="max-h-[60vh] lg:max-h-[30rem] overflow-y-auto custom-scrollbar">
-                        {notifications.length === 0 ? (
-                          <div className="p-10 text-center text-gray-400 font-bold">No notifications yet</div>
-                        ) : (
-                          notifications.map((notif) => (
-                            <div key={notif.id} onClick={() => handleNotificationClick(notif)} className={`p-5 border-b border-gray-50 flex gap-4 cursor-pointer hover:bg-gray-50 transition-all ${!notif.read ? 'bg-blue-50/30' : ''}`}>
-                              <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${notif.type === 'store' ? 'bg-blue-100 text-blue-600' : notif.type === 'user' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                {notif.type === 'store' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
-                                {notif.type === 'user' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
-                                {notif.type === 'system' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                              </div>
-                              <div className="overflow-hidden">
-                                <p className="text-xs font-black text-gray-900 mb-0.5">{notif.title}</p>
-                                <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">{notif.message}</p>
-                                <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest mt-2">{notif.time}</p>
-                              </div>
-                            </div>
-                          ))
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="hidden lg:block"><LanguageSwitcher /></div>
+              
+              {/* Notifications */}
+              <div className="relative" ref={notificationsRef}>
+                <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center" style={{ background: '#e84c3d' }}>
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {isNotificationsOpen && (
+                  <div className="fixed inset-x-4 top-16 lg:absolute lg:inset-auto lg:right-0 lg:top-full lg:mt-2 w-auto lg:w-[22rem] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-scaleIn z-50">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <h4 className={`text-xs font-bold text-gray-900 uppercase tracking-wider ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ការជូនដំណឹង' : 'Notifications'}</h4>
+                        {unreadCount > 0 && (
+                          <span className="px-2 py-0.5 text-white text-[9px] font-bold rounded-full" style={{ background: '#e84c3d' }}>{unreadCount}</span>
                         )}
                       </div>
-                      <div className="p-4 text-center bg-gray-50/50">
-                        <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Mark all as read</button>
-                      </div>
+                      {notifications.some(n => n.read === false) && (
+                        <button onClick={clearNotifications} className={`text-[10px] font-semibold text-gray-400 hover:text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'សម្អាតទាំងអស់' : 'Mark all read'}
+                        </button>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div onClick={() => handleTabChange('settings')} className="flex items-center gap-3 sm:pl-6 sm:border-l sm:border-gray-100 cursor-pointer group">
+                    <div className="max-h-[60vh] lg:max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className={`py-10 text-center text-gray-400 font-medium text-xs ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'មិនមានការជូនដំណឹងទេ' : 'No notifications yet'}</div>
+                      ) : (
+                        notifications.map((notif) => (
+                          <div key={notif.id} onClick={() => handleNotificationClick(notif)} className={`px-5 py-3.5 border-b border-gray-50 flex gap-3 cursor-pointer hover:bg-gray-50 transition-colors ${!notif.read ? 'bg-orange-50/50' : ''}`}>
+                            <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-xs`} style={{ background: !notif.read ? '#e84c3d' : '#d1d5db' }}>
+                              {notif.type === 'store' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                              {notif.type === 'user' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+                              {notif.type === 'system' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-semibold text-gray-900 leading-none mb-1 ${!notif.read ? 'font-bold' : ''} ${language === 'km' ? 'font-khmer' : ''}`}>{notif.title}</p>
+                              <p className={`text-[11px] text-gray-500 line-clamp-2 ${language === 'km' ? 'font-khmer' : ''}`}>{notif.message}</p>
+                              <p className={`text-[10px] text-gray-300 mt-1 ${language === 'km' ? 'font-khmer' : ''}`}>{notif.time}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Avatar */}
+              <div className="relative" ref={profileDropdownRef}>
+                <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-2 pl-2 border-l border-gray-100 hover:opacity-80 transition-opacity">
                   <div className="text-right hidden sm:block">
-                    <p className={`text-[12px] font-black text-gray-900 leading-tight ${language === 'km' ? 'font-khmer text-sm' : 'font-sans'}`}>{userProfile.full_name || (userProfile.email ? userProfile.email.split('@')[0] : 'User')}</p>
-                    <p className={`text-[10px] font-black text-gray-400 uppercase tracking-widest ${language === 'km' ? 'font-khmer text-[11px]' : 'font-sans'}`}>{language === 'km' ? 'ប្រវត្តិរូប' : 'View Profile'}</p>
+                    <p className={`text-xs font-semibold text-gray-700 leading-none ${language === 'km' ? 'font-khmer' : ''}`}>{userProfile.full_name || (userProfile.email ? userProfile.email.split('@')[0] : 'User')}</p>
                   </div>
                   <div className="relative">
-                    <div className="w-11 h-11 rounded-full overflow-hidden shadow-sm bg-gray-50 ring-2 ring-white ring-offset-2 ring-offset-gray-50 group-hover:ring-primary/20 transition-all">
-                      {profileImage ? <img src={profileImage} alt="PF" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 text-gray-400 flex items-center justify-center font-black text-xs">{userProfile.email ? userProfile.email.charAt(0).toUpperCase() : '?'}</div>}
+                    <div className="w-8 h-8 rounded-full overflow-hidden ring-2" style={{ '--tw-ring-color': '#e84c3d' } as React.CSSProperties}>
+                      {profileImage ? <img src={profileImage} alt="PF" className="w-full h-full object-cover" /> : <div className="w-full h-full text-white flex items-center justify-center text-xs font-bold" style={{ background: '#e84c3d' }}>{userProfile.email ? userProfile.email.charAt(0).toUpperCase() : '?'}</div>}
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
                   </div>
-                </div>
+                </button>
+                
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-scaleIn z-50 py-2">
+                    <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                      <p className="text-sm font-bold text-gray-900 truncate">{userProfile.full_name || (userProfile.email ? userProfile.email.split('@')[0] : 'User')}</p>
+                      <p className="text-xs text-gray-500 truncate">{userProfile.email}</p>
+                    </div>
+                    <button 
+                      onClick={() => { handleTabChange('settings'); setIsProfileDropdownOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors flex items-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      {language === 'km' ? 'ការកំណត់' : 'Settings'}
+                    </button>
+                    <button 
+                      onClick={handleLogout}
+                      className={`w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                      {language === 'km' ? 'ចាកចេញ' : 'Logout'}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-8 lg:p-10 animate-fadeIn overflow-x-hidden">{renderContent()}</main>
+        <main className="flex-1 p-4 sm:p-6 animate-fadeIn overflow-x-hidden">{renderContent()}</main>
       </div>
       {isSidebarOpen && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity" onClick={() => setIsSidebarOpen(false)} />}
     </div>

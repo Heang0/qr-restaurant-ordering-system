@@ -119,8 +119,8 @@ function OrderContent() {
     if (quantity <= 0) { removeFromCart(menuItemId); return; }
     setCart(prev => prev.map(i => i.menuItemId === menuItemId ? { ...i, quantity } : i));
   };
-  const updateNotes = (menuItemId: string, notes: string) => {
-    setCart(prev => prev.map(i => i.menuItemId === menuItemId ? { ...i, notes } : i));
+  const updateRemark = (menuItemId: string, remark: string) => {
+    setCart(prev => prev.map(i => i.menuItemId === menuItemId ? { ...i, remark } : i));
   };
   const clearCart = () => setCart([]);
 
@@ -132,7 +132,7 @@ function OrderContent() {
       const orderData = {
         storeId: store.id,
         tableId: tableId,
-        items: cart.map(item => ({ menuItemId: item.menuItemId, quantity: item.quantity, remark: item.notes || '' }))
+        items: cart.map(item => ({ menuItemId: item.menuItemId, quantity: item.quantity, remark: item.remark || '' }))
       };
 
       const response = await fetch('/api/orders', {
@@ -167,10 +167,10 @@ function OrderContent() {
     setSelectedItem(null);
   };
 
-  const handleAddToCartFromModal = (notes: string) => {
+  const handleAddToCartFromModal = (remark: string) => {
     if (selectedItem) {
-      const itemWithNotes = { ...selectedItem, notes };
-      addToCart(itemWithNotes, 1);
+      const itemWithNotes = { ...selectedItem, remark };
+      addToCart(itemWithNotes as any, 1);
       handleCloseModal();
     }
   };
@@ -227,7 +227,7 @@ function OrderContent() {
         onAddToCart={addToCart}
         onRemoveFromCart={removeFromCart}
         onUpdateQuantity={updateQuantity}
-        onUpdateNotes={updateNotes}
+        onUpdateRemark={updateRemark}
         onSubmitOrder={handleSubmitOrder}
         language={language}
         t={t}

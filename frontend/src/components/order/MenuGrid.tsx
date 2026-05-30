@@ -34,9 +34,22 @@ const MenuGrid: React.FC<MenuGridProps> = ({
 }) => {
   const getCategoryName = (category: any) => {
     if (!category) return language === 'km' ? 'ទាំងអស់' : 'All';
-    if (typeof category === 'string') return category;
-    const cat = category as { name: string; nameKm?: string };
-    return language === 'km' && cat.nameKm ? cat.nameKm : cat.name;
+    let nameEn = '';
+    let nameKm = '';
+    
+    if (typeof category === 'string') {
+      nameEn = category;
+    } else {
+      nameEn = category.name;
+      nameKm = category.nameKm || category.name_km;
+    }
+
+    if (language === 'km') {
+      if (nameKm) return nameKm;
+      if (nameEn.toLowerCase() === 'popular dishes' || nameEn.toLowerCase() === 'popular dish') return 'មុខម្ហូបពេញនិយម';
+      return nameEn;
+    }
+    return nameEn;
   };
 
   const getCategoryIcon = (id: string, isActive: boolean) => {
@@ -110,18 +123,13 @@ const MenuGrid: React.FC<MenuGridProps> = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={language === 'km' ? 'ស្វែងរកមុខម្ហូប...' : 'Search for dishes...'}
-          className={`w-full pl-16 pr-6 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl shadow-sm focus:shadow-xl focus:shadow-primary/5 focus:border-primary focus:bg-white outline-none transition-all duration-500 text-[14px] font-medium text-gray-900 placeholder-gray-500 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
+          className={`w-full pl-14 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-2xl shadow-sm focus:shadow-xl focus:shadow-primary/5 focus:border-primary focus:bg-white outline-none transition-all duration-500 text-[14px] font-medium text-gray-900 placeholder-gray-500 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
         />
       </div>
 
       {/* Categories */}
-      <div className="sticky top-0 z-30 -mx-5 px-5 bg-[#fcfcfd]/80 backdrop-blur-xl pb-4 flex flex-col gap-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className={`text-[13px] font-semibold text-gray-500 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : ''}`}>
-            {language === 'km' ? 'ជ្រើសរើសប្រភេទ' : 'Select Category'}
-          </h2>
-        </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x -mx-5 px-5">
+      <div className="sticky top-0 z-30 -mx-5 px-5 bg-[#fcfcfd]/90 backdrop-blur-xl pb-3 pt-2">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x -mx-5 px-5">
           {categories.map((category) => {
             const categoryId = typeof category === 'object' ? String(category.id || category._id) : String(category);
             const isActive = selectedCategory === categoryId;
@@ -129,16 +137,16 @@ const MenuGrid: React.FC<MenuGridProps> = ({
               <button
                 key={categoryId}
                 onClick={() => onCategoryChange(categoryId)}
-                className={`snap-start flex items-center gap-2.5 px-5 py-2.5 rounded-2xl transition-all duration-500 whitespace-nowrap border ${
+                className={`snap-start flex items-center gap-2 px-4 py-2 rounded-full transition-colors duration-300 whitespace-nowrap font-medium text-[13px] ${
                   isActive 
-                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105' 
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-primary/30 hover:text-primary shadow-sm'
+                    ? 'bg-primary text-white shadow-sm' 
+                    : 'bg-gray-100/80 text-gray-500 hover:bg-gray-200'
                 }`}
               >
-                <span className={`${isActive ? 'text-white' : 'text-primary'}`}>
+                <span className={`${isActive ? 'text-white' : 'text-gray-400'}`}>
                   {getCategoryIcon(categoryId, isActive)}
                 </span>
-                <span className={`text-[12px] font-semibold uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>
+                <span className={`tracking-wide ${language === 'km' ? 'font-khmer' : ''}`}>
                   {getCategoryName(category)}
                 </span>
               </button>
@@ -152,7 +160,7 @@ const MenuGrid: React.FC<MenuGridProps> = ({
         {items.map((item) => (
           <div
             key={item.id}
-            className="group flex flex-col bg-white rounded-2xl border border-gray-100 hover:border-primary/20 transition-all duration-300 overflow-hidden relative"
+            className="group flex flex-col bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative"
           >
             {/* Image Section */}
             <div 
@@ -191,9 +199,9 @@ const MenuGrid: React.FC<MenuGridProps> = ({
             </div>
 
             {/* Content Section */}
-            <div className="p-3 flex flex-col flex-1">
-              <h3 className={`text-[13px] font-semibold text-gray-900 leading-snug mb-1 line-clamp-1 ${language === 'km' ? 'font-khmer' : ''}`}>
-                {language === 'km' && item.nameKm ? item.nameKm : item.name}
+            <div className="p-4 flex flex-col flex-1">
+              <h3 className={`text-[14px] font-bold text-gray-900 leading-tight mb-1 line-clamp-1 ${language === 'km' ? 'font-khmer tracking-normal' : 'tracking-tight'}`}>
+                {language === 'km' && (item.nameKm || item.name_km) ? (item.nameKm || item.name_km) : item.name}
               </h3>
 
               {(item.description || item.descriptionKm) && (
@@ -202,16 +210,16 @@ const MenuGrid: React.FC<MenuGridProps> = ({
                 </p>
               )}
 
-              <div className="mt-auto flex items-center justify-between">
-                <span className="text-[14px] font-semibold text-gray-900 tracking-tight">${item.price.toFixed(2)}</span>
+              <div className="mt-auto flex items-center justify-between pt-1">
+                <span className="text-[16px] font-black text-gray-900 tracking-tighter">${item.price.toFixed(2)}</span>
                 
                 <button
                   onClick={() => onAddToCart(item, 1)}
                   disabled={!item.isAvailable}
-                  className="w-8 h-8 rounded-full bg-gray-50 text-gray-900 flex items-center justify-center hover:bg-primary hover:text-white transition-colors duration-300 disabled:opacity-5 shadow-sm"
+                  className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-30 disabled:hover:scale-100 shadow-lg shadow-primary/30"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
               </div>

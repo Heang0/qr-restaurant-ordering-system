@@ -15,16 +15,19 @@ export interface MenuItem {
   reviewsCount?: number;
   prepTime?: string;
   isPopular?: boolean;
+  options?: Array<{ name: string; nameKm: string; price: number }>;
 }
 
 export interface CartItem {
+  cartItemId?: string; // Unique key for item + options combination
   menuItemId: string;
   name: string;
   nameKm?: string;
   price: number;
   image?: string;
   quantity: number;
-  notes?: string;
+  remark?: string;
+  selectedOptions?: Array<{ name: string; nameKm: string; price: number }>;
 }
 
 export interface OrderItem {
@@ -35,7 +38,8 @@ export interface OrderItem {
   price: number;
   subtotal: number;
   image?: string;
-  notes?: string;
+  remark?: string;
+  options?: Array<{ name: string; nameKm: string; price: number }>;
 }
 
 export interface Order {

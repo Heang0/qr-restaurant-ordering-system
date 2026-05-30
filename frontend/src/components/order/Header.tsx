@@ -9,27 +9,19 @@ interface HeaderProps {
   language: 'en' | 'km';
   storeName?: string;
   storeLogo?: string;
-  onMenuClick?: () => void;
+  onNotificationClick?: () => void;
+  unreadCount?: number;
 }
 
-const Header: React.FC<HeaderProps> = ({ tableId, language, storeName, storeLogo, onMenuClick }) => {
+const Header: React.FC<HeaderProps> = ({ tableId, language, storeName, storeLogo, onNotificationClick, unreadCount = 0 }) => {
   const { t } = useLanguage();
 
   return (
-    <header className="bg-white/80 backdrop-blur-xl px-6 pt-4 pb-3 sticky top-0 z-40 border-b border-gray-200 animate-fadeIn">
-      {/* Top Bar: Menu Trigger & Store Info & Actions */}
+    <header className="bg-white/80 backdrop-blur-xl px-4 sm:px-6 py-2 sticky top-0 z-40 border-b border-gray-100 animate-fadeIn">
+      {/* Top Bar: Store Info & Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={onMenuClick}
-            className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-900 hover:bg-gray-200 transition-colors shadow-sm"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             {storeLogo ? (
               <img src={storeLogo} alt={storeName} className="w-9 h-9 rounded-xl object-cover shadow-sm border border-gray-100" />
             ) : (
@@ -54,15 +46,22 @@ const Header: React.FC<HeaderProps> = ({ tableId, language, storeName, storeLogo
         </div>
 
         <div className="flex items-center gap-3">
-           <div className="hidden lg:block">
+           <div>
              <LanguageSwitcher className="scale-90" />
            </div>
-           <button className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 relative hover:bg-gray-200 transition-colors">
-              <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white"></div>
+            <button 
+              onClick={onNotificationClick}
+              className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 relative hover:bg-gray-200 transition-colors active:scale-95 duration-200"
+            >
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-primary text-white text-[9px] font-black rounded-full border-2 border-white flex items-center justify-center px-1 shadow-sm animate-scaleIn">
+                  {unreadCount}
+                </div>
+              )}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-           </button>
+            </button>
         </div>
       </div>
     </header>

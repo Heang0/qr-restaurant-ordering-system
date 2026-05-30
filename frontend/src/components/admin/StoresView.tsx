@@ -121,10 +121,9 @@ const StoresView: React.FC<StoresViewProps> = ({ language, t }) => {
     <div className="space-y-6 max-w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className={`text-xl sm:text-2xl font-black text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans'}`}>
+          <h2 className={`text-xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
             {language === 'km' ? 'ការគ្រប់គ្រងហាង' : 'Store Management'}
           </h2>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Active Restaurant Locations</p>
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 max-w-2xl">
@@ -137,17 +136,17 @@ const StoresView: React.FC<StoresViewProps> = ({ language, t }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={language === 'km' ? 'ស្វែងរកហាង...' : 'Search stores...'}
-              className={`w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-gray-100 focus:border-primary outline-none transition-all font-normal text-sm shadow-sm placeholder:font-normal placeholder:text-gray-300 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
+              className={`w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 focus:border-primary outline-none transition-all text-sm shadow-sm placeholder:text-gray-400 ${language === 'km' ? 'font-khmer' : ''}`}
             />
           </div>
-          <button onClick={openCreateModal} className={`bg-primary text-white px-6 py-4 rounded-2xl font-normal text-[14px] uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap w-full sm:w-auto ${language === 'km' ? 'font-khmer px-8' : 'font-sans'}`}>
+          <button onClick={openCreateModal} className={`bg-primary text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap w-full sm:w-auto ${language === 'km' ? 'font-khmer' : ''}`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
             <span>{language === 'km' ? 'បង្កើតថ្មី' : 'Create New'}</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 overflow-hidden animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fadeIn">
         <div className="overflow-x-auto custom-scrollbar touch-pan-x">
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
@@ -199,22 +198,29 @@ const StoresView: React.FC<StoresViewProps> = ({ language, t }) => {
       </div>
       
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-6">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md animate-scaleIn overflow-hidden max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-50 flex-shrink-0">
-              <div><h3 className={`text-lg text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{editingStore ? (language === 'km' ? 'កែសម្រួលហាង' : 'Edit Location') : (language === 'km' ? 'បង្កើតហាងថ្មី' : 'Register Location')}</h3></div>
-              <button onClick={() => setShowModal(false)} className="w-9 h-9 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-gray-100 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
-            </div>
+        <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
+          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm animate-fadeIn" onClick={() => setShowModal(false)} />
+          <div className="relative flex-1 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                <h3 className={`text-lg font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+                  {editingStore ? (language === 'km' ? 'កែសម្រួលហាង' : 'Edit Location') : (language === 'km' ? 'បង្កើតហាងថ្មី' : 'Register Location')}
+                </h3>
+                <button type="button" onClick={() => setShowModal(false)} className="p-2 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
               <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                 <div className="space-y-2"><label className={`text-[13px] text-gray-400 uppercase tracking-widest ml-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{language === 'km' ? 'ឈ្មោះហាង' : 'Store Name'}</label><input type="text" required value={formData.name} onChange={handleNameChange} className={`w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-100 focus:bg-white focus:border-primary outline-none transition-all text-sm font-normal ${language === 'km' ? 'font-khmer' : 'font-sans'}`} placeholder={language === 'km' ? 'ឧទាហរណ៍៖ ហាងកាហ្វេរបស់ខ្ញុំ' : 'e.g. My Cafe'} /></div>
                 <div className="space-y-2"><label className={`text-[13px] text-gray-400 uppercase tracking-widest ml-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>{language === 'km' ? 'អាសយដ្ឋាន URL' : 'URL Slug'}</label><input type="text" readOnly value={formData.slug} className="w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-100 font-bold text-primary italic text-sm" /></div>
               </div>
-              <div className="p-6 border-t border-gray-50 bg-gray-50/30 flex gap-3">
-                <button type="button" onClick={() => setShowModal(false)} className={`flex-1 px-6 py-4 bg-white text-gray-500 border border-gray-200 rounded-xl uppercase text-[13px] font-normal ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'បោះបង់' : 'Cancel'}</button>
-                <button type="submit" className={`flex-1 px-6 py-4 bg-primary text-white rounded-xl uppercase text-[13px] shadow-lg shadow-primary/20 font-normal ${language === 'km' ? 'font-khmer' : ''}`}>{editingStore ? (language === 'km' ? 'រក្សាទុក' : 'Save') : (language === 'km' ? 'បង្កើត' : 'Create')}</button>
+              <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+                <button type="button" onClick={() => setShowModal(false)} className={`flex-1 py-2.5 rounded-xl text-gray-700 bg-white border border-gray-300 font-semibold hover:bg-gray-50 text-sm transition-colors ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'បោះបង់' : 'Cancel'}</button>
+                <button type="submit" className={`flex-1 py-2.5 rounded-xl text-white bg-primary font-semibold hover:bg-primary/90 text-sm transition-colors ${language === 'km' ? 'font-khmer' : ''}`}>{editingStore ? (language === 'km' ? 'រក្សាទុក' : 'Save') : (language === 'km' ? 'បង្កើត' : 'Create')}</button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

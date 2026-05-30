@@ -87,59 +87,59 @@ const DashboardView: React.FC<DashboardViewProps> = ({ language, t, onTabChange 
   }
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {statsData.map((stat, index) => (
-          <div key={index} className="card-premium relative overflow-hidden group">
-            <div className={`absolute top-0 right-0 w-24 h-24 ${stat.bg} rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-500`}></div>
-            <div className="relative z-10">
-               <div className={`w-12 h-12 ${stat.bg} ${stat.text} rounded-2xl flex items-center justify-center mb-5`}>
-                  {getIcon(stat.icon)}
-               </div>
-               <p className={`text-sm text-gray-400 uppercase tracking-widest mb-1 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>{stat.label}</p>
-               <p className="text-3xl font-black text-gray-900 tracking-tight">{stat.value}</p>
+          <div key={index} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className={`text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>{stat.label}</p>
+                <p className="text-3xl font-black text-gray-900 tracking-tight">{stat.value}</p>
+              </div>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.bg} ${stat.text}`}>
+                {getIcon(stat.icon)}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="card-premium">
-        <div className="flex items-center justify-between mb-8">
-           <h2 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+           <h2 className={`text-xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
              {language === 'km' ? 'សកម្មភាពរហ័ស' : 'Quick Operations'}
            </h2>
-           <div className="h-[1px] flex-1 bg-gray-100 mx-6"></div>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <button onClick={() => onTabChange('menu')} className="p-6 rounded-2xl bg-primary/5 border border-primary/10 hover:bg-primary hover:text-white transition-all duration-300 group text-center shadow-sm">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 text-primary group-hover:bg-white/20 group-hover:text-white shadow-sm">
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button onClick={() => onTabChange('menu')} className="p-5 rounded-xl bg-gray-50 border border-gray-100 hover:border-primary/30 hover:bg-primary/5 transition-all group text-left flex flex-col">
+            <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center mb-4 text-gray-600 group-hover:text-primary group-hover:border-primary/30 transition-colors">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             </div>
-            <span className={`text-sm tracking-wide ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>{language === 'km' ? 'បន្ថែមមុខម្ហូប' : 'New Menu Item'}</span>
+            <span className={`text-sm font-semibold text-gray-700 group-hover:text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'បន្ថែមមុខម្ហូប' : 'New Menu Item'}</span>
           </button>
 
-          <button onClick={() => onTabChange('orders')} className="p-6 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all duration-300 group text-center shadow-sm">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 text-emerald-600 group-hover:bg-white/20 group-hover:text-white shadow-sm">
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <button onClick={() => onTabChange('orders')} className="p-5 rounded-xl bg-gray-50 border border-gray-100 hover:border-emerald-500/30 hover:bg-emerald-50 transition-all group text-left flex flex-col">
+            <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center mb-4 text-gray-600 group-hover:text-emerald-600 group-hover:border-emerald-500/30 transition-colors">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <span className={`text-sm tracking-wide ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>{language === 'km' ? 'បញ្ជាក់ការបញ្ជា' : 'Order Queue'}</span>
+            <span className={`text-sm font-semibold text-gray-700 group-hover:text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'បញ្ជាក់ការបញ្ជា' : 'Order Queue'}</span>
           </button>
 
-          <button onClick={() => onTabChange('tables')} className="p-6 rounded-2xl bg-violet-50/50 border border-violet-100 hover:bg-violet-600 hover:text-white transition-all duration-300 group text-center shadow-sm">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 text-violet-600 group-hover:bg-white/20 group-hover:text-white shadow-sm">
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>
+          <button onClick={() => onTabChange('tables')} className="p-5 rounded-xl bg-gray-50 border border-gray-100 hover:border-violet-500/30 hover:bg-violet-50 transition-all group text-left flex flex-col">
+            <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center mb-4 text-gray-600 group-hover:text-violet-600 group-hover:border-violet-500/30 transition-colors">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" /></svg>
             </div>
-            <span className={`text-sm tracking-wide ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>{language === 'km' ? 'តុសកម្ម' : 'Manage Tables'}</span>
+            <span className={`text-sm font-semibold text-gray-700 group-hover:text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'តុសកម្ម' : 'Manage Tables'}</span>
           </button>
 
-          <button onClick={() => onTabChange('settings')} className="p-6 rounded-2xl bg-orange-50/50 border border-orange-100 hover:bg-orange-600 hover:text-white transition-all duration-300 group text-center shadow-sm">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 text-orange-600 group-hover:bg-white/20 group-hover:text-white shadow-sm">
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066" /></svg>
+          <button onClick={() => onTabChange('settings')} className="p-5 rounded-xl bg-gray-50 border border-gray-100 hover:border-orange-500/30 hover:bg-orange-50 transition-all group text-left flex flex-col">
+            <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center mb-4 text-gray-600 group-hover:text-orange-600 group-hover:border-orange-500/30 transition-colors">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066" /></svg>
             </div>
-            <span className={`text-sm tracking-wide ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-bold'}`}>{language === 'km' ? 'ការកំណត់' : 'System Settings'}</span>
+            <span className={`text-sm font-semibold text-gray-700 group-hover:text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ការកំណត់' : 'System Settings'}</span>
           </button>
         </div>
       </div>

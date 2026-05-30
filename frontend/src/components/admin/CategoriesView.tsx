@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
+import ModalPortal from '@/components/Portal';
 
 interface Category {
   id?: string;
@@ -36,6 +37,22 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ language, t }) => {
     isActive: true
   });
   
+  useEffect(() => {
+    const isAnyModalOpen = showCreateModal || showEditModal;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+      // Prevent touch move on body for iOS
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.touchAction = 'auto';
+    };
+  }, [showCreateModal, showEditModal]);
+
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -90,11 +107,16 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ language, t }) => {
       if (response.ok) {
         toast.success(language === 'km' ? (editingCategory ? 'ប្រភេទត្រូវបានកែសម្រួល!' : 'ប្រភេទត្រូវបានបង្កើត!') : (editingCategory ? 'Category updated!' : 'Category created!'));
         setShowEditModal(false);
+        setShowCreateModal(false);
         setFormData({ name: '', nameKm: '', description: '', descriptionKm: '', order: '0', isActive: true });
         setEditingCategory(null);
         fetchCategories();
       } else {
-        toast.error(data.message || 'Failed to save category');
+        if (data.message === 'PLAN_LIMIT_REACHED') {
+          toast.error(language === 'km' ? 'ឈានដល់ដែនកំណត់! សូមដំឡើងកញ្ចប់សេវាកម្មរបស់អ្នក។' : 'Limit Reached! Please upgrade your plan in the Billing tab.');
+        } else {
+          toast.error(data.message || 'Failed to save category');
+        }
       }
     } catch (error) {
       toast.error(language === 'km' ? 'មានកំហុសកើតឡើង' : 'An error occurred');
@@ -160,371 +182,299 @@ const CategoriesView: React.FC<CategoriesViewProps> = ({ language, t }) => {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Header */}
-      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h2 className={`text-xl sm:text-2xl font-black text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans'}`}>
+          <h2 className={`text-xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
             {language === 'km' ? 'ការគ្រប់គ្រងប្រភេទ' : 'Menu Structure'}
           </h2>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Organize your menu catalog</p>
         </div>
         <button 
           onClick={() => setShowCreateModal(true)} 
-          className={`bg-primary text-white px-6 py-4 rounded-2xl font-normal text-[14px] uppercase tracking-widest hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap w-full sm:w-auto ${language === 'km' ? 'font-khmer px-8' : 'font-sans'}`}
+          className={`bg-primary text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto ${language === 'km' ? 'font-khmer' : ''}`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
           <span className="hidden sm:inline">{language === 'km' ? 'បង្កើតប្រភេទ' : 'Add Category'}</span>
         </button>
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Categories List */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="col-span-full py-20 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary border-t-transparent mx-auto"></div>
+          <div className="p-10 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-primary border-t-transparent mx-auto"></div>
           </div>
         ) : categories.length === 0 ? (
-          <div className="col-span-full py-20 text-center bg-white rounded-[2.5rem] border border-gray-100 border-dashed">
-            <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-               <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+          <div className="py-16 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
             </div>
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">
+            <p className="text-gray-500 font-semibold text-sm">
                {language === 'km' ? 'មិនមានប្រភេទទេ' : 'No categories structure found'}
             </p>
           </div>
         ) : (
-          categories.map((category) => {
-            const categoryId = getCategoryId(category);
-
-            return (
-            <div key={categoryId} className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 group relative overflow-hidden flex flex-col p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500">
-              <div className="flex items-start justify-between mb-8">
-                <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                   <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${category.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                      {category.isActive ? (language === 'km' ? 'សកម្ម' : 'Active') : (language === 'km' ? 'មិនសកម្ម' : 'Hidden')}
-                   </div>
-                   <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">Priority #{category.order}</div>
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <h3 className={`text-xl text-gray-900 tracking-tight mb-2 group-hover:text-primary transition-colors ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                  {language === 'km' && category.nameKm ? category.nameKm : category.name}
-                </h3>
-                
-                {(category.description || category.descriptionKm) && (
-                  <p className={`text-xs text-gray-400 font-medium leading-relaxed ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                    {language === 'km' && category.descriptionKm ? category.descriptionKm : category.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-10 flex items-center gap-3">
-                <button
-                  onClick={() => handleEdit(category)}
-                  className="flex-1 h-12 rounded-xl bg-gray-50 text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm border border-gray-100"
-                >
-                  {language === 'km' ? 'កែសម្រួល' : 'Edit'}
-                </button>
-                <button
-                  onClick={() => toggleActive(categoryId, category.isActive)}
-                  className={`h-12 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    category.isActive 
-                      ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' 
-                      : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'
-                  }`}
-                >
-                   {category.isActive ? (language === 'km' ? 'បិទ' : 'Disable') : (language === 'km' ? 'បើក' : 'Enable')}
-                </button>
-                <button
-                  onClick={() => handleDelete(categoryId)}
-                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-red-500 hover:text-white transition-all group/del shadow-sm border border-gray-100"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            );
-          })
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className={`px-6 py-4 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ឈ្មោះ' : 'Name'}</th>
+                  <th className={`px-6 py-4 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'អាទិភាព' : 'Priority'}</th>
+                  <th className={`px-6 py-4 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ស្ថានភាព' : 'Status'}</th>
+                  <th className={`px-6 py-4 text-right ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'សកម្មភាព' : 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {categories.map((category) => {
+                  const categoryId = getCategoryId(category);
+                  return (
+                    <tr key={categoryId} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <p className={`text-sm font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' && category.nameKm ? category.nameKm : category.name}
+                        </p>
+                        {(category.description || category.descriptionKm) && (
+                          <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[250px]">
+                            {language === 'km' && category.descriptionKm ? category.descriptionKm : category.description}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-gray-700">#{category.order}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                         <button
+                           onClick={() => toggleActive(categoryId, category.isActive)}
+                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                             category.isActive
+                               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                           }`}
+                         >
+                           <span className={`w-1.5 h-1.5 rounded-full ${category.isActive ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
+                           {category.isActive ? (language === 'km' ? 'សកម្ម' : 'Active') : (language === 'km' ? 'មិនសកម្ម' : 'Hidden')}
+                         </button>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                         <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEdit(category)}
+                              className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(categoryId)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                         </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* Create Category Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8">
-          <div className="flex min-h-full items-center justify-center">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden border border-white/10 animate-scaleIn">
-              {/* Modal Header - Fixed */}
-              <div className="p-6 border-b border-gray-50 flex items-center justify-between shrink-0">
-                <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                  {language === 'km' ? 'បង្កើតប្រភេទថ្មី' : 'Create New Category'}
-                </h3>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
-                >
-                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm animate-fadeIn" onClick={() => setShowCreateModal(false)} />
+          <div className="flex min-h-full items-center justify-center p-4 relative pointer-events-none">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl flex flex-col animate-scaleIn pointer-events-auto overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
+                  <h3 className={`text-lg text-gray-900 font-bold ${language === 'km' ? 'font-khmer' : ''}`}>
+                    {language === 'km' ? 'បង្កើតប្រភេទ' : 'Create Category'}
+                  </h3>
+                  <button type="button" onClick={() => setShowCreateModal(false)} className="p-2 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
 
-              {/* Modal Body - Scrollable */}
-              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                <div className="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ឈ្មោះ (អង់គ្លេស)' : 'Name (English)'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    placeholder="e.g., Main Dishes"
-                  />
-                </div>
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ឈ្មោះ (ខ្មែរ)' : 'Name (Khmer)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nameKm}
-                    onChange={(e) => setFormData({ ...formData, nameKm: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    placeholder="ឧ. ម្ហូបចម្បង"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ការពិពណ៌នា (អង់គ្លេស)' : 'Description (English)'}
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    rows={2}
-                    placeholder="Category description..."
-                  />
-                </div>
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ការពិពណ៌នា (ខ្មែរ)' : 'Description (Khmer)'}
-                  </label>
-                  <textarea
-                    value={formData.descriptionKm}
-                    onChange={(e) => setFormData({ ...formData, descriptionKm: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    rows={2}
-                    placeholder="ការពិពណ៌នា..."
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'លំដាប់' : 'Order'}
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.order}
-                    onChange={(e) => setFormData({ ...formData, order: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    placeholder="0"
-                    min="0"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {language === 'km' ? 'លេខតូចបង្ហាញមុន' : 'Lower number shows first'}
-                  </p>
-                </div>
-                <div className="flex items-center pt-6">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isActive"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="w-4 h-4 text-primary rounded focus:ring-primary"
-                    />
-                    <label htmlFor="isActive" className={`text-sm text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                      {language === 'km' ? 'ប្រភេទសកម្ម' : 'Category is active'}
-                    </label>
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 bg-white">
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    <div className="space-y-4">
+                      <div>
+                        <label className={`block text-xs font-semibold text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'ឈ្មោះ (អង់គ្លេស)*' : 'Name (English)*'}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                          placeholder="e.g., Beverages"
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-semibold text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'ឈ្មោះ (ខ្មែរ)' : 'Name (Khmer)'}
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.nameKm}
+                          onChange={(e) => setFormData({ ...formData, nameKm: e.target.value })}
+                          className={`w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm ${language === 'km' ? 'font-khmer' : ''}`}
+                          placeholder="ឧ. ភេសជ្ជៈ"
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-semibold text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'អាទិភាព (លំដាប់)*' : 'Priority (Order)*'}
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          value={formData.order}
+                          onChange={(e) => setFormData({ ...formData, order: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </div>
+                        <label htmlFor="isActive" className={`text-sm font-bold text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'បើកដំណើរការ' : 'Active Status'}
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Modal Footer - Fixed */}
-            <div className="p-6 border-t border-gray-100 bg-white flex gap-4 shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className={`flex-1 px-6 py-4 border border-gray-200 bg-white rounded-2xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
-              >
-                {language === 'km' ? 'បោះបង់' : 'Cancel'}
-              </button>
-              <button
-                type="submit"
-                className={`flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                </svg>
-                {language === 'km' ? 'បង្កើត' : 'Create'}
-              </button>
+                  <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateModal(false)}
+                      className={`flex-1 py-2.5 rounded-xl text-gray-700 bg-white border border-gray-300 font-semibold hover:bg-gray-50 text-sm transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                    >
+                      {language === 'km' ? 'បោះបង់' : 'Cancel'}
+                    </button>
+                    <button
+                      type="submit"
+                      className={`flex-1 py-2.5 rounded-xl text-white bg-primary font-semibold hover:bg-primary/90 text-sm transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                    >
+                      {language === 'km' ? 'រក្សាទុក' : 'Save'}
+                    </button>
+                  </div>
+                </form>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
-  )}
+        </ModalPortal>
+      )}
 
       {/* Edit Category Modal */}
       {showEditModal && editingCategory && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 overflow-y-auto p-4 py-8">
-          <div className="flex min-h-full items-center justify-center">
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden border border-white/10 animate-scaleIn">
-              {/* Modal Header - Fixed */}
-              <div className="p-6 border-b border-gray-50 flex items-center justify-between shrink-0">
-                <h3 className={`text-xl text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans font-black'}`}>
-                  {language === 'km' ? 'កែសម្រួលប្រភេទ' : 'Edit Category'}
-                </h3>
-                <button
-                  onClick={() => { setShowEditModal(false); setEditingCategory(null); }}
-                  className="w-10 h-10 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all group"
-                >
-                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+        <ModalPortal>
+          <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div 
+            className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm animate-fadeIn"
+            onClick={() => { setShowEditModal(false); setEditingCategory(null); }}
+          />
+          <div className="flex min-h-full items-center justify-center p-4 relative pointer-events-none">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl flex flex-col animate-scaleIn pointer-events-auto overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
+                  <h3 className={`text-lg text-gray-900 font-bold ${language === 'km' ? 'font-khmer' : ''}`}>
+                    {language === 'km' ? 'កែប្រែប្រភេទ' : 'Edit Category'}
+                  </h3>
+                  <button type="button" onClick={() => { setShowEditModal(false); setEditingCategory(null); }} className="p-2 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
 
-              {/* Modal Body - Scrollable */}
-              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                <div className="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-sm font-medium text-gray-700 mb-2 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                    {language === 'km' ? 'ឈ្មោះ (អង់គ្លេស)*' : 'Name (English)*'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    placeholder="e.g., Main Dishes"
-                  />
-                </div>
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ឈ្មោះ (ខ្មែរ)' : 'Name (Khmer)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nameKm}
-                    onChange={(e) => setFormData({ ...formData, nameKm: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    placeholder="ឧ. ម្ហូបចម្បង"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ការពិពណ៌នា (អង់គ្លេស)' : 'Description (English)'}
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    rows={2}
-                    placeholder="Category description..."
-                  />
-                </div>
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'ការពិពណ៌នា (ខ្មែរ)' : 'Description (Khmer)'}
-                  </label>
-                  <textarea
-                    value={formData.descriptionKm}
-                    onChange={(e) => setFormData({ ...formData, descriptionKm: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    rows={2}
-                    placeholder="ការពិពណ៌នា..."
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-[13px] text-gray-400 uppercase tracking-widest mb-2 ${language === 'km' ? 'font-khmer font-normal' : 'font-black'}`}>
-                    {language === 'km' ? 'លំដាប់' : 'Order'}
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.order}
-                    onChange={(e) => setFormData({ ...formData, order: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <div className="flex items-center gap-2 pt-6">
-                    <input
-                      type="checkbox"
-                      id="isActiveEdit"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="w-4 h-4 text-primary rounded focus:ring-primary"
-                    />
-                    <label htmlFor="isActiveEdit" className={`text-sm text-gray-700 ${language === 'km' ? 'font-khmer' : 'font-sans'}`}>
-                      {language === 'km' ? 'ប្រភេទសកម្ម' : 'Category is active'}
-                    </label>
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 bg-white">
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    <div className="space-y-4">
+                      <div>
+                        <label className={`block text-xs font-semibold text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'ឈ្មោះ (អង់គ្លេស)*' : 'Name (English)*'}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-semibold text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'ឈ្មោះ (ខ្មែរ)' : 'Name (Khmer)'}
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.nameKm}
+                          onChange={(e) => setFormData({ ...formData, nameKm: e.target.value })}
+                          className={`w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm ${language === 'km' ? 'font-khmer' : ''}`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-semibold text-gray-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'អាទិភាព (លំដាប់)*' : 'Priority (Order)*'}
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          value={formData.order}
+                          onChange={(e) => setFormData({ ...formData, order: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            id="isActiveEdit"
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </div>
+                        <label htmlFor="isActiveEdit" className={`text-sm font-bold text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' ? 'បើកដំណើរការ' : 'Active Status'}
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Modal Footer - Fixed */}
-            <div className="p-6 border-t border-gray-100 bg-white flex gap-4 shrink-0">
-              <button
-                type="button"
-                onClick={() => { setShowEditModal(false); setEditingCategory(null); }}
-                className={`flex-1 px-6 py-4 border border-gray-200 bg-white rounded-2xl text-[13px] font-normal uppercase tracking-widest text-gray-500 hover:bg-gray-50 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
-              >
-                {language === 'km' ? 'បោះបង់' : 'Cancel'}
-              </button>
-              <button
-                type="submit"
-                className={`flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-[13px] font-black uppercase tracking-[0.15em] hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 ${language === 'km' ? 'font-khmer' : ''}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                {language === 'km' ? 'រក្សាទុក' : 'Save Changes'}
-              </button>
+                  <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => { setShowEditModal(false); setEditingCategory(null); }}
+                      className={`flex-1 py-2.5 rounded-xl text-gray-700 bg-white border border-gray-300 font-semibold hover:bg-gray-50 text-sm transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                    >
+                      {language === 'km' ? 'បោះបង់' : 'Cancel'}
+                    </button>
+                    <button
+                      type="submit"
+                      className={`flex-1 py-2.5 rounded-xl text-white bg-primary font-semibold hover:bg-primary/90 text-sm transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                    >
+                      {language === 'km' ? 'រក្សាទុក' : 'Save'}
+                    </button>
+                  </div>
+                </form>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
-  )}
+        </ModalPortal>
+      )}
     </div>
   );
 };

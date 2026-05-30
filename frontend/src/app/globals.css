@@ -145,6 +145,16 @@ html {
   to { transform: translateY(0); }
 }
 
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+@keyframes progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
 .animate-scaleIn {
   animation: scaleIn 0.4s cubic-bezier(0.2, 0, 0.2, 1) forwards;
 }
@@ -153,12 +163,20 @@ html {
   animation: fadeIn 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
 }
 
+.animate-fadeOut {
+  animation: fadeOut 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
 .animate-slideUp {
   animation: slideUp 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
 }
 
 .animate-slideDown {
   animation: slideDown 0.5s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+.animate-progress {
+  animation: progress 2s cubic-bezier(0.2, 0, 0.2, 1) forwards;
 }
 
 /* Transitions */

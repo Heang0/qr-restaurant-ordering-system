@@ -12,7 +12,7 @@ interface CartProps {
   onAddToCart: (item: any, quantity: number) => void;
   onRemoveFromCart: (menuItemId: string) => void;
   onUpdateQuantity: (menuItemId: string, quantity: number) => void;
-  onUpdateNotes: (menuItemId: string, notes: string) => void;
+  onUpdateRemark: (menuItemId: string, remark: string) => void;
   onSubmitOrder: () => void;
   language: 'en' | 'km';
   t: (key: string) => string;
@@ -26,15 +26,15 @@ const Cart: React.FC<CartProps> = ({
   onAddToCart,
   onRemoveFromCart,
   onUpdateQuantity,
-  onUpdateNotes,
+  onUpdateRemark,
   onSubmitOrder,
   language,
   t,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="min-h-[calc(100vh-60px)] bg-white animate-fadeIn flex flex-col">
+    <div className={`fixed inset-0 z-[100] ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+      <div className={`absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`} onClick={onClose} />
+      <div className={`absolute bottom-0 left-0 right-0 h-[85vh] bg-white rounded-t-[2.5rem] shadow-2xl flex flex-col transition-transform duration-300 transform ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}>
       {/* Header */}
       <div className="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
         <button
@@ -49,7 +49,7 @@ const Cart: React.FC<CartProps> = ({
           <h2 className={`text-lg font-semibold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
             {language === 'km' ? 'កញ្ចប់ទំនិញ' : 'My Cart'}
           </h2>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+          <p className={`text-[10px] font-semibold text-gray-400 uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>
             {cart.length} {language === 'km' ? 'មុខ' : 'Items'}
           </p>
         </div>
@@ -71,27 +71,44 @@ const Cart: React.FC<CartProps> = ({
         ) : (
           <div className="space-y-6">
             {cart.map((item) => (
-              <div key={item.menuItemId} className="flex gap-4 items-center group animate-fadeIn">
+              <div key={item.cartItemId || item.menuItemId} className="flex gap-4 items-center group animate-fadeIn">
                 <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm">
                   <img src={item.image || '/placeholder.png'} alt={item.name} className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className={`text-[14px] font-semibold text-gray-900 mb-1 truncate ${language === 'km' ? 'font-khmer' : ''}`}>
+                  <h3 className={`text-[14px] font-semibold text-gray-900 mb-0.5 truncate ${language === 'km' ? 'font-khmer' : ''}`}>
                     {language === 'km' && item.nameKm ? item.nameKm : item.name}
                   </h3>
+                  
+                  {item.selectedOptions && item.selectedOptions.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {item.selectedOptions.map((opt, idx) => (
+                        <span key={idx} className={`text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md border border-gray-200 ${language === 'km' ? 'font-khmer' : ''}`}>
+                          {language === 'km' && opt.nameKm ? opt.nameKm : opt.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {item.remark && (
+                    <p className={`text-[10px] text-gray-400 italic mb-2 truncate ${language === 'km' ? 'font-khmer' : ''}`}>
+                      "{item.remark}"
+                    </p>
+                  )}
+
                   <div className="flex items-center gap-4">
                     <span className="text-[14px] font-semibold text-primary">${item.price.toFixed(2)}</span>
                     <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-2 py-1">
                       <button 
-                        onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)} 
+                        onClick={() => onUpdateQuantity(item.cartItemId || item.menuItemId, item.quantity - 1)} 
                         className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-primary transition-colors text-lg"
                       >
                         -
                       </button>
                       <span className="text-[12px] font-semibold text-gray-900 min-w-[16px] text-center">{item.quantity}</span>
                       <button 
-                        onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)} 
+                        onClick={() => onUpdateQuantity(item.cartItemId || item.menuItemId, item.quantity + 1)} 
                         className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-primary transition-colors text-lg"
                       >
                         +
@@ -101,7 +118,7 @@ const Cart: React.FC<CartProps> = ({
                 </div>
 
                 <button
-                  onClick={() => onRemoveFromCart(item.menuItemId)}
+                  onClick={() => onRemoveFromCart(item.cartItemId || item.menuItemId)}
                   className="w-9 h-9 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,11 +151,11 @@ const Cart: React.FC<CartProps> = ({
         <div className="px-6 pt-6 pb-10 bg-white border-t border-gray-100">
           <div className="space-y-3 mb-8">
             <div className="flex justify-between items-center">
-              <span className="text-[12px] font-medium text-gray-500 uppercase tracking-widest">{language === 'km' ? 'សរុប' : 'Subtotal'}</span>
+              <span className={`text-[12px] font-medium text-gray-500 uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'សរុប' : 'Subtotal'}</span>
               <span className="text-[14px] font-semibold text-gray-900">${total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[12px] font-medium text-gray-500 uppercase tracking-widest">{language === 'km' ? 'ពន្ធ' : 'VAT (10%)'}</span>
+              <span className={`text-[12px] font-medium text-gray-500 uppercase tracking-widest ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? 'ពន្ធ' : 'VAT (10%)'}</span>
               <span className="text-[14px] font-semibold text-gray-900">${(total * 0.1).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center pt-3 border-t border-gray-100">
@@ -160,6 +177,7 @@ const Cart: React.FC<CartProps> = ({
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 };

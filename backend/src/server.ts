@@ -13,6 +13,7 @@ import tableRoutes from './routes/tableRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Start Server
 app.listen(PORT, () => {

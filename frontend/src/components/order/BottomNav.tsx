@@ -76,7 +76,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
               <button
                 key={item.id}
                 onClick={handleClick}
-                className={`relative flex flex-1 flex-col items-center justify-center py-2.5 px-1 rounded-2xl transition-all duration-500 group ${
+                className={`relative flex flex-1 flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-500 group ${
                   isActive ? 'text-primary' : 'text-gray-300 hover:text-primary/50'
                 }`}
               >

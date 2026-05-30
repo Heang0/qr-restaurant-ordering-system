@@ -8,10 +8,11 @@ interface AuditLog {
   action: string;
   entity_type: string;
   entity_id: string;
-  details: string;
+  details: any;
   ip_address: string;
   created_at: string;
   user_email?: string;
+  users?: { email: string; full_name?: string; role?: string } | null;
 }
 
 interface AuditLogsViewProps {
@@ -38,7 +39,7 @@ const AuditLogsView: React.FC<AuditLogsViewProps> = ({ language, t }) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/audit-logs`, {
+      const response = await fetch(`${API_BASE}/audit`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -100,10 +101,9 @@ const AuditLogsView: React.FC<AuditLogsViewProps> = ({ language, t }) => {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h2 className={`text-2xl font-black text-gray-900 ${language === 'km' ? 'font-khmer font-normal' : 'font-sans'}`}>
+          <h2 className={`text-xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
             {language === 'km' ? 'កំណត់ត្រាសកម្មភាព' : 'Audit Logs'}
           </h2>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">System Event History</p>
         </div>
         <button 
           onClick={fetchLogs}
@@ -115,7 +115,7 @@ const AuditLogsView: React.FC<AuditLogsViewProps> = ({ language, t }) => {
       </div>
 
       {/* Logs Table Card */}
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-50 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
@@ -153,8 +153,12 @@ const AuditLogsView: React.FC<AuditLogsViewProps> = ({ language, t }) => {
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900">{log.user_email || 'System'}</span>
-                        <span className="text-[10px] font-bold text-gray-400 tracking-tight">{log.ip_address}</span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {log.users?.email || log.user_email || 'System'}
+                        </span>
+                        <span className="text-[10px] font-bold text-gray-400 tracking-tight capitalize">
+                          {log.users?.role || log.ip_address || ''}
+                        </span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
@@ -166,7 +170,9 @@ const AuditLogsView: React.FC<AuditLogsViewProps> = ({ language, t }) => {
                       <span className="text-xs font-black text-gray-500 uppercase tracking-widest">{log.entity_type}</span>
                     </td>
                     <td className="px-8 py-5">
-                      <p className="text-xs font-bold text-gray-600 truncate max-w-[300px]">{log.details}</p>
+                      <p className="text-xs font-bold text-gray-600 truncate max-w-[300px]">
+                        {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details}
+                      </p>
                     </td>
                   </tr>
                 ))

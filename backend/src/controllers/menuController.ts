@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { supabase } from '../config/supabase.js';
+import { checkPlanLimit } from '../utils/planLimits.js';
 
 export const getMenuItems = async (req: Request, res: Response) => {
   try {
@@ -21,7 +22,8 @@ export const getMenuItems = async (req: Request, res: Response) => {
       descriptionKm: item.description_km,
       categoryId: item.category_id,
       imageUrl: item.image_url || item.image,
-      isAvailable: item.is_available
+      isAvailable: item.is_available,
+      options: item.options || []
     }));
     
     res.json(mappedItems);
@@ -34,6 +36,9 @@ export const getMenuItems = async (req: Request, res: Response) => {
 export const createMenuItem = async (req: Request, res: Response) => {
   try {
     const { storeId, categoryId, name, nameKm, price, description, descriptionKm, isAvailable, image, ...body } = req.body;
+    
+    // Check plan limits
+    await checkPlanLimit(storeId, 'products');
     
     // Discovery showed: [ 'id', 'name', 'description', 'price', 'image', 'category_id', 'store_id', 'is_available', 'created_at' ]
     const insertData = { 
@@ -61,6 +66,9 @@ export const createMenuItem = async (req: Request, res: Response) => {
     res.status(201).json({ message: 'Menu item created successfully', menuItem: item });
   } catch (error: any) {
     console.error('Create menu item error:', error);
+    if (error.code === 'PLAN_LIMIT_REACHED') {
+      return res.status(403).json({ message: 'PLAN_LIMIT_REACHED', details: error.details });
+    }
     res.status(500).json({ message: error.message || 'Server error' });
   }
 };
@@ -88,11 +96,14 @@ export const updateMenuItem = async (req: Request, res: Response) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Update Menu Item Error:', error);
+      return res.status(500).json({ message: error.message || 'Server error', details: error });
+    }
     res.json({ message: 'Menu item updated successfully', menuItem: item });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update menu item error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Server error', details: error });
   }
 };
 

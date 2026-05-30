@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 interface ImageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddToCart: (notes: string) => void;
+  onAddToCart: (remark: string, selectedOptions: any[]) => void;
   imageUrl: string;
   itemName: string;
   itemNameKm?: string;
@@ -13,6 +13,7 @@ interface ImageModalProps {
   descriptionKm?: string;
   price: number;
   language: 'en' | 'km';
+  options?: Array<{ name: string; nameKm: string; price: number }>;
 }
 
 const ImageModal: React.FC<ImageModalProps> = ({
@@ -26,18 +27,31 @@ const ImageModal: React.FC<ImageModalProps> = ({
   descriptionKm,
   price,
   language,
+  options = [],
 }) => {
   const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
+  const [remark, setRemark] = useState('');
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
   if (!isOpen) return null;
 
+  const toggleOption = (idx: number) => {
+    setSelectedOptions(prev => 
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const calculateTotalPrice = () => {
+    const optionsTotal = selectedOptions.reduce((sum, idx) => sum + (options[idx]?.price || 0), 0);
+    return (price + optionsTotal) * quantity;
+  };
+
   const handleAddToCart = () => {
-    // Note: The original props only take notes, but I'll add quantity handling if needed
-    // For now I'll just call the original prop
-    onAddToCart(notes);
-    setNotes('');
+    const selected = selectedOptions.map(idx => options[idx]);
+    onAddToCart(remark, selected);
+    setRemark('');
     setQuantity(1);
+    setSelectedOptions([]);
   };
 
   return (
@@ -76,7 +90,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
               </svg>
               <span className="text-[11px] font-black text-amber-700 uppercase tracking-widest">4.8 (120+)</span>
             </div>
-            <div className="text-2xl font-black text-primary tracking-tighter">${price.toFixed(2)}</div>
+            <div className="text-2xl font-black text-primary tracking-tighter">${calculateTotalPrice().toFixed(2)}</div>
           </div>
 
           <div className="mb-6">
@@ -88,19 +102,39 @@ const ImageModal: React.FC<ImageModalProps> = ({
             </p>
           </div>
 
-          {/* Dummy Add-Ons / Customization Section (Visual Only) */}
-          <div className="space-y-4 mb-8">
-            <h4 className={`text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : ''}`}>
-              {language === 'km' ? 'ជម្រើសបន្ថែម' : 'Choose Add-ons'}
-            </h4>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {['Extra Spicy', 'No Veggies', 'Double Sauce'].map((opt) => (
-                <button key={opt} className="px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 text-[11px] font-bold text-gray-500 whitespace-nowrap hover:border-primary hover:text-primary transition-all">
-                  {opt}
-                </button>
-              ))}
+          {/* Real Add-Ons / Customization Section */}
+          {options && options.length > 0 && (
+            <div className="space-y-4 mb-8">
+              <h4 className={`text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ${language === 'km' ? 'font-khmer' : ''}`}>
+                {language === 'km' ? 'ជម្រើសបន្ថែម' : 'Order Options'}
+              </h4>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {options.map((opt, idx) => {
+                  const isActive = selectedOptions.includes(idx);
+                  return (
+                    <button 
+                      key={idx} 
+                      onClick={() => toggleOption(idx)}
+                      className={`px-5 py-3 rounded-2xl border text-[11px] font-bold whitespace-nowrap transition-all flex flex-col items-start gap-0.5 ${
+                        isActive 
+                          ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                          : 'bg-gray-50 border-gray-100 text-gray-500 hover:border-primary/30'
+                      }`}
+                    >
+                      <span className={`${language === 'km' ? 'font-khmer' : ''}`}>
+                        {language === 'km' && opt.nameKm ? opt.nameKm : opt.name}
+                      </span>
+                      {opt.price > 0 && (
+                        <span className={`text-[9px] opacity-70 ${isActive ? 'text-white' : 'text-primary'}`}>
+                          +${opt.price.toFixed(2)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Notes Section */}
           <div className="mb-8">
@@ -111,8 +145,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
                 </svg>
               </div>
               <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
                 placeholder={language === 'km' ? 'បន្ថែមចំណាំនៅទីនេះ...' : 'Add special instructions here...'}
                 className={`w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border border-transparent focus:bg-white focus:border-primary outline-none transition-all text-sm font-medium text-gray-700 resize-none ${language === 'km' ? 'font-khmer' : 'font-sans'}`}
                 rows={2}

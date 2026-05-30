@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { supabase } from '../config/supabase.js';
+import { checkPlanLimit } from '../utils/planLimits.js';
 
 export const getTables = async (req: Request, res: Response) => {
   try {
@@ -28,6 +29,9 @@ export const getTables = async (req: Request, res: Response) => {
 export const createTable = async (req: Request, res: Response) => {
   try {
     const { name, slug, isActive, storeId, qrCode } = req.body;
+    
+    // Check plan limits
+    await checkPlanLimit(storeId, 'tables');
     
     // Check for existing table with the same name in the same store
     const { data: existingTables } = await supabase
@@ -64,6 +68,9 @@ export const createTable = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Create table catch error:', error);
+    if (error.code === 'PLAN_LIMIT_REACHED') {
+      return res.status(403).json({ message: 'PLAN_LIMIT_REACHED', details: error.details });
+    }
     res.status(500).json({ message: error.message || 'Server error' });
   }
 };
@@ -132,6 +139,28 @@ export const deleteTable = async (req: Request, res: Response) => {
 
     if (error) throw error;
     res.json({ message: 'Table deleted successfully' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+export const callWaiter = async (req: Request, res: Response) => {
+  try {
+    const { storeId, tableId, tableNumber } = req.body;
+    
+    // In a real app, you'd save this to a notifications table
+    // For now, we'll just log it
+    console.log(`[WAITER CALL] Store: ${storeId}, Table: ${tableNumber} (${tableId})`);
+    
+    // Optionally create an audit log
+    await supabase.from('audit_logs').insert([{
+      action: 'CALL_WAITER',
+      entity_type: 'table',
+      entity_id: tableId,
+      details: { tableNumber, storeId }
+    }]);
+
+    res.json({ message: 'Waiter called successfully' });
   } catch (error: any) {
     res.status(500).json({ message: error.message || 'Server error' });
   }

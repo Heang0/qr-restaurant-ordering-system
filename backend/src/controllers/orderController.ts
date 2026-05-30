@@ -3,17 +3,33 @@ import { supabase } from '../config/supabase.js';
 
 export const getOrders = async (req: Request, res: Response) => {
   try {
-    const { storeId, tableId, status } = req.query;
+    const { storeId, tableId, status, timeframe } = req.query;
     if (!storeId) return res.status(400).json({ message: 'Store ID required' });
-
-    const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
     let query = supabase
       .from('orders')
       .select('*, tables(*)')
-      .eq('store_id', storeId)
-      .gte('created_at', twentyFourHoursAgo.toISOString());
+      .eq('store_id', storeId);
+
+    if (timeframe === 'all') {
+      // No date filter
+    } else if (timeframe === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      query = query.gte('created_at', today.toISOString());
+    } else if (timeframe === '7days') {
+      const date = new Date();
+      date.setDate(date.getDate() - 7);
+      query = query.gte('created_at', date.toISOString());
+    } else if (timeframe === '30days') {
+      const date = new Date();
+      date.setDate(date.getDate() - 30);
+      query = query.gte('created_at', date.toISOString());
+    } else {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+      query = query.gte('created_at', twentyFourHoursAgo.toISOString());
+    }
 
     if (tableId) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
